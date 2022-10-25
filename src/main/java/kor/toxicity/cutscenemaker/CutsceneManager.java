@@ -14,11 +14,12 @@ public final class CutsceneManager {
     private final JavaPlugin plugin;
     @Getter
     private EffectManager EffectLib = null;
-    private ProtocolManager manager;
+    @Getter
+    private final ProtocolManager ProtocolLib;
 
     CutsceneManager(JavaPlugin plugin) {
         this.plugin = plugin;
-        manager = ProtocolLibrary.getProtocolManager();
+        ProtocolLib = ProtocolLibrary.getProtocolManager();
         if (Bukkit.getPluginManager().isPluginEnabled("EffectLib")) EffectLib = new EffectManager(plugin);
     }
 
@@ -26,11 +27,8 @@ public final class CutsceneManager {
         return Bukkit.getScheduler().runTaskTimer(plugin,task,delay,time);
     }
 
-    public ProtocolManager getProtocolLib() {
-        return manager;
-    }
 
     public void register(PacketListener listener) {
-        manager.addPacketListener(listener);
+        ProtocolLib.addPacketListener(listener);
     }
 }
