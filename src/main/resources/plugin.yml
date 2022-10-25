@@ -1,0 +1,15 @@
+name: CutsceneMaker
+author: toxicity
+description: making Cutscene
+main: kor.toxicity.cutscenemaker.CutsceneMaker
+version: 1.0
+api-version: 1.13
+softdepend:
+  - EffectLib
+depend:
+  - ProtocolLib
+commands:
+  cutscene:
+    description: Cutscene command
+    usage: /<command>
+    aliases: [cut,컷씬]
