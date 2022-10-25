@@ -1,16 +1,16 @@
 package kor.toxicity.cutscenemaker.util;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.bukkit.Location;
 
-public class TextParser {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public final class TextParser {
 
     private static final TextParser instance = new TextParser();
 
     public static TextParser getInstance() {
         return instance;
-    }
-    private TextParser() {
-
     }
 
     public String toSimpleLoc(Location loc) {

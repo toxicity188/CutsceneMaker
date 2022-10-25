@@ -1,5 +1,7 @@
 package kor.toxicity.cutscenemaker.util;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
@@ -10,7 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-public abstract class ItemUtil {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public final class ItemUtil {
 
 
 	public static ItemStack setInternalTag(ItemStack item, String key) {

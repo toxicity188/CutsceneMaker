@@ -1,16 +1,17 @@
 package kor.toxicity.cutscenemaker.util;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.bukkit.entity.LivingEntity;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MethodString {
 
     private static final MethodString instance = new MethodString();
-    private MethodString() {
-    }
     public static MethodString getInstance() {
         return instance;
     }

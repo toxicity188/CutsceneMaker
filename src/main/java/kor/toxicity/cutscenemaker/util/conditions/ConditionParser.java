@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public class ConditionParser<T> {
+public final class ConditionParser<T> {
 
     private static final JsonParser parser = new JsonParser();
 
