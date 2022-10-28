@@ -70,7 +70,7 @@ public final class CutsceneManager {
                 c.load(plugin);
                 container.put(e.getPlayer(),c);
             } catch (Exception t) {
-                throw new RuntimeException("An error has occurred.");
+                c.register(plugin);
             }
         }
         @EventHandler

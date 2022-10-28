@@ -4,7 +4,6 @@ import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.util.DataField;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
@@ -60,7 +59,7 @@ public abstract class RepeatableAction extends CutsceneAction{
         @Override
         public void run() {
             loop ++;
-            if (ticks < loop || entity.isDead() || !entity.isValid() || (entity instanceof Player && !((Player) entity).isOnline())) {
+            if (ticks < loop || entity.isDead() || !entity.isValid()) {
                 kill();
                 return;
             }

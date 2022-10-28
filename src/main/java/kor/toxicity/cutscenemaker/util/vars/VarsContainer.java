@@ -5,6 +5,7 @@ import com.opencsv.CSVWriter;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -40,6 +41,13 @@ public class VarsContainer {
         return vars.get(key);
     }
 
+    public boolean register(JavaPlugin pl) {
+        try {
+            return new File(pl.getDataFolder().getAbsolutePath() + "\\User\\" + player.getUniqueId().toString() + ".csv").createNewFile();
+        } catch (Exception e) {
+            return false;
+        }
+    }
     public void remove(String key) {
         vars.remove(key);
     }

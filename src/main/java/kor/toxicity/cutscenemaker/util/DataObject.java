@@ -58,6 +58,6 @@ public class DataObject<T> {
         };
     }
     private List<Field> c() {
-        return Arrays.stream(t.getClass().getDeclaredFields()).filter(f -> a(f) != null).collect(Collectors.toList());
+        return Arrays.stream(t.getClass().getFields()).filter(f -> a(f) != null).collect(Collectors.toList());
     }
 }
