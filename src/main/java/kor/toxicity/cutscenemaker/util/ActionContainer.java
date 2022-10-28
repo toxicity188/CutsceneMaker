@@ -10,7 +10,9 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 public class ActionContainer {
@@ -19,6 +21,8 @@ public class ActionContainer {
     private final List<CutsceneAction> actions;
     private Predicate<LivingEntity> conditions;
 
+
+    private final Map<LivingEntity,ActionRunning> tasks = new HashMap<>();
 
     public ActionContainer(CutsceneMaker pl) {
         this.pl = pl;
@@ -36,7 +40,8 @@ public class ActionContainer {
 
     public boolean run(LivingEntity entity) {
         if (conditions != null && !conditions.test(entity)) return false;
-        new ActionRunning(entity);
+        if (tasks.containsKey(entity)) tasks.get(entity).kill();
+        tasks.put(entity,new ActionRunning(entity));
         return true;
     }
 
@@ -60,6 +65,7 @@ public class ActionContainer {
         private void kill() {
             if (task != null) task.cancel();
             EvtUtil.unregister(this);
+            ActionContainer.this.tasks.remove(player);
         }
         private void load() {
             if (loop < actions.size()) {

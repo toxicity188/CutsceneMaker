@@ -3,7 +3,9 @@ package kor.toxicity.cutscenemaker;
 import kor.toxicity.cutscenemaker.data.ActionData;
 import kor.toxicity.cutscenemaker.data.Reloadable;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
+import kor.toxicity.cutscenemaker.util.vars.Vars;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -18,6 +20,7 @@ public final class CutsceneMaker extends JavaPlugin {
     @Override
     public void onEnable() {
         this.getDataFolder().mkdir();
+        new File(this.getDataFolder().getAbsolutePath() + "\\User").mkdir();
 
         manager = new CutsceneManager(this);
         reload.add(new ActionData(this));
@@ -46,5 +49,8 @@ public final class CutsceneMaker extends JavaPlugin {
 
     public ConfigLoad read(String dict) {
         return new ConfigLoad(new File(this.getDataFolder().getAbsolutePath() + "\\" + dict),"");
+    }
+    public static Vars getVars(Player player, String key) {
+        return manager.getVars(player,key);
     }
 }

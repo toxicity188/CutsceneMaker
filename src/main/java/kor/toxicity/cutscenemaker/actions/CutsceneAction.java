@@ -2,6 +2,7 @@ package kor.toxicity.cutscenemaker.actions;
 
 
 import kor.toxicity.cutscenemaker.CutsceneManager;
+import kor.toxicity.cutscenemaker.util.DataField;
 import org.bukkit.entity.LivingEntity;
 
 public abstract class CutsceneAction {

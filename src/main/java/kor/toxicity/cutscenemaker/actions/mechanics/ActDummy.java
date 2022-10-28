@@ -11,9 +11,9 @@ public class ActDummy extends CutsceneAction {
 
     @Override
     public void apply(LivingEntity entity) {
-        /**
-         * This is a dummy effect.
-         * this also can input "delay" parameter.
+        /*
+          This is a dummy effect.
+          this also can input "delay" parameter.
          */
     }
 }

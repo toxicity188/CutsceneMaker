@@ -4,6 +4,7 @@ package kor.toxicity.cutscenemaker.util.conditions;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.util.JsonMethod;
 import kor.toxicity.cutscenemaker.util.TextParser;
 import org.bukkit.Bukkit;
@@ -51,7 +52,7 @@ public final class ConditionParser<T> {
                 default:
                     try {
                         long d = Long.parseLong(t[2]);
-                        return NUMBER.parse(NUMBER.getAsFunc(t[0],Double.parseDouble(t[0])),t[1],d);
+                        return NUMBER.parse(NUMBER.getAsFunc(t[0],Long.parseLong(t[0])),t[1],d);
                     } catch (Exception e) {
                         return STRING.parse(STRING.getAsFunc(t[0],t[0]), t[1],t[2]);
                     }
@@ -78,16 +79,16 @@ public final class ConditionParser<T> {
         STRING.addOperator("!=", (a,b) -> !a.equals(b));
 
         NUMBER.addFunction("num", (e,j) -> {
-            if (j.size() == 0 || j.get(0).getAsNumber() == null) return 0;
-            return j.get(0).getAsNumber();
+            if (j.size() == 0 || !(e instanceof Player)) return 0;
+            return CutsceneMaker.getVars((Player) e,j.get(0).getAsString()).getAsNum();
         });
         STRING.addFunction("str", (e,j) -> {
-            if (j.size() == 0 || j.get(0).getAsString() == null) return "<none>";
-            return j.get(0).getAsString();
+            if (j.size() == 0 || !(e instanceof Player)) return "<none>";
+            return CutsceneMaker.getVars((Player) e,j.get(0).getAsString()).getVar();
         });
         BOOL.addFunction("bool", (e,j) -> {
-            if (j.size() == 0) return false;
-            return j.get(0).getAsBoolean();
+            if (j.size() == 0 || !(e instanceof Player)) return false;
+            return CutsceneMaker.getVars((Player) e,j.get(0).getAsString()).getAsBool();
         });
     }
 

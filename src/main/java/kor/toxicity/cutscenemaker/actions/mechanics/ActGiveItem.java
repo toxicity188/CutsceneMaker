@@ -3,7 +3,7 @@ package kor.toxicity.cutscenemaker.actions.mechanics;
 import com.google.gson.JsonObject;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
-import kor.toxicity.cutscenemaker.actions.DataField;
+import kor.toxicity.cutscenemaker.util.DataField;
 import kor.toxicity.cutscenemaker.util.ItemUtil;
 import kor.toxicity.cutscenemaker.util.TextParser;
 import org.bukkit.Material;
@@ -29,6 +29,7 @@ public class ActGiveItem extends CutsceneAction {
     public int durability = 0;
     @DataField(aliases = "l")
     public String lore;
+    @DataField
     public JsonObject tag;
 
 

@@ -2,8 +2,10 @@ package kor.toxicity.cutscenemaker.util.vars;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 @AllArgsConstructor
 public class Vars {
 

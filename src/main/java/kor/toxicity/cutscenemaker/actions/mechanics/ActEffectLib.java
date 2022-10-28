@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 import de.slikey.effectlib.EffectManager;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
-import kor.toxicity.cutscenemaker.actions.DataField;
+import kor.toxicity.cutscenemaker.util.DataField;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.entity.LivingEntity;

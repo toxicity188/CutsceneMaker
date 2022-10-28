@@ -6,7 +6,7 @@ import com.google.gson.JsonParser;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
-import kor.toxicity.cutscenemaker.actions.DataField;
+import kor.toxicity.cutscenemaker.util.DataField;
 import kor.toxicity.cutscenemaker.actions.mechanics.*;
 import kor.toxicity.cutscenemaker.exceptions.NoActionFoundException;
 import kor.toxicity.cutscenemaker.exceptions.NoValueFoundException;
@@ -15,9 +15,7 @@ import kor.toxicity.cutscenemaker.util.ConfigLoad;
 import kor.toxicity.cutscenemaker.util.conditions.ConditionParser;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -42,6 +40,10 @@ public final class ActionData extends CutsceneData {
         actions.put("effectlib", ActEffectLib.class);
         actions.put("message", ActMessage.class);
         actions.put("give", ActGiveItem.class);
+        actions.put("sound", ActSound.class);
+        actions.put("set",ActSetVariable.class);
+        actions.put("add",ActAddVariable.class);
+        actions.put("entityeffect", ActEntityEffect.class);
     }
     public ActionData(CutsceneMaker pl) {
         super(pl);
@@ -72,7 +74,10 @@ public final class ActionData extends CutsceneData {
                 Predicate<LivingEntity> cond = null;
                 for (String t : condition) {
                     String[] get = t.split(" ");
-                    if (cond != null) cond = cond.and(ConditionParser.LIVING_ENTITY.getByString(get));
+                    if (cond != null) {
+                        Predicate<LivingEntity> add = ConditionParser.LIVING_ENTITY.getByString(get);
+                        if (add != null) cond = cond.and(add);
+                    }
                     else cond = ConditionParser.LIVING_ENTITY.getByString(get);
                 }
                 container.setConditions(cond);
@@ -89,10 +94,7 @@ public final class ActionData extends CutsceneData {
                 JsonElement e = parser.parse(k.substring(clazz.length()).replaceAll("=",":"));
                 List<Field> adapt = Arrays.stream(c.getFields()).filter(f -> b(f) != null).collect(Collectors.toList());
                 if (e != null) {
-                    je(e,(key,value) -> {
-                        Field set = adapt.stream().filter(g -> key.equals(g.getName()) || Arrays.asList(b(g).aliases()).contains(key)).findFirst().orElse(null);
-                        if (set != null) fieldset(a).accept(set,value);
-                    });
+                    je(e,(key,value) -> adapt.stream().filter(g -> key.equals(g.getName()) || Arrays.asList(b(g).aliases()).contains(key)).findFirst().ifPresent(set -> fieldset(a).accept(set, value)));
                 }
                 Field thr = adapt.stream().filter(q -> {
                     try {

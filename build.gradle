@@ -18,10 +18,13 @@ repositories {
     maven { url "https://repo.dmulloy2.net/repository/public/" }
     maven { url = 'https://oss.sonatype.org/content/repositories/snapshots' }
     maven { url = 'https://oss.sonatype.org/content/repositories/central' }
+    maven { url = 'https://repo.skriptlang.org/releases' }
+    maven { url = 'https://repo.destroystokyo.com/repository/maven-public/' }
 }
 
 dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.24'
+    compileOnly 'com.github.SkriptLang:Skript:dev37c'
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
 
     testCompileOnly 'org.projectlombok:lombok:1.18.24'
