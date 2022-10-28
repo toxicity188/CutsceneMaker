@@ -6,12 +6,10 @@ import com.google.gson.JsonParser;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
-import kor.toxicity.cutscenemaker.util.DataField;
+import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.actions.mechanics.*;
 import kor.toxicity.cutscenemaker.exceptions.NoActionFoundException;
 import kor.toxicity.cutscenemaker.exceptions.NoValueFoundException;
-import kor.toxicity.cutscenemaker.util.ActionContainer;
-import kor.toxicity.cutscenemaker.util.ConfigLoad;
 import kor.toxicity.cutscenemaker.util.conditions.ConditionParser;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -92,18 +90,11 @@ public final class ActionData extends CutsceneData {
                 Class<? extends CutsceneAction> c = actions.get(clazz);
                 CutsceneAction a = c.getDeclaredConstructor(CutsceneManager.class).newInstance(getPlugin().getManager());
                 JsonElement e = parser.parse(k.substring(clazz.length()).replaceAll("=",":"));
-                List<Field> adapt = Arrays.stream(c.getFields()).filter(f -> b(f) != null).collect(Collectors.toList());
-                if (e != null) {
-                    je(e,(key,value) -> adapt.stream().filter(g -> key.equals(g.getName()) || Arrays.asList(b(g).aliases()).contains(key)).findFirst().ifPresent(set -> fieldset(a).accept(set, value)));
-                }
-                Field thr = adapt.stream().filter(q -> {
-                    try {
-                        return b(q).throwable() && q.get(a) == null;
-                    } catch (Exception ex) {
-                        return true;
-                    }
-                }).findFirst().orElse(null);
-                if (thr != null) throw new NoValueFoundException("Class \"" + clazz + "\" must set value \"" + thr.getName() + "\"");
+
+                DataObject<CutsceneAction> obj = new DataObject<>(a);
+
+                obj.apply(e.getAsJsonObject());
+                if (!obj.isLoaded()) throw new NoValueFoundException("Class \"" + clazz + "\" must set value \"" + TextParser.getInstance().toSingleText(obj.getErrorField()) + "\"");
                 a.initialize();
                 return a;
             } catch (Exception e) {

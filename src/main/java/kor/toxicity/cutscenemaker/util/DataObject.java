@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 public class DataObject<T> {
 
     private final T t;
-    private boolean check;
+    private List<String> check;
 
     public DataObject(T t) {
         this.t = t;
@@ -23,15 +23,19 @@ public class DataObject<T> {
         assert j != null;
         List<Field> f = c();
         j.entrySet().forEach(e ->  f.stream().filter(a -> a.getName().equals(e.getKey()) || Arrays.asList(a(a).aliases()).contains(e.getKey())).findFirst().ifPresent(b -> b(t).accept(b, e.getValue())));
-        check = f.stream().noneMatch(a -> {
+        check = f.stream().filter(a -> {
             try {
                 return a(a).throwable() && a.get(t) == null;
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
-        });
+        }).map(Field::getName).collect(Collectors.toList());
     }
     public boolean isLoaded() {
+        return check.isEmpty();
+    }
+
+    public List<String> getErrorField() {
         return check;
     }
 
