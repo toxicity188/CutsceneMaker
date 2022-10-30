@@ -21,6 +21,7 @@ public class ActionContainer {
     private final List<CutsceneAction> actions;
     private Predicate<LivingEntity> conditions;
 
+    private BukkitTask delay;
 
     private final Map<LivingEntity,ActionRunning> tasks = new HashMap<>();
 
@@ -39,8 +40,9 @@ public class ActionContainer {
     }
 
     public boolean run(LivingEntity entity) {
-        if (conditions != null && !conditions.test(entity)) return false;
+        if ((conditions != null && !conditions.test(entity)) || delay != null) return false;
         if (tasks.containsKey(entity)) tasks.get(entity).kill();
+        delay = Bukkit.getScheduler().runTaskLaterAsynchronously(pl,() -> delay = null,4);
         tasks.put(entity,new ActionRunning(entity));
         return true;
     }

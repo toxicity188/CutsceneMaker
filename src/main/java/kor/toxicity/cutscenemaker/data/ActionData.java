@@ -1,30 +1,27 @@
 package kor.toxicity.cutscenemaker.data;
 
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
-import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.actions.mechanics.*;
 import kor.toxicity.cutscenemaker.exceptions.NoActionFoundException;
 import kor.toxicity.cutscenemaker.exceptions.NoValueFoundException;
+import kor.toxicity.cutscenemaker.util.ActionContainer;
+import kor.toxicity.cutscenemaker.util.ConfigLoad;
+import kor.toxicity.cutscenemaker.util.DataObject;
+import kor.toxicity.cutscenemaker.util.TextParser;
 import kor.toxicity.cutscenemaker.util.conditions.ConditionParser;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.LivingEntity;
 
-import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 public final class ActionData extends CutsceneData {
 
@@ -52,8 +49,11 @@ public final class ActionData extends CutsceneData {
         actionContainer.clear();
         ConfigLoad config = getPlugin().read("Action");
         config.getAllFiles().forEach(s -> {
+
             List<String> key = config.getStringList(s + ".Actions");
             List<String> condition = config.getStringList(s + ".Conditions");
+            List<String> events = config.getStringList(s + ".Events");
+
             ActionContainer container = new ActionContainer(getPlugin());
             if (key != null) {
                 key.forEach(k -> {
@@ -80,6 +80,12 @@ public final class ActionData extends CutsceneData {
                 }
                 container.setConditions(cond);
             }
+            if (events != null) {
+                events.forEach(e -> {
+                    String t = getFirst(e);
+                    EventData.addListener(container,t,parser.parse(getLast(e,t)).getAsJsonObject());
+                });
+            }
         });
         CutsceneMaker.send(ChatColor.GREEN + Integer.toString(actionContainer.size()) + " actions successfully loaded.");
     }
@@ -104,32 +110,6 @@ public final class ActionData extends CutsceneData {
             throw new NoActionFoundException("Unable to load Action \"" + clazz + "\".");
         }
     }
-    private DataField b(Field f) {
-        return f.getDeclaredAnnotation(DataField.class);
-    }
-    private BiConsumer<Field,JsonElement> fieldset(Object a) {
-        return (f,j) -> {
-            try {
-                Object p = null;
-                if (f.getType() == Integer.TYPE) p = j.getAsInt();
-                if (f.getType() == Double.TYPE) p = j.getAsDouble();
-                if (f.getType() == Float.TYPE) p = j.getAsFloat();
-                if (f.getType() == Boolean.TYPE) p = j.getAsBoolean();
-                if (f.getType() == String.class) p = j.getAsString();
-                if (f.getType() == JsonObject.class && j.isJsonObject()) p = j.getAsJsonObject();
-                f.set(a, p);
-            } catch (IllegalAccessException ignored) {}
-        };
-    }
-
-    private void je(JsonElement e, BiConsumer<String,JsonElement> action) {
-        if (!e.isJsonObject()) return;
-        e.getAsJsonObject().entrySet().forEach(s -> action.accept(s.getKey(),s.getValue()));
-    }
-    private void ja(JsonElement e, Consumer<JsonElement> action) {
-        if (!e.isJsonArray()) return;
-        e.getAsJsonArray().forEach(action);
-    }
 
     private String getFirst(String s) {
         StringBuilder ret = new StringBuilder();
@@ -139,6 +119,9 @@ public final class ActionData extends CutsceneData {
             loop ++;
         }
         return ret.toString().replaceAll(" ","");
+    }
+    private String getLast(String t, String first) {
+        return t.substring(first.length()).replaceAll("=",":");
     }
 
     public static void addAction(String name, Class<? extends CutsceneAction> action) {

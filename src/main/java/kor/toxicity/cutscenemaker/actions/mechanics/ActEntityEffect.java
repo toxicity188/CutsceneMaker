@@ -8,7 +8,7 @@ import org.bukkit.entity.LivingEntity;
 
 public class ActEntityEffect extends RepeatableAction {
 
-    @DataField
+    @DataField(throwable = true)
     public String type;
 
     private EntityEffect effect;
@@ -20,7 +20,7 @@ public class ActEntityEffect extends RepeatableAction {
     @Override
     public void initialize() {
         try {
-            effect = EntityEffect.valueOf(type);
+            effect = EntityEffect.valueOf(type.toUpperCase());
         } catch (Exception e) {
             effect = EntityEffect.HURT;
         }

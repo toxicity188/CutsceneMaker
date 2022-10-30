@@ -1,6 +1,7 @@
 package kor.toxicity.cutscenemaker;
 
 import kor.toxicity.cutscenemaker.data.ActionData;
+import kor.toxicity.cutscenemaker.data.EventData;
 import kor.toxicity.cutscenemaker.data.Reloadable;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
@@ -9,12 +10,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public final class CutsceneMaker extends JavaPlugin {
 
-    private final Set<Reloadable> reload = new HashSet<>();
+    private final Set<Reloadable> reload = new LinkedHashSet<>();
     private static CutsceneManager manager;
 
     @Override
@@ -23,6 +24,7 @@ public final class CutsceneMaker extends JavaPlugin {
         new File(this.getDataFolder().getAbsolutePath() + "\\User").mkdir();
 
         manager = new CutsceneManager(this);
+        reload.add(new EventData(this));
         reload.add(new ActionData(this));
         load();
         getCommand("cutscene").setExecutor(new CutsceneCommand(this));

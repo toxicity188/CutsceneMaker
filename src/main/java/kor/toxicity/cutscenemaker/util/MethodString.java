@@ -1,5 +1,6 @@
 package kor.toxicity.cutscenemaker.util;
 
+import kor.toxicity.cutscenemaker.util.conditions.ConditionParser;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.bukkit.entity.LivingEntity;
@@ -29,9 +30,16 @@ public class MethodString {
             for (String t : (s.contains("%") ? s.split("%") : new String[] {s})) {
                 loop ++;
                 if (Math.floorMod(loop,2) == 0) {
-
+                    Function<LivingEntity,?> f = ConditionParser.LIVING_ENTITY.getAsFunc(t);
+                    if (f != null) print.add(e -> f.apply(e).toString());
                 } else print.add(q -> s);
             }
+        }
+
+        public String print(LivingEntity e) {
+            StringBuilder t = new StringBuilder();
+            print.stream().map(f -> f.apply(e)).forEach(t::append);
+            return t.toString();
         }
 
     }

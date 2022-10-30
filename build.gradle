@@ -33,7 +33,7 @@ dependencies {
     implementation group: 'com.opencsv', name: 'opencsv', version: '4.6'
 
     compileOnly 'com.github.Slikey:EffectLib:master'
-    compileOnly group: "com.comphenix.protocol", name: "ProtocolLib", version: "4.8.0";
+    compileOnly group: "com.comphenix.protocol", name: "ProtocolLib", version: "4.8.0"
     compileOnly 'org.spigotmc:spigot-api:1.12.2-R0.1-SNAPSHOT'
 
 }

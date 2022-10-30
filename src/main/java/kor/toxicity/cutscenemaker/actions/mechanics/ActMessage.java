@@ -3,7 +3,7 @@ package kor.toxicity.cutscenemaker.actions.mechanics;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.util.DataField;
 import kor.toxicity.cutscenemaker.actions.RepeatableAction;
-import org.bukkit.entity.Entity;
+import kor.toxicity.cutscenemaker.util.MethodString;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -34,8 +34,8 @@ public class ActMessage extends RepeatableAction {
 
     private String[] m;
     private String[] st;
-    private BiConsumer<Entity,Integer> act;
-    private final Map<Entity,Integer> id;
+    private BiConsumer<LivingEntity,Integer> act;
+    private final Map<LivingEntity,Integer> id;
 
     public ActMessage(CutsceneManager pl) {
         super(pl);
@@ -50,7 +50,7 @@ public class ActMessage extends RepeatableAction {
         switch (type) {
             default:
             case "message":
-                act = (e,i) -> e.sendMessage(b(e,m[i]));
+                act = (e,i) -> e.sendMessage(b(e,c(e,m[i])));
                 break;
             case "title":
                 act = (e,i) -> {
@@ -64,8 +64,11 @@ public class ActMessage extends RepeatableAction {
         String t = s.replaceAll("&","§");
         c.accept(s.contains("/") ? t.split("/") : new String[] {t});
     }
-    private String b(Entity e, String a) {
+    private String b(LivingEntity e, String a) {
         return a.replaceAll("<name>",e.getName());
+    }
+    private String c(LivingEntity e, String t) {
+        return MethodString.getInstance().parse(t).print(e);
     }
 
     @Override
@@ -83,4 +86,5 @@ public class ActMessage extends RepeatableAction {
     protected void end(LivingEntity end) {
         id.remove(end);
     }
+
 }

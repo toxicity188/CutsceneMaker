@@ -7,7 +7,6 @@ import de.slikey.effectlib.EffectManager;
 import kor.toxicity.cutscenemaker.actions.mechanics.ActSetSkriptVar;
 import kor.toxicity.cutscenemaker.data.ActionData;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
-import kor.toxicity.cutscenemaker.util.conditions.ConditionParser;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import kor.toxicity.cutscenemaker.util.vars.VarsContainer;
 import lombok.Getter;
@@ -34,8 +33,11 @@ public final class CutsceneManager {
 
     CutsceneManager(JavaPlugin plugin) {
         this.plugin = plugin;
+
         this.user = new CutsceneUser();
+        Bukkit.getOnlinePlayers().forEach(this.user::load);
         EvtUtil.register(plugin,user);
+
         ProtocolLib = ProtocolLibrary.getProtocolManager();
         if (Bukkit.getPluginManager().isPluginEnabled("EffectLib")) EffectLib = new EffectManager(plugin);
         if (Bukkit.getPluginManager().isPluginEnabled("Skript")) {
@@ -65,10 +67,13 @@ public final class CutsceneManager {
 
         @EventHandler
         public void onJoin(PlayerJoinEvent e) {
-            VarsContainer c = new VarsContainer(e.getPlayer());
+            load(e.getPlayer());
+        }
+        private void load(Player player) {
+            VarsContainer c = new VarsContainer(player);
             try {
                 c.load(plugin);
-                container.put(e.getPlayer(),c);
+                container.put(player,c);
             } catch (Exception t) {
                 c.register(plugin);
             }

@@ -62,6 +62,13 @@ public final class ConditionParser<T> {
             }
         } else return null;
     }
+    public Function<T,?> getAsFunc(String t) {
+        Function<T,?> f = BOOL.getAsFunc(t,null);
+        if (f == null) f = NUMBER.getAsFunc(t,null);
+        if (f == null) f = STRING.getAsFunc(t, null);
+        return f;
+
+    }
 
     private ConditionParser() {
 
@@ -142,7 +149,7 @@ public final class ConditionParser<T> {
                     return m.getAsFunction(e.getAsJsonArray());
                 }
             }
-            return t -> def;
+            return (def != null) ? t -> def : null;
         }
         private String a(String s) {
             StringBuilder ret = new StringBuilder();
