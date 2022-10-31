@@ -2,7 +2,9 @@ package kor.toxicity.cutscenemaker.util;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 
 import java.util.List;
 
@@ -34,5 +36,13 @@ public final class TextParser {
             if (l < text.size()) a.append(comma);
         }
         return a.toString();
+    }
+
+    public String getEntityName(Entity e) {
+        return (e.getName() != null && !e.getName().equals("")) ? uncolored(e.getName()) : e.getType().toString().toLowerCase();
+    }
+
+    public String uncolored(String s) {
+        return ChatColor.stripColor(s);
     }
 }

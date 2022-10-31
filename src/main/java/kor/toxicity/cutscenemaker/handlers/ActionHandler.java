@@ -24,6 +24,7 @@ public abstract class ActionHandler implements Listener {
         handlers.put("blockbreak", HandlerBlockBreak.class);
         handlers.put("blockclick", HandlerBlockClick.class);
         handlers.put("command", HandlerCommand.class);
+        handlers.put("entityclick", HandlerEntityClick.class);
     }
 
     private final ActionContainer container;
