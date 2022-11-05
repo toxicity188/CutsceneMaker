@@ -21,6 +21,10 @@ public class ActTeleport extends RepeatableAction {
     public double yCord = 0;
     @DataField(aliases = "z")
     public double zCord = 0;
+    @DataField(aliases = "p")
+    public float pitch;
+    @DataField
+    public float yaw;
 
     @DataField(aliases = "sxo")
     public double startX;
@@ -58,7 +62,7 @@ public class ActTeleport extends RepeatableAction {
         TeleportRecord record = new TeleportRecord();
         record.loc = (absolute) ? new Location((world != null && Bukkit.getWorld(world) != null) ? Bukkit.getWorld(world) : entity.getWorld(), startX,startY,startZ) : entity.getLocation().clone().add(startX,startY,startZ);
         if (Math.abs(setPitch) <= 90) record.loc.setPitch(-(float) setPitch);
-        if (Math.abs(setYaw) < 180) record.loc.setPitch(-(float) setYaw);
+        if (Math.abs(setYaw) < 180) record.loc.setYaw((float) setYaw);
         if (orient) {
             double t = Math.toRadians(-record.loc.getYaw());
 
@@ -79,12 +83,16 @@ public class ActTeleport extends RepeatableAction {
             record.y = yCord * getInterval();
             record.z = zCord * getInterval();
         }
+        record.pitch = -pitch * (float) getInterval();
+        record.yaw = yaw * (float) getInterval();
         task.put(entity,record);
     }
     @Override
     public void update(LivingEntity player) {
         TeleportRecord record = task.get(player);
         record.loc.add(record.x,record.y,record.z);
+        record.loc.setPitch(record.loc.getPitch() + record.pitch);
+        record.loc.setYaw(record.loc.getYaw() + record.yaw);
         if (surface) while (record.loc.getBlock().getType() != Material.AIR) record.loc.add(0,1,0);
         player.teleport(record.loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
     }
@@ -99,5 +107,7 @@ public class ActTeleport extends RepeatableAction {
         private double x;
         private double y;
         private double z;
+        private float pitch;
+        private float yaw;
     }
 }

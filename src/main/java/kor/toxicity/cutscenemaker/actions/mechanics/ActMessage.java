@@ -16,6 +16,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class ActMessage extends RepeatableAction {
 
@@ -25,8 +26,11 @@ public class ActMessage extends RepeatableAction {
     public String subtitle = "";
     @DataField(aliases = {"r","rand"})
     public boolean random = false;
-    @DataField()
+    @DataField
     public String type = "message";
+
+    @DataField(aliases = "b")
+    public int blank = 1;
 
     @DataField(aliases = "fi")
     public int fadein = 10;
@@ -54,7 +58,14 @@ public class ActMessage extends RepeatableAction {
         switch (type) {
             default:
             case "message":
-                act = (e,i) -> e.sendMessage(m.get(i).print(e));
+                if (blank > 0) {
+                    Consumer<LivingEntity> c = e -> IntStream.range(0, blank).forEach(i -> e.sendMessage(""));
+                    act = (e, i) -> {
+                        c.accept(e);
+                        e.sendMessage(m.get(i).print(e));
+                        c.accept(e);
+                    };
+                } else act = (e,i) -> e.sendMessage(m.get(i).print(e));
                 break;
             case "title":
                 act = (e,i) -> {
