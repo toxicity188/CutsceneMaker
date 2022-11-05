@@ -2,14 +2,16 @@ package kor.toxicity.cutscenemaker;
 
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
-import com.comphenix.protocol.events.PacketListener;
 import de.slikey.effectlib.EffectManager;
 import kor.toxicity.cutscenemaker.actions.mechanics.ActSetSkriptVar;
 import kor.toxicity.cutscenemaker.data.ActionData;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
+import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import kor.toxicity.cutscenemaker.util.vars.VarsContainer;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -49,9 +51,8 @@ public final class CutsceneManager {
         return Bukkit.getScheduler().runTaskTimer(plugin,task,delay,time);
     }
 
-
-    public void register(PacketListener listener) {
-        ProtocolLib.addPacketListener(listener);
+    public ListenerManager register(Listener... listener) {
+        return new ListenerManager(plugin,listener);
     }
 
     public VarsContainer getVars(Player player) {
@@ -60,7 +61,7 @@ public final class CutsceneManager {
     public Vars getVars(Player player, String name) {
         return (getVars(player) != null) ? getVars(player).get(name) : null;
     }
-
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     private class CutsceneUser implements Listener {
 
         private final Map<Player, VarsContainer> container = new HashMap<>();

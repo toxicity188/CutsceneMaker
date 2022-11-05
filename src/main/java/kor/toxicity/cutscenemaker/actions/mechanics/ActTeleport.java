@@ -8,6 +8,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -85,7 +86,7 @@ public class ActTeleport extends RepeatableAction {
         TeleportRecord record = task.get(player);
         record.loc.add(record.x,record.y,record.z);
         if (surface) while (record.loc.getBlock().getType() != Material.AIR) record.loc.add(0,1,0);
-        player.teleport(record.loc);
+        player.teleport(record.loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
     }
 
     @Override

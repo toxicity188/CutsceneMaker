@@ -6,7 +6,6 @@ import kor.toxicity.cutscenemaker.util.DataField;
 import kor.toxicity.cutscenemaker.util.TextParser;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 
 import java.util.function.Predicate;

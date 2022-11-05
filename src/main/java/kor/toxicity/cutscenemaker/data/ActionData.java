@@ -39,6 +39,8 @@ public final class ActionData extends CutsceneData {
         actions.put("set",ActSetVariable.class);
         actions.put("add",ActAddVariable.class);
         actions.put("entityeffect", ActEntityEffect.class);
+        actions.put("potion", ActPotionEffect.class);
+        actions.put("slate", ActReady.class);
     }
     public ActionData(CutsceneMaker pl) {
         super(pl);
