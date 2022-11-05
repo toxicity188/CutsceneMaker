@@ -46,6 +46,7 @@ public final class ActionData extends CutsceneData {
         actions.put("mark",ActMark.class);
         actions.put("recall", ActRecall.class);
         actions.put("delete", ActDeleteVariable.class);
+        actions.put("command", ActCommand.class);
     }
     public ActionData(CutsceneMaker pl) {
         super(pl);
@@ -141,7 +142,7 @@ public final class ActionData extends CutsceneData {
     }
 
     public static void addAction(String name, Class<? extends CutsceneAction> action) {
-        if (!actions.containsKey(name)) actions.put(name,action);
+        actions.putIfAbsent(name,action);
     }
     public static boolean start(String name, LivingEntity entity) {
         if (!actionContainer.containsKey(name)) return false;
