@@ -1,15 +1,21 @@
 package kor.toxicity.cutscenemaker.handlers.types;
 
 import kor.toxicity.cutscenemaker.handlers.ActionHandler;
+import kor.toxicity.cutscenemaker.handlers.enums.EventClickType;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.DataField;
+import kor.toxicity.cutscenemaker.util.TextParser;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 public class HandlerBlockClick extends ActionHandler {
@@ -22,6 +28,10 @@ public class HandlerBlockClick extends ActionHandler {
     public String world;
     @DataField(aliases = "c")
     public boolean cancel = false;
+    @DataField(aliases = {"a", "act"})
+    public String action;
+    @DataField(aliases = "s")
+    public boolean sneaking = false;
 
     private Predicate<PlayerInteractEvent> check = PlayerInteractEvent::hasBlock;
 
@@ -57,9 +67,24 @@ public class HandlerBlockClick extends ActionHandler {
                 }
             } catch (Exception ignored) {}
         }
+        if (action != null) {
+            try {
+                List<Action> act = new ArrayList<>();
+                Arrays.stream(TextParser.getInstance().split(action, "or")).map(s -> {
+                    try {
+                        return EventClickType.valueOf(s.toUpperCase());
+                    } catch (Exception e) {
+                        return null;
+                    }
+                }).filter(Objects::nonNull).forEach(e -> act.addAll(Arrays.asList(e.getAct())));
+                if (act.size() > 0) build(e -> act.contains(e.getAction()));
+            } catch (Exception ignored) {}
+        }
+        if (sneaking) build(e -> e.getPlayer().isSneaking());
         type = null;
         location = null;
         world = null;
+        action = null;
     }
 
     @EventHandler

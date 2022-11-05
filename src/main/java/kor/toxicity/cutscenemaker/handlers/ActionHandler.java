@@ -25,10 +25,11 @@ public abstract class ActionHandler implements Listener {
         handlers.put("blockclick", HandlerBlockClick.class);
         handlers.put("command", HandlerCommand.class);
         handlers.put("entityclick", HandlerEntityClick.class);
+        handlers.put("kill", HandlerKill.class);
     }
 
     private final ActionContainer container;
-    public void apply(final LivingEntity entity) {
+    public final void apply(final LivingEntity entity) {
         container.run(entity);
     }
 
@@ -51,7 +52,7 @@ public abstract class ActionHandler implements Listener {
         }
         return null;
     }
-    public void unregister() {
+    public final void unregister() {
         HandlerList.unregisterAll(this);
     }
 }

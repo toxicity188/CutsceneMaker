@@ -1,17 +1,21 @@
 package kor.toxicity.cutscenemaker.actions.mechanics;
 
 import kor.toxicity.cutscenemaker.CutsceneManager;
-import kor.toxicity.cutscenemaker.util.DataField;
 import kor.toxicity.cutscenemaker.actions.RepeatableAction;
+import kor.toxicity.cutscenemaker.util.DataField;
 import kor.toxicity.cutscenemaker.util.MethodString;
+import kor.toxicity.cutscenemaker.util.TextParser;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class ActMessage extends RepeatableAction {
 
@@ -32,8 +36,8 @@ public class ActMessage extends RepeatableAction {
     public int fadeout = 10;
 
 
-    private String[] m;
-    private String[] st;
+    private List<MethodString.MethodInterpreter> m;
+    private List<MethodString.MethodInterpreter> st;
     private BiConsumer<LivingEntity,Integer> act;
     private final Map<LivingEntity,Integer> id;
 
@@ -50,25 +54,18 @@ public class ActMessage extends RepeatableAction {
         switch (type) {
             default:
             case "message":
-                act = (e,i) -> e.sendMessage(b(e,c(e,m[i])));
+                act = (e,i) -> e.sendMessage(m.get(i).print(e));
                 break;
             case "title":
                 act = (e,i) -> {
-                    if (e instanceof Player) ((Player) e).sendTitle(b(e,m[Math.min(m.length-1,i)]), b(e,st[Math.min(st.length-1,i)]), fadein, stay, fadeout);
+                    if (e instanceof Player) ((Player) e).sendTitle(m.get(Math.min(m.size()-1,i)).print(e), st.get(Math.min(st.size()-1,i)).print(e), fadein, stay, fadeout);
                 };
                 break;
         }
     }
-    private void a(String s, Consumer<String[]> c) {
+    private void a(String s, Consumer<List<MethodString.MethodInterpreter>> c) {
         if (s == null) return;
-        String t = s.replaceAll("&","§");
-        c.accept(s.contains("/") ? t.split("/") : new String[] {t});
-    }
-    private String b(LivingEntity e, String a) {
-        return a.replaceAll("<name>",e.getName());
-    }
-    private String c(LivingEntity e, String t) {
-        return MethodString.getInstance().parse(t).print(e);
+        c.accept(Arrays.stream(TextParser.getInstance().split(s.replaceAll("&","§"),"/")).map(q -> MethodString.getInstance().parse(q)).collect(Collectors.toList()));
     }
 
     @Override
@@ -78,7 +75,7 @@ public class ActMessage extends RepeatableAction {
 
     @Override
     protected void update(LivingEntity entity) {
-        act.accept(entity,(random) ? ThreadLocalRandom.current().nextInt(0,m.length) : Math.min(m.length - 1,id.get(entity)));
+        act.accept(entity,(random) ? ThreadLocalRandom.current().nextInt(0,m.size()) : Math.min(m.size() - 1,id.get(entity)));
         id.put(entity,id.get(entity) + 1);
     }
 

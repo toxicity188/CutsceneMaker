@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.util.JsonMethod;
+import kor.toxicity.cutscenemaker.util.RegionUtil;
 import kor.toxicity.cutscenemaker.util.TextParser;
 import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
@@ -16,7 +17,6 @@ import org.bukkit.inventory.ItemStack;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 public final class ConditionParser<T> {
 
@@ -39,20 +39,26 @@ public final class ConditionParser<T> {
         LIVING_ENTITY.NUMBER.addFunction("health%",(e,j) -> e.getHealth()/e.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
         LIVING_ENTITY.NUMBER.addFunction("health",(e,j) -> e.getHealth());
         LIVING_ENTITY.STRING.addFunction("name",(e,j) -> {
-            if (j.size() > 0) return Bukkit.getPlayer(j.getAsString()).getName();
+            if (j.size() > 0) return Bukkit.getPlayer(j.get(0).getAsString()).getName();
             return e.getName();
         });
         LIVING_ENTITY.BOOL.addFunction("op",(e,j) -> e.isOp());
+        LIVING_ENTITY.BOOL.addFunction("inregion",(e,j) -> {
+            if (j.size() > 0) {
+                return RegionUtil.getInstance().inRegion(e,j.get(0).getAsString(),j.size() > 1 ? j.get(1).getAsString() : null);
+            }
+            return false;
+        });
 
     }
 
-    public Predicate<T> getByString(String[] t) {
+    public ActionPredicate<T> getByString(String[] t) {
         if (t.length >= 3) {
             switch (t[2]) {
                 default:
                     try {
-                        long d = Long.parseLong(t[2]);
-                        return NUMBER.parse(NUMBER.getAsFunc(t[0],Long.parseLong(t[0])),t[1],d);
+                        double d = Double.parseDouble(t[2]);
+                        return NUMBER.parse(NUMBER.getAsFunc(t[0],Double.parseDouble(t[0])),t[1],d);
                     } catch (Exception e) {
                         return STRING.parse(STRING.getAsFunc(t[0],t[0]), t[1],t[2]);
                     }
@@ -72,12 +78,12 @@ public final class ConditionParser<T> {
 
     private ConditionParser() {
 
-        NUMBER.addOperator("==", (a,b) -> a.longValue() == b.longValue());
-        NUMBER.addOperator(">=",(a,b) -> a.longValue() >= b.longValue());
-        NUMBER.addOperator("<=",(a,b) -> a.longValue() <= b.longValue());
-        NUMBER.addOperator(">",(a,b) -> a.longValue() > b.longValue());
-        NUMBER.addOperator("<",(a,b) -> a.longValue() < b.longValue());
-        NUMBER.addOperator("!=",(a,b) -> a.longValue() != b.longValue());
+        NUMBER.addOperator("==", (a,b) -> a.doubleValue() == b.doubleValue());
+        NUMBER.addOperator(">=",(a,b) -> a.doubleValue() >= b.doubleValue());
+        NUMBER.addOperator("<=",(a,b) -> a.doubleValue() <= b.doubleValue());
+        NUMBER.addOperator(">",(a,b) -> a.doubleValue() > b.doubleValue());
+        NUMBER.addOperator("<",(a,b) -> a.doubleValue() < b.doubleValue());
+        NUMBER.addOperator("!=",(a,b) -> a.doubleValue() != b.doubleValue());
 
         BOOL.addOperator("==",(a,b) -> a == b);
         BOOL.addOperator("!=",(a,b) -> a != b);
@@ -109,12 +115,12 @@ public final class ConditionParser<T> {
             func = new HashMap<>();
         }
 
-        public Predicate<T> parse(Function<T,R> f, String action, R t) {
+        public ActionPredicate<T> parse(Function<T,R> f, String action, R t) {
             ComparisonOperator<R> c = comp.get(action.toLowerCase());
             if (f == null && c == null) return null;
             return parse(f,c,t);
         }
-        public Predicate<T> parse(Function<T,R> f, ComparisonOperator<R> c, R t) {
+        public ActionPredicate<T> parse(Function<T,R> f, ComparisonOperator<R> c, R t) {
             return q -> {
                 try {
                     return c.get(f.apply(q), t);

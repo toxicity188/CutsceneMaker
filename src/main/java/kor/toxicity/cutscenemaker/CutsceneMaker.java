@@ -2,6 +2,7 @@ package kor.toxicity.cutscenemaker;
 
 import kor.toxicity.cutscenemaker.data.ActionData;
 import kor.toxicity.cutscenemaker.data.EventData;
+import kor.toxicity.cutscenemaker.data.ItemData;
 import kor.toxicity.cutscenemaker.data.Reloadable;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
@@ -25,6 +26,7 @@ public final class CutsceneMaker extends JavaPlugin {
 
         manager = new CutsceneManager(this);
         reload.add(new EventData(this));
+        reload.add(new ItemData(this));
         reload.add(new ActionData(this));
         load();
         getCommand("cutscene").setExecutor(new CutsceneCommand(this));

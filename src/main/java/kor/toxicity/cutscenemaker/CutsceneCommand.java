@@ -6,13 +6,19 @@ import kor.toxicity.cutscenemaker.commands.CommandPacket;
 import kor.toxicity.cutscenemaker.commands.SenderType;
 import kor.toxicity.cutscenemaker.data.ActionData;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.yaml.snakeyaml.Yaml;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -46,6 +52,40 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
                 boolean r = ActionData.start(pkg.getArgs()[1],(LivingEntity) pkg.getSender());
                 if (!r) send(pkg.getSender(), "run failed.");
                 else send(pkg.getSender(),"run success!");
+            }
+            @CommandHandler(aliases = "아이템", length = 3,description = "get or set item.",usage = "/cutscene item <get/set> <file> <key>",sender = {SenderType.PLAYER})
+            public void item(CommandPacket pkg) {
+                String[] args = pkg.getArgs();
+                Player player = (Player) pkg.getSender();
+                ItemStack item = player.getInventory().getItemInMainHand();
+                if (item == null || item.getType() == Material.AIR) {
+                    send(pkg.getSender(), "hand item you want to save.");
+                    return;
+                }
+                try {
+                    YamlConfiguration config = new YamlConfiguration();
+                    File dir = new File(pl.getDataFolder().getAbsolutePath() + "\\Items\\" + args[2] + ".yml");
+                    if (!dir.exists()) dir.createNewFile();
+                    config.load(dir);
+                    switch (args[1]) {
+                        default:
+                            send(player, "\"get\" or \"set\" required.");
+                            break;
+                        case "get":
+                            if (config.isSet(args[3]) && config.isItemStack(args[3])) {
+                                player.getInventory().addItem(config.getItemStack(args[3]));
+                                send(player, "successfully get.");
+                            } else send(player, "item not found.");
+                            break;
+                        case "set":
+                            config.set(args[3],item);
+                            config.save(dir);
+                            send(player, "successfully saved.");
+                            break;
+                    }
+                } catch (Exception e) {
+                    send(player, "sorry, cannot save item.");
+                }
             }
         });
     }

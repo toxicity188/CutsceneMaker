@@ -12,6 +12,7 @@ import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
 import kor.toxicity.cutscenemaker.util.DataObject;
 import kor.toxicity.cutscenemaker.util.TextParser;
+import kor.toxicity.cutscenemaker.util.conditions.ActionPredicate;
 import kor.toxicity.cutscenemaker.util.conditions.ConditionParser;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -41,6 +42,10 @@ public final class ActionData extends CutsceneData {
         actions.put("entityeffect", ActEntityEffect.class);
         actions.put("potion", ActPotionEffect.class);
         actions.put("slate", ActReady.class);
+        actions.put("action",ActAction.class);
+        actions.put("mark",ActMark.class);
+        actions.put("recall", ActRecall.class);
+        actions.put("delete", ActDeleteVariable.class);
     }
     public ActionData(CutsceneMaker pl) {
         super(pl);
@@ -71,14 +76,23 @@ public final class ActionData extends CutsceneData {
             else return;
             if (condition != null) {
 
-                Predicate<LivingEntity> cond = null;
+                ActionPredicate<LivingEntity> cond = null;
                 for (String t : condition) {
                     String[] get = t.split(" ");
                     if (cond != null) {
-                        Predicate<LivingEntity> add = ConditionParser.LIVING_ENTITY.getByString(get);
-                        if (add != null) cond = cond.and(add);
+                        ActionPredicate<LivingEntity> add = ConditionParser.LIVING_ENTITY.getByString(get);
+                        if (add != null) cond = cond.addAnd(add);
                     }
                     else cond = ConditionParser.LIVING_ENTITY.getByString(get);
+                    assert cond != null;
+                    if (get.length > 4) switch (get[3]) {
+                        case "cast":
+                            cond = cond.cast(e -> start(get[4],e));
+                            break;
+                        case "castinstead":
+                            cond = cond.castInstead(e -> start(get[4],e));
+                            break;
+                    }
                 }
                 container.setConditions(cond);
             }

@@ -3,6 +3,7 @@ package kor.toxicity.cutscenemaker.actions.mechanics;
 import com.google.gson.JsonObject;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
+import kor.toxicity.cutscenemaker.data.ItemData;
 import kor.toxicity.cutscenemaker.util.DataField;
 import kor.toxicity.cutscenemaker.util.ItemUtil;
 import kor.toxicity.cutscenemaker.util.TextParser;
@@ -32,6 +33,9 @@ public class ActGiveItem extends CutsceneAction {
     @DataField
     public JsonObject tag;
 
+    @DataField(aliases = "c")
+    public String config;
+
 
     private ItemStack give;
 
@@ -41,24 +45,30 @@ public class ActGiveItem extends CutsceneAction {
 
     @Override
     public void initialize() {
-        try {
-            give = new ItemStack(Material.valueOf(type));
-        } catch (Exception e) {
-            give = new ItemStack(Material.IRON_SWORD);
+        if (config != null) {
+            give = ItemData.getItem(config);
         }
-        give.setAmount(amount);
-        give.setDurability((short) durability);
+        if (give == null) {
+            try {
+                give = new ItemStack(Material.valueOf(type));
+            } catch (Exception e) {
+                give = new ItemStack(Material.IRON_SWORD);
+            }
+            give.setAmount(amount);
+            give.setDurability((short) durability);
 
 
-        ItemMeta meta = give.getItemMeta();
-        meta.setDisplayName(a(name));
-        if (lore != null) meta.setLore(Arrays.stream((lore.contains("//") ? lore.split("//") : new String[] {lore})).map(this::a).collect(Collectors.toList()));
-        give.setItemMeta(meta);
+            ItemMeta meta = give.getItemMeta();
+            meta.setDisplayName(a(name));
+            if (lore != null)
+                meta.setLore(Arrays.stream((lore.contains("//") ? lore.split("//") : new String[]{lore})).map(this::a).collect(Collectors.toList()));
+            give.setItemMeta(meta);
 
-        if (tag != null) {
-            Map<String,String> tags = new HashMap<>();
-            tag.entrySet().stream().filter(e -> e.getValue().getAsString() != null).forEach(e -> tags.put(e.getKey(),e.getValue().getAsString()));
-            ItemUtil.setInternalTag(give,tags);
+            if (tag != null) {
+                Map<String, String> tags = new HashMap<>();
+                tag.entrySet().stream().filter(e -> e.getValue().getAsString() != null).forEach(e -> tags.put(e.getKey(), e.getValue().getAsString()));
+                ItemUtil.setInternalTag(give, tags);
+            }
         }
     }
 

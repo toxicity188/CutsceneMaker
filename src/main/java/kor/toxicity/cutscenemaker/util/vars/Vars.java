@@ -12,11 +12,11 @@ public class Vars {
     private String var;
 
     public Number getAsNum() {
-        return getAsNum(0);
+        return getAsNum(0D);
     }
     public Number getAsNum(Number def) {
         try {
-            return Long.parseLong(var);
+            return Double.parseDouble(var);
         } catch (Exception e) {
             return def;
         }

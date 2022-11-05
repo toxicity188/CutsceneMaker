@@ -1,6 +1,7 @@
 package kor.toxicity.cutscenemaker.util;
 
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -10,14 +11,11 @@ import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class TextParser {
-
+    @Getter
     private static final TextParser instance = new TextParser();
 
     public final String comma = ",";
 
-    public static TextParser getInstance() {
-        return instance;
-    }
 
     public String toSimpleLoc(Location loc) {
         return loc.getX() + comma + loc.getY() + comma + loc.getZ();
@@ -36,6 +34,9 @@ public final class TextParser {
             if (l < text.size()) a.append(comma);
         }
         return a.toString();
+    }
+    public String[] split(String t, String index) {
+        return t.contains(index) ? t.split(index) : new String[] {t};
     }
 
     public String getEntityName(Entity e) {
