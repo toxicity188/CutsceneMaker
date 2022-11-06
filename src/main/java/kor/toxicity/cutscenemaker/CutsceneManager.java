@@ -13,6 +13,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -32,6 +33,9 @@ public final class CutsceneManager {
     private EffectManager EffectLib = null;
     @Getter
     private final ProtocolManager ProtocolLib;
+
+    @Getter
+    private final Map<String, Location> locations = new HashMap<>();
 
     CutsceneManager(JavaPlugin plugin) {
         this.plugin = plugin;

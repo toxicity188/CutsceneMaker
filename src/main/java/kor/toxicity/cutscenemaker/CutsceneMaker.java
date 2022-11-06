@@ -1,9 +1,6 @@
 package kor.toxicity.cutscenemaker;
 
-import kor.toxicity.cutscenemaker.data.ActionData;
-import kor.toxicity.cutscenemaker.data.EventData;
-import kor.toxicity.cutscenemaker.data.ItemData;
-import kor.toxicity.cutscenemaker.data.Reloadable;
+import kor.toxicity.cutscenemaker.data.*;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import org.bukkit.Bukkit;
@@ -16,6 +13,8 @@ import java.util.Set;
 
 public final class CutsceneMaker extends JavaPlugin {
 
+    public static final String NAME = "[CutsceneMaker]";
+
     private final Set<Reloadable> reload = new LinkedHashSet<>();
     private static CutsceneManager manager;
 
@@ -27,6 +26,7 @@ public final class CutsceneMaker extends JavaPlugin {
         manager = new CutsceneManager(this);
         reload.add(new EventData(this));
         reload.add(new ItemData(this));
+        reload.add(new LocationData(this));
         reload.add(new ActionData(this));
         load();
         getCommand("cutscene").setExecutor(new CutsceneCommand(this));
@@ -44,8 +44,10 @@ public final class CutsceneMaker extends JavaPlugin {
     }
 
     public static void send(String s) {
-        Bukkit.getConsoleSender().sendMessage("[CutsceneMaker] " + s);
+        Bukkit.getConsoleSender().sendMessage(NAME + " " + s);
     }
+
+    public static void warn(String s) {Bukkit.getLogger().warning(NAME + " " + s);}
 
     public CutsceneManager getManager() {
         return manager;

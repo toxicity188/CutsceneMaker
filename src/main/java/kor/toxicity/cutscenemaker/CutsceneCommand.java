@@ -5,6 +5,7 @@ import kor.toxicity.cutscenemaker.commands.CommandListener;
 import kor.toxicity.cutscenemaker.commands.CommandPacket;
 import kor.toxicity.cutscenemaker.commands.SenderType;
 import kor.toxicity.cutscenemaker.data.ActionData;
+import kor.toxicity.cutscenemaker.util.ConfigWriter;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -85,6 +86,18 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
                     }
                 } catch (Exception e) {
                     send(player, "sorry, cannot save item.");
+                }
+            }
+            @CommandHandler(aliases = {"좌표","loc"}, length = 2,description = "save your location to file data.",usage = "/cutscene location <file> <key>",sender = {SenderType.PLAYER})
+            public void location(CommandPacket pkg) {
+                String[] args = pkg.getArgs();
+                try {
+                    ConfigWriter writer = new ConfigWriter(new File(pl.getDataFolder().getAbsolutePath() + "\\Locations\\" + args[1] + ".yml"));
+                    writer.setLocation(args[2],((Player) pkg.getSender()).getLocation());
+                    writer.save();
+                    send(pkg.getSender(), "successfully saved.");
+                } catch (Exception e) {
+                    send(pkg.getSender(), "sorry, cannot save location.");
                 }
             }
         });

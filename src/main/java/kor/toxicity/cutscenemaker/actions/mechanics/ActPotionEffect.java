@@ -11,7 +11,7 @@ public class ActPotionEffect extends CutsceneAction {
 
     @DataField(throwable = true)
     public String type;
-    @DataField(aliases = {"dur","d"})
+    @DataField(aliases = "dur")
     public int duration = 20;
     @DataField(aliases = {"amp","amplifier","s","str"})
     public int strength = 0;

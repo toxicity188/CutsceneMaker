@@ -53,6 +53,8 @@ public class ActionContainer {
         private int loop;
         private final LivingEntity player;
 
+        private final Map<String,LivingEntity> entities = new HashMap<>();
+
 
         private ActionRunning(LivingEntity player) {
             this.player = player;
@@ -66,6 +68,7 @@ public class ActionContainer {
 
         private void kill() {
             if (task != null) task.cancel();
+            entities.forEach((s,e) -> e.remove());
             EvtUtil.unregister(this);
             ActionContainer.this.tasks.remove(player);
         }

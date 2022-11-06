@@ -8,7 +8,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ItemData extends CutsceneData{
+public final class ItemData extends CutsceneData{
 
     private static ItemData instance;
 

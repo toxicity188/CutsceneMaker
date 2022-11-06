@@ -8,7 +8,7 @@ import kor.toxicity.cutscenemaker.util.ActionContainer;
 import java.util.HashSet;
 import java.util.Set;
 
-public class EventData extends CutsceneData{
+public final class EventData extends CutsceneData{
 
     private final Set<ActionHandler> handlers = new HashSet<>();
     private static EventData instance;
