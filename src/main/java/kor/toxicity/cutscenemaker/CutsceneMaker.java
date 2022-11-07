@@ -28,10 +28,9 @@ public final class CutsceneMaker extends JavaPlugin {
         reload.add(new ItemData(this));
         reload.add(new LocationData(this));
         reload.add(new ActionData(this));
-        load();
         getCommand("cutscene").setExecutor(new CutsceneCommand(this));
 
-        send("Plugin enabled.");
+        load(() -> send("Plugin enabled."));
     }
 
     @Override
@@ -39,8 +38,11 @@ public final class CutsceneMaker extends JavaPlugin {
         send("Plugin disabled.");
     }
 
-    void load() {
-        reload.forEach(Reloadable::reload);
+    void load(Runnable callback) {
+        Bukkit.getScheduler().runTaskAsynchronously(this,() -> {
+            reload.forEach(Reloadable::reload);
+            if (callback != null) callback.run();
+        });
     }
 
     public static void send(String s) {

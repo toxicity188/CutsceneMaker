@@ -44,9 +44,7 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
             @CommandHandler(aliases = {"re","rd","리로드"}, length = 0, description = "reload this plugin.", usage = "/cutscene reload", sender = {SenderType.CONSOLE, SenderType.PLAYER})
             public void reload(CommandPacket pkg) {
                 long time = System.currentTimeMillis();
-                pl.load();
-                time -= System.currentTimeMillis();
-                send(pkg.getSender(),"load finished. (" + -time + "ms)");
+                pl.load(() -> send(pkg.getSender(),"load finished. (" + (System.currentTimeMillis() - time - 50) + "ms)"));
             }
             @CommandHandler(aliases = "실행", length = 1,description = "run Action that has loaded.",usage = "/cutscene run <name>",sender = {SenderType.ENTITY})
             public void run(CommandPacket pkg) {

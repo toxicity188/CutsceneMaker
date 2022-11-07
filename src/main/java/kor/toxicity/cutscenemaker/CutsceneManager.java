@@ -78,10 +78,11 @@ public final class CutsceneManager {
             VarsContainer c = new VarsContainer(player);
             try {
                 c.load(plugin);
-                container.put(player,c);
             } catch (Exception t) {
                 c.register(plugin);
             }
+            c.autoSave(plugin,300);
+            container.put(player,c);
         }
         @EventHandler
         public void onQuit(PlayerQuitEvent e) {
@@ -89,10 +90,11 @@ public final class CutsceneManager {
             if (c != null) {
                 try {
                     c.save(plugin);
-                    container.remove(e.getPlayer());
                 } catch (Exception t) {
                     throw new RuntimeException("An error has occurred.");
                 }
+                c.stop();
+                container.remove(e.getPlayer());
             }
         }
     }
