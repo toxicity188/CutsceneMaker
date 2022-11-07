@@ -62,10 +62,10 @@ public class ActMessage extends RepeatableAction {
                     Consumer<LivingEntity> c = e -> IntStream.range(0, blank).forEach(i -> e.sendMessage(""));
                     act = (e, i) -> {
                         c.accept(e);
-                        e.sendMessage(m.get(i).print(e));
+                        e.sendMessage(m.get(Math.min(m.size()-1,i)).print(e));
                         c.accept(e);
                     };
-                } else act = (e,i) -> e.sendMessage(m.get(i).print(e));
+                } else act = (e,i) -> e.sendMessage(m.get(Math.min(m.size()-1,i)).print(e));
                 break;
             case "title":
                 act = (e,i) -> {
@@ -86,8 +86,9 @@ public class ActMessage extends RepeatableAction {
 
     @Override
     protected void update(LivingEntity entity) {
-        act.accept(entity,(random) ? ThreadLocalRandom.current().nextInt(0,m.size()) : Math.min(m.size() - 1,id.get(entity)));
-        id.put(entity,id.get(entity) + 1);
+        int t = id.get(entity);
+        act.accept(entity,(random) ? ThreadLocalRandom.current().nextInt(0,t) : t);
+        id.put(entity,t + 1);
     }
 
     @Override

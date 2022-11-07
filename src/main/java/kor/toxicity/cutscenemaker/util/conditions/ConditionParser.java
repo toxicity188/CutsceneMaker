@@ -58,7 +58,7 @@ public final class ConditionParser<T> {
                 default:
                     try {
                         double d = Double.parseDouble(t[2]);
-                        return NUMBER.parse(NUMBER.getAsFunc(t[0],Double.parseDouble(t[0])),t[1],d);
+                        return NUMBER.parse(NUMBER.getAsFunc(t[0],0),t[1],d);
                     } catch (Exception e) {
                         return STRING.parse(STRING.getAsFunc(t[0],t[0]), t[1],t[2]);
                     }

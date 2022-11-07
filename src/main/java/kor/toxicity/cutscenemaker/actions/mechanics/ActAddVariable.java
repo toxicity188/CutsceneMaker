@@ -24,7 +24,7 @@ public class ActAddVariable extends CutsceneAction {
     public void apply(LivingEntity entity) {
         if (entity instanceof Player) {
             Vars v = pl.getVars((Player) entity,name);
-            if (v != null) v.setVar(Double.toString(v.getAsNum().doubleValue() + value));
+            if (v != null) v.setVar(Double.toString(v.getAsNum(0D).doubleValue() + value));
 
         }
     }
