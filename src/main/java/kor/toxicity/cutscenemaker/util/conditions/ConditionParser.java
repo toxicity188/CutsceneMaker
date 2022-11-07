@@ -36,7 +36,7 @@ public final class ConditionParser<T> {
             return "<none>";
         });
         LIVING_ENTITY.STRING.addFunction("location",(e,j) -> TextParser.getInstance().toSimpleLoc(e.getLocation()));
-        LIVING_ENTITY.NUMBER.addFunction("health%",(e,j) -> e.getHealth()/e.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
+        LIVING_ENTITY.NUMBER.addFunction("healthpercentage",(e,j) -> e.getHealth()/e.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
         LIVING_ENTITY.NUMBER.addFunction("health",(e,j) -> e.getHealth());
         LIVING_ENTITY.STRING.addFunction("name",(e,j) -> {
             if (j.size() > 0) return Bukkit.getPlayer(j.get(0).getAsString()).getName();

@@ -13,7 +13,7 @@ public class RegionUtil {
     private static final RegionUtil instance = new RegionUtil();
 
     public boolean inRegion(Entity entity, String name, String world) {
-        return WGBukkit.getRegionManager(world != null && Bukkit.getWorld(world) != null ? Bukkit.getWorld(world) : entity.getWorld()).getRegion(name) != null;
+        return WGBukkit.getRegionManager(world != null && Bukkit.getWorld(world) != null ? Bukkit.getWorld(world) : entity.getWorld()).getApplicableRegions(entity.getLocation()).getRegions().stream().anyMatch(l -> l.getId().equals(name));
     }
 
 }
