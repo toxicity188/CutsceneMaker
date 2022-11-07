@@ -83,8 +83,7 @@ public final class ActionData extends CutsceneData {
                         if (add != null) cond = cond.addAnd(add);
                     }
                     else cond = ConditionParser.LIVING_ENTITY.getByString(get);
-                    assert cond != null;
-                    if (get.length > 4) switch (get[3]) {
+                    if (cond != null && get.length > 4) switch (get[3]) {
                         case "cast":
                             cond = cond.cast(e -> start(get[4],e));
                             break;
