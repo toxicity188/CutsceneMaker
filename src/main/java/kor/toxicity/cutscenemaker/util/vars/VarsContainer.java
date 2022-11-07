@@ -32,7 +32,7 @@ public class VarsContainer {
             try {
                 save(pl);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                register(pl);
             }
         },delay,delay);
     }
