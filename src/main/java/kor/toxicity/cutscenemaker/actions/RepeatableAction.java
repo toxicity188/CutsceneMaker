@@ -27,7 +27,10 @@ public abstract class RepeatableAction extends CutsceneAction{
     @Override
     public void apply(LivingEntity entity) {
         initialize(entity);
-        if (ticks == 1) update(entity);
+        if (ticks == 1) {
+            update(entity);
+            end(entity);
+        }
         else {
             if (tasks.containsKey(entity)) tasks.get(entity).kill();
             new RepeatableRun(entity);

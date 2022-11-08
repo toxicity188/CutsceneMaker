@@ -73,7 +73,8 @@ public class ActionContainer {
             if (loop < actions.size()) {
                 CutsceneAction action = actions.get(loop);
                 action.apply(player);
-                task = Bukkit.getScheduler().runTaskLater(pl, this::load,action.delay);
+                if (action.delay == 0) load();
+                else task = Bukkit.getScheduler().runTaskLater(pl, this::load,action.delay);
                 loop++;
             } else {
                 task.cancel();
