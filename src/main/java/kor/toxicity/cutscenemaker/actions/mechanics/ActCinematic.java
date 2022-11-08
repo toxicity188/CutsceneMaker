@@ -8,8 +8,8 @@ import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.function.Function;
 
 public class ActCinematic extends RepeatableAction {
@@ -22,7 +22,7 @@ public class ActCinematic extends RepeatableAction {
     @DataField(aliases = "c")
     public boolean cloak = true;
 
-    private final Map<LivingEntity,Integer> loops = new HashMap<>();
+    private final Map<LivingEntity,Integer> loops = new WeakHashMap<>();
     private final CutsceneManager manager;
     private Location first;
     private Location last;

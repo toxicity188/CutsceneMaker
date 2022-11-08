@@ -12,6 +12,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 public class ActTeleport extends RepeatableAction {
 
@@ -52,7 +53,7 @@ public class ActTeleport extends RepeatableAction {
 
     public ActTeleport(CutsceneManager pl) {
         super(pl);
-        task = new HashMap<>();
+        task = new WeakHashMap<>();
     }
 
 

@@ -9,10 +9,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 
 public class ActionContainer {
@@ -23,7 +20,7 @@ public class ActionContainer {
 
     private BukkitTask delay;
 
-    private final Map<LivingEntity,ActionRunning> tasks = new HashMap<>();
+    private final Map<LivingEntity,ActionRunning> tasks = new WeakHashMap<>();
 
     public ActionContainer(CutsceneMaker pl) {
         this.pl = pl;
@@ -53,7 +50,7 @@ public class ActionContainer {
         private int loop;
         private final LivingEntity player;
 
-        private final Map<String,LivingEntity> entities = new HashMap<>();
+        private final Map<String,LivingEntity> entities = new WeakHashMap<>();
 
 
         private ActionRunning(LivingEntity player) {

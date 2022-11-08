@@ -3,7 +3,8 @@ package kor.toxicity.cutscenemaker.actions.mechanics;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.RepeatableAction;
 import kor.toxicity.cutscenemaker.util.DataField;
-import kor.toxicity.cutscenemaker.util.MethodString;
+import kor.toxicity.cutscenemaker.util.functions.MethodInterpreter;
+import kor.toxicity.cutscenemaker.util.functions.MethodString;
 import kor.toxicity.cutscenemaker.util.TextParser;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -40,8 +41,8 @@ public class ActMessage extends RepeatableAction {
     public int fadeout = 10;
 
 
-    private List<MethodString.MethodInterpreter> m;
-    private List<MethodString.MethodInterpreter> st;
+    private List<MethodInterpreter> m;
+    private List<MethodInterpreter> st;
     private BiConsumer<LivingEntity,Integer> act;
     private final Map<LivingEntity,Integer> id;
 
@@ -74,7 +75,7 @@ public class ActMessage extends RepeatableAction {
                 break;
         }
     }
-    private void a(String s, Consumer<List<MethodString.MethodInterpreter>> c) {
+    private void a(String s, Consumer<List<MethodInterpreter>> c) {
         if (s == null) return;
         c.accept(Arrays.stream(TextParser.getInstance().split(s.replaceAll("&","§"),"/")).map(q -> MethodString.getInstance().parse(q)).collect(Collectors.toList()));
     }

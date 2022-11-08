@@ -3,6 +3,7 @@ package kor.toxicity.cutscenemaker;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.commands.CommandListener;
 import kor.toxicity.cutscenemaker.data.ActionData;
+import kor.toxicity.cutscenemaker.handlers.ActionHandler;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class CutsceneAPI {
@@ -18,6 +19,10 @@ public final class CutsceneAPI {
     }
     public void registerCommand(CommandListener listener) {
         CutsceneCommand.register(pl,listener);
+    }
+
+    public void addEventHandler(String string, Class<? extends ActionHandler> clazz) {
+        ActionHandler.addHandler(string,clazz);
     }
 
 }

@@ -32,6 +32,7 @@ dependencies {
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.24'
 
     implementation group: 'com.opencsv', name: 'opencsv', version: '4.6'
+    compileOnly 'org.xerial:sqlite-jdbc:3.7.2'
 
     compileOnly 'com.sk89q.worldguard:worldguard-legacy:6.2'
     compileOnly 'com.sk89q.worldedit:worldedit-core:6.1.4-SNAPSHOT'
@@ -54,4 +55,5 @@ tasks.withType(JavaCompile) {
 shadowJar {
     setArchivesBaseName("CutsceneMaker")
     relocate("com.opencsv","kor.toxicity.cutscenemaker.shaded.opencsv")
+    relocate("org.apache","kor.toxicity.cutscenemaker.shaded.apache")
 }

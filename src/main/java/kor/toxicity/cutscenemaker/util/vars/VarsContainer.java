@@ -56,8 +56,13 @@ public class VarsContainer {
     }
 
     public Vars get(String key) {
-        if (!vars.containsKey(key)) vars.put(key,new Vars("<none>"));
-        return vars.get(key);
+        if (key.startsWith("*")) {
+            if (!global.containsKey(key)) global.put(key, new Vars("<none>"));
+            return global.get(key);
+        } else {
+            if (!vars.containsKey(key)) vars.put(key, new Vars("<none>"));
+            return vars.get(key);
+        }
     }
 
     public boolean register(JavaPlugin pl) {

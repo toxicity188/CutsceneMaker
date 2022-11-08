@@ -35,6 +35,10 @@ public abstract class ActionHandler implements Listener {
 
     protected abstract void initialize();
 
+    public static void addHandler(String s,Class<? extends ActionHandler> c) {
+        handlers.putIfAbsent(s,c);
+    }
+
     public static ActionHandler addListener(ActionContainer container, String name, JsonObject obj, JavaPlugin plugin) {
         assert container != null && name != null && plugin != null;
         String nameCase = name.toLowerCase();
