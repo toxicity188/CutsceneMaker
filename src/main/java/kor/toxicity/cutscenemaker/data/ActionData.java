@@ -102,6 +102,7 @@ public final class ActionData extends CutsceneData {
                     EventData.addListener(container,t,parser.parse(getLast(e,t)).getAsJsonObject());
                 });
             }
+            container.confirm();
         });
         CutsceneMaker.send(ChatColor.GREEN + Integer.toString(actionContainer.size()) + " actions successfully loaded.");
     }

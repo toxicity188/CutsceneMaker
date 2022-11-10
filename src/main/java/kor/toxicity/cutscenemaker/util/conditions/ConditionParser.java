@@ -16,6 +16,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 
 public final class ConditionParser<T> {
@@ -38,6 +39,24 @@ public final class ConditionParser<T> {
         LIVING_ENTITY.STRING.addFunction("location",(e,j) -> TextParser.getInstance().toSimpleLoc(e.getLocation()));
         LIVING_ENTITY.NUMBER.addFunction("healthpercentage",(e,j) -> e.getHealth()/e.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
         LIVING_ENTITY.NUMBER.addFunction("health",(e,j) -> e.getHealth());
+        LIVING_ENTITY.NUMBER.addFunction("random",(e,j) -> {
+            try {
+                double d = (j.size() > 0) ? j.get(0).getAsDouble() : 0D;
+                double r = (j.size() > 1) ? j.get(1).getAsDouble() : 1D;
+                return ThreadLocalRandom.current().nextDouble(d,r);
+            } catch (Exception t) {
+                return 0;
+            }
+        });
+        LIVING_ENTITY.NUMBER.addFunction("randomInt",(e,j) -> {
+            try {
+                int d = (j.size() > 0) ? j.get(0).getAsInt() : 0;
+                int r = (j.size() > 1) ? j.get(1).getAsInt() : 1;
+                return ThreadLocalRandom.current().nextInt(d,r);
+            } catch (Exception t) {
+                return 0;
+            }
+        });
         LIVING_ENTITY.STRING.addFunction("name",(e,j) -> {
             if (j.size() > 0) return Bukkit.getPlayer(j.get(0).getAsString()).getName();
             return e.getName();

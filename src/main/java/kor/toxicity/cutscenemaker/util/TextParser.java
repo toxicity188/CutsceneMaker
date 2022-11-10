@@ -10,7 +10,8 @@ import org.bukkit.entity.Entity;
 import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class TextParser {
+public final class
+TextParser {
     @Getter
     private static final TextParser instance = new TextParser();
 
