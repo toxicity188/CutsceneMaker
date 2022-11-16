@@ -54,6 +54,12 @@ public final class CutsceneManager {
     public BukkitTask runTaskTimer(Runnable task, long delay, long time) {
         return Bukkit.getScheduler().runTaskTimer(plugin,task,delay,time);
     }
+    public BukkitTask runTaskLater(Runnable task, long delay) {
+        return Bukkit.getScheduler().runTaskLater(plugin,task,delay);
+    }
+    public BukkitTask runTaskLaterAsynchronously(Runnable task, long delay) {
+        return Bukkit.getScheduler().runTaskLaterAsynchronously(plugin,task,delay);
+    }
 
     public ListenerManager register(Listener... listener) {
         return new ListenerManager(plugin,listener);

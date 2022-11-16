@@ -47,6 +47,7 @@ public final class ActionData extends CutsceneData {
         actions.put("delete", ActDeleteVariable.class);
         actions.put("command", ActCommand.class);
         actions.put("cinematic", ActCinematic.class);
+        actions.put("entry", ActEntry.class);
     }
     public ActionData(CutsceneMaker pl) {
         super(pl);

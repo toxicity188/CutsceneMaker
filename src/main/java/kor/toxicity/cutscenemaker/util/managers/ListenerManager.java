@@ -41,9 +41,12 @@ public class ListenerManager {
     }
     public ListenerManager(final JavaPlugin pl, Listener... listener) {
         this(pl);
+        this.listener = new ArrayList<>();
         if (listener != null) {
-            this.listener = Arrays.asList(listener);
-            this.listener.forEach(register);
+            Arrays.stream(listener).forEach(l -> {
+                this.listener.add(l);
+                register.accept(l);
+            });
         }
     }
 
