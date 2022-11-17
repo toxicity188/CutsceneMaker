@@ -1,6 +1,7 @@
 package kor.toxicity.cutscenemaker.handlers;
 
 import com.google.gson.JsonObject;
+import kor.toxicity.cutscenemaker.events.ActionStartEvent;
 import kor.toxicity.cutscenemaker.handlers.types.*;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.DataObject;
@@ -30,7 +31,9 @@ public abstract class ActionHandler implements Listener {
 
     private final ActionContainer container;
     public final void apply(final LivingEntity entity) {
-        container.run(entity);
+        ActionStartEvent event = new ActionStartEvent(entity,container);
+        EvtUtil.call(event);
+        if (!event.isCancelled()) container.run(entity);
     }
 
     protected abstract void initialize();

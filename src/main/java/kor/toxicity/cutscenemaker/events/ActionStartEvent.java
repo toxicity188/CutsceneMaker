@@ -1,0 +1,29 @@
+package kor.toxicity.cutscenemaker.events;
+
+import kor.toxicity.cutscenemaker.util.ActionContainer;
+import lombok.Getter;
+import lombok.Setter;
+import org.bukkit.entity.Entity;
+import org.bukkit.event.Cancellable;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.entity.EntityEvent;
+
+public class ActionStartEvent extends EntityEvent implements ICutsceneEvent, Cancellable {
+
+    @Getter
+    private final ActionContainer container;
+    @Getter
+    @Setter
+    private boolean cancelled;
+
+    public ActionStartEvent(Entity what, ActionContainer container) {
+        super(what);
+        this.container = container;
+    }
+
+    @Override
+    public HandlerList getHandlers() {
+        return ICutsceneEvent.HANDLER;
+    }
+
+}
