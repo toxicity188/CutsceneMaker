@@ -7,7 +7,7 @@ public class SqliteUserDB implements UserDB {
 
     @Override
     public void save(Player player) {
-
+        //TODO make a save code
     }
 
     @Override

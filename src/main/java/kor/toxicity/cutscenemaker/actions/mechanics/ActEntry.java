@@ -5,7 +5,6 @@ import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.wrappers.BlockPosition;
 import com.comphenix.protocol.wrappers.WrappedBlockData;
-import com.comphenix.protocol.wrappers.WrappedWatchableObject;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
@@ -13,10 +12,7 @@ import kor.toxicity.cutscenemaker.data.ActionData;
 import kor.toxicity.cutscenemaker.material.WrappedMaterial;
 import kor.toxicity.cutscenemaker.util.DataField;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Sign;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -24,7 +20,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
@@ -41,10 +36,10 @@ public class ActEntry extends CutsceneAction {
         entries.put("chat",(p,t) -> {
             if (t.message != null) p.sendMessage(t.message);
             ListenerManager manager = t.manager.register();
-            BukkitTask task = t.manager.runTaskLaterAsynchronously(() -> {
+            BukkitTask task = (t.wait > 0) ? t.manager.runTaskLaterAsynchronously(() -> {
                 manager.unregister();
                 if (t.fail != null) p.sendMessage(t.fail);
-            },t.wait * 20L);
+            },t.wait * 20L) : null;
             manager.add(new Listener() {
                 @EventHandler
                 public void chat(AsyncPlayerChatEvent e) {
@@ -64,7 +59,7 @@ public class ActEntry extends CutsceneAction {
                 }
 
                 private void kill() {
-                    task.cancel();
+                    if (task != null) task.cancel();
                     manager.unregister();
                 }
             });
@@ -89,12 +84,18 @@ public class ActEntry extends CutsceneAction {
                 if (t.message != null) p.sendSignChange(loc,new String[] {"", t.message,"",""});
                 manager.sendServerPacket(p,update);
                 ListenerManager listener = t.manager.register();
+                BukkitTask task = (t.wait > 0) ? t.manager.runTaskLaterAsynchronously(() -> {
+                    listener.unregister();
+                    p.closeInventory();
+                    if (t.fail != null) p.sendMessage(t.fail);
+                },t.wait * 20L) : null;
                 listener.register(e -> {
                     if (e.getPlayer().equals(p)) {
                         try {
-                            block.getBlockData().write(0,WrappedBlockData.createData(Material.BEDROCK));
+                            block.getBlockData().write(0,WrappedBlockData.createData(loc.getBlock().getType()));
                             manager.sendServerPacket(p,block);
                         } catch (Exception ignored) {}
+                        if (task != null) task.cancel();
                         t.invoke(p,e.getPacket().getStringArrays().read(0)[0]);
                         listener.unregister();
                     }
@@ -114,8 +115,8 @@ public class ActEntry extends CutsceneAction {
     public String var;
     @DataField(throwable = true)
     public String callback;
-    @DataField
-    public int wait = 10;
+    @DataField(aliases = {"w","wt"})
+    public int wait = -1;
     @DataField
     public String fail;
 
