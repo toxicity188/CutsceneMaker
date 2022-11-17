@@ -9,14 +9,16 @@ import java.util.List;
 import java.util.function.Function;
 
 public class MethodInterpreter {
+
+    public static final String PERCENT = "%";
     private final List<Function<LivingEntity,String>> print;
     MethodInterpreter(String s) {
         print = new ArrayList<>();
         int loop = 0;
-        for (String t : TextParser.getInstance().split(s,"%")) {
+        for (String t : TextParser.getInstance().split(s,PERCENT)) {
             loop ++;
             if (Math.floorMod(loop,2) == 0) {
-                if (t.equals("")) print.add(q -> "%");
+                if (t.equals("")) print.add(q -> PERCENT);
                 else {
                     Function<LivingEntity, ?> f = ConditionParser.LIVING_ENTITY.getAsFunc(t);
                     if (f != null) print.add(e -> {
@@ -38,6 +40,6 @@ public class MethodInterpreter {
     }
 
     private String printNumber(double d) {
-        return (d == (int) d) ? Integer.toString((int) d) : String.format("%.2f", d);
+        return (d == Math.floor(d)) ? Integer.toString((int) d) : String.format("%.2f", d);
     }
 }
