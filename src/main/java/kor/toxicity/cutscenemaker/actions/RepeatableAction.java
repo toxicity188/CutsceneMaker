@@ -2,7 +2,6 @@ package kor.toxicity.cutscenemaker.actions;
 
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.util.DataField;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -15,8 +14,10 @@ public abstract class RepeatableAction extends CutsceneAction{
     public int interval = 1;
     @DataField(aliases = "t")
     public int ticks = 1;
+    @DataField(aliases = "async")
+    public boolean asynchronous = true;
 
-    private final Map<Entity, RepeatableRun> tasks = new HashMap<>();
+    private final Map<LivingEntity, RepeatableRun> tasks = new HashMap<>();
     private final CutsceneManager manager;
 
     public RepeatableAction(CutsceneManager pl) {
@@ -27,7 +28,7 @@ public abstract class RepeatableAction extends CutsceneAction{
     @Override
     public void apply(LivingEntity entity) {
         initialize(entity);
-        if (ticks == 1) {
+        if (ticks <= 1) {
             update(entity);
             end(entity);
         }
@@ -54,8 +55,10 @@ public abstract class RepeatableAction extends CutsceneAction{
         private int loop;
         private RepeatableRun(LivingEntity entity) {
             this.entity = entity;
-            task = manager.runTaskTimer(this,0,interval);
+            if (asynchronous) task = manager.runTaskTimerAsynchronously(this,0,interval);
+            else task = manager.runTaskTimer(this,0,interval);
             tasks.put(entity,this);
+            initialize(entity);
 
         }
 

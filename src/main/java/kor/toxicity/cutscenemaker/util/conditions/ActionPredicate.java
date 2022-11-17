@@ -19,9 +19,8 @@ public interface ActionPredicate<T> extends Predicate<T> {
     default ActionPredicate<T> cast(Consumer<T> action) {
         Objects.requireNonNull(action);
         return t -> {
-            boolean r = test(t);
-            if (r) action.accept(t);
-            return r;
+            if (test(t)) action.accept(t);
+            return true;
         };
     }
 

@@ -82,10 +82,10 @@ public final class ActionData extends CutsceneData {
                 for (String t : condition) {
                     String[] get = t.split(" ");
                     if (cond != null) {
-                        ActionPredicate<LivingEntity> add = ConditionParser.LIVING_ENTITY.getByString(get);
+                        ActionPredicate<LivingEntity> add = ConditionParser.LIVING_ENTITY.find(get);
                         if (add != null) cond = cond.addAnd(add);
                     }
-                    else cond = ConditionParser.LIVING_ENTITY.getByString(get);
+                    else cond = ConditionParser.LIVING_ENTITY.find(get);
                     if (cond != null && get.length > 4) switch (get[3]) {
                         case "cast":
                             cond = cond.cast(e -> start(get[4],e));

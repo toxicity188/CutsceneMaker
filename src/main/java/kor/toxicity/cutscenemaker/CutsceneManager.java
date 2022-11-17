@@ -60,6 +60,9 @@ public final class CutsceneManager {
     public BukkitTask runTaskLaterAsynchronously(Runnable task, long delay) {
         return Bukkit.getScheduler().runTaskLaterAsynchronously(plugin,task,delay);
     }
+    public BukkitTask runTaskTimerAsynchronously(Runnable task, long delay, long time) {
+        return Bukkit.getScheduler().runTaskTimerAsynchronously(plugin,task,delay,time);
+    }
 
     public ListenerManager register(Listener... listener) {
         return new ListenerManager(plugin,listener);
@@ -81,27 +84,31 @@ public final class CutsceneManager {
             load(e.getPlayer());
         }
         private void load(Player player) {
-            VarsContainer c = new VarsContainer(player);
-            try {
-                c.load(plugin);
-            } catch (Exception t) {
-                c.register(plugin);
-            }
-            c.autoSave(plugin,300);
-            container.put(player,c);
+            Bukkit.getScheduler().runTaskAsynchronously(plugin,() -> {
+                VarsContainer c = new VarsContainer(player);
+                try {
+                    c.load(plugin);
+                } catch (Exception t) {
+                    c.register(plugin);
+                }
+                c.autoSave(plugin, 300);
+                container.put(player, c);
+            });
         }
         @EventHandler
         public void onQuit(PlayerQuitEvent e) {
-            VarsContainer c = container.get(e.getPlayer());
-            if (c != null) {
-                try {
-                    c.save(plugin);
-                } catch (Exception t) {
-                    throw new RuntimeException("An error has occurred.");
+            Bukkit.getScheduler().runTaskAsynchronously(plugin,() -> {
+                VarsContainer c = container.get(e.getPlayer());
+                if (c != null) {
+                    try {
+                        c.save(plugin);
+                    } catch (Exception t) {
+                        throw new RuntimeException("An error has occurred.");
+                    }
+                    c.stop();
+                    container.remove(e.getPlayer());
                 }
-                c.stop();
-                container.remove(e.getPlayer());
-            }
+            });
         }
     }
 }

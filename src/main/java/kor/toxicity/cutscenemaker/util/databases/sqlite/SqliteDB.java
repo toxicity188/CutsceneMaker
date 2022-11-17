@@ -13,6 +13,6 @@ public abstract class SqliteDB {
     public Connection getConnection(String dir) throws SQLException, IOException {
         File file = new File(dir+EXTENSION);
         if (!file.exists()) file.createNewFile();
-        return DriverManager.getConnection("jdbc:sqlite:" + dir + EXTENSION);
+        return DriverManager.getConnection("jdbc:sqlite:" + file.getAbsolutePath());
     }
 }

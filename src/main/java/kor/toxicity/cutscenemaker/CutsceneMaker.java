@@ -6,6 +6,7 @@ import kor.toxicity.cutscenemaker.util.vars.Vars;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.util.LinkedHashSet;

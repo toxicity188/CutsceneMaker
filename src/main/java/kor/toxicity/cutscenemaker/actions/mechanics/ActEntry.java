@@ -1,11 +1,22 @@
 package kor.toxicity.cutscenemaker.actions.mechanics;
 
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolManager;
+import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.wrappers.BlockPosition;
+import com.comphenix.protocol.wrappers.WrappedBlockData;
+import com.comphenix.protocol.wrappers.WrappedWatchableObject;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.data.ActionData;
+import kor.toxicity.cutscenemaker.material.WrappedMaterial;
 import kor.toxicity.cutscenemaker.util.DataField;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Sign;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,6 +24,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
@@ -57,7 +69,41 @@ public class ActEntry extends CutsceneAction {
                 }
             });
         });
+        entries.put("sign",(p,t) -> {
+            ProtocolManager manager = t.manager.getProtocolLib();
 
+            Location loc = p.getLocation();
+            loc.setY(0);
+            BlockPosition position = new BlockPosition(loc.toVector());
+
+            PacketContainer update = manager.createPacket(PacketType.Play.Server.OPEN_SIGN_EDITOR);
+            update.getBlockPositionModifier().write(0,position);
+
+            PacketContainer block = manager.createPacket(PacketType.Play.Server.BLOCK_CHANGE);
+            block.getBlockPositionModifier().write(0,position);
+            block.getBlockData().write(0,WrappedBlockData.createData(WrappedMaterial.getInstance().getWrapper().getSign()));
+
+
+            try {
+                manager.sendServerPacket(p,block);
+                if (t.message != null) p.sendSignChange(loc,new String[] {"", t.message,"",""});
+                manager.sendServerPacket(p,update);
+                ListenerManager listener = t.manager.register();
+                listener.register(e -> {
+                    if (e.getPlayer().equals(p)) {
+                        try {
+                            block.getBlockData().write(0,WrappedBlockData.createData(Material.BEDROCK));
+                            manager.sendServerPacket(p,block);
+                        } catch (Exception ignored) {}
+                        t.invoke(p,e.getPacket().getStringArrays().read(0)[0]);
+                        listener.unregister();
+                    }
+                },PacketType.Play.Client.UPDATE_SIGN);
+            } catch (Exception e) {
+                e.printStackTrace();
+                CutsceneMaker.warn("unable to send packet.");
+            }
+        });
     }
 
     @DataField

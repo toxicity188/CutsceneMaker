@@ -8,22 +8,25 @@ import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.util.JsonMethod;
 import kor.toxicity.cutscenemaker.util.RegionUtil;
 import kor.toxicity.cutscenemaker.util.TextParser;
+import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 
 public final class ConditionParser<T> {
 
     private static final JsonParser parser = new JsonParser();
-
     public static final ConditionParser<LivingEntity> LIVING_ENTITY = new ConditionParser<>();
+
+
+    private final Set<ConditionContainer<?>> types = new LinkedHashSet<>();
+
     public final ConditionContainer<Number> NUMBER = new ConditionContainer<>();
     public final ConditionContainer<Boolean> BOOL = new ConditionContainer<>();
     public final ConditionContainer<String> STRING = new ConditionContainer<>();
@@ -70,32 +73,34 @@ public final class ConditionParser<T> {
         });
 
     }
-
-    public ActionPredicate<T> getByString(String[] t) {
-        if (t.length >= 3) {
-            switch (t[2]) {
-                default:
-                    try {
-                        double d = Double.parseDouble(t[2]);
-                        return NUMBER.parse(NUMBER.getAsFunc(t[0],0),t[1],d);
-                    } catch (Exception e) {
-                        return STRING.parse(STRING.getAsFunc(t[0],t[0]), t[1],t[2]);
-                    }
-                case "true":
-                case "false":
-                    return BOOL.parse(BOOL.getAsFunc(t[0],Boolean.parseBoolean(t[0])), t[1],Boolean.parseBoolean(t[2]));
-            }
-        } else return null;
-    }
     public Function<T,?> getAsFunc(String t) {
-        Function<T,?> f = BOOL.getAsFunc(t,null);
-        if (f == null) f = NUMBER.getAsFunc(t,null);
-        if (f == null) f = STRING.getAsFunc(t, null);
-        return f;
+        ConditionContainer<?> parse = types.stream().filter(c -> c.getAsFunc(t) != null).findFirst().orElse(null);
+        return (parse != null) ? parse.getAsFunc(t) : null;
 
+    }
+
+    public ActionPredicate<T> find(String[] s) {
+        ConditionContainer<?> parse = types.stream().filter(c -> c.parse(s[0],s[1],s[2]) != null).findFirst().orElse(null);
+        if (parse != null) {
+            return parse.parse(s[0],s[1],s[2]);
+        } else {
+            CutsceneMaker.warn("unable to read condition \"" + s[0] + " " + s[1] + " " + s[2] + "\"");
+            return null;
+        }
     }
 
     private ConditionParser() {
+        NUMBER.converter = Double::parseDouble;
+        STRING.converter = s -> s;
+        BOOL.converter = s -> {
+            switch (s) {
+                case "true":
+                case "false":
+                    return Boolean.parseBoolean(s);
+                default:
+                    return null;
+            }
+        };
 
         NUMBER.addOperator("==", (a,b) -> a.doubleValue() == b.doubleValue());
         NUMBER.addOperator(">=",(a,b) -> a.doubleValue() >= b.doubleValue());
@@ -114,13 +119,13 @@ public final class ConditionParser<T> {
             if (j.size() == 0 || !(e instanceof Player)) return 0;
             return CutsceneMaker.getVars((Player) e,j.get(0).getAsString()).getAsNum();
         });
-        STRING.addFunction("str", (e,j) -> {
-            if (j.size() == 0 || !(e instanceof Player)) return "<none>";
-            return CutsceneMaker.getVars((Player) e,j.get(0).getAsString()).getVar();
-        });
         BOOL.addFunction("bool", (e,j) -> {
             if (j.size() == 0 || !(e instanceof Player)) return false;
             return CutsceneMaker.getVars((Player) e,j.get(0).getAsString()).getAsBool();
+        });
+        STRING.addFunction("str", (e,j) -> {
+            if (j.size() == 0 || !(e instanceof Player)) return "<none>";
+            return CutsceneMaker.getVars((Player) e,j.get(0).getAsString()).getVar();
         });
     }
 
@@ -128,21 +133,25 @@ public final class ConditionParser<T> {
 
         private final Map<String, ComparisonOperator<R>> comp;
         private final Map<String, JsonMethod<T, R>> func;
+        @Setter
+        private Function<String, R> converter;
 
         private ConditionContainer() {
             comp = new HashMap<>();
             func = new HashMap<>();
+            types.add(this);
         }
 
-        public ActionPredicate<T> parse(Function<T,R> f, String action, R t) {
-            ComparisonOperator<R> c = comp.get(action.toLowerCase());
-            if (f == null && c == null) return null;
-            return parse(f,c,t);
+        public ActionPredicate<T> parse(String f, String action, String t) {
+            Function<T,R> func1 = getAsFunc(f);
+            Function<T,R> func2 = getAsFunc(t);
+            ComparisonOperator<R> compare = comp.get(action.toLowerCase());
+            return (func1 != null && func2 != null && compare != null) ? parse(func1,compare,func2) : null;
         }
-        public ActionPredicate<T> parse(Function<T,R> f, ComparisonOperator<R> c, R t) {
+        public ActionPredicate<T> parse(Function<T,R> f, ComparisonOperator<R> c, Function<T,R> t) {
             return q -> {
                 try {
-                    return c.get(f.apply(q), t);
+                    return c.get(f.apply(q), t.apply(q));
                 } catch (Exception e) {
                     return false;
                 }
@@ -164,7 +173,7 @@ public final class ConditionParser<T> {
         }
 
 
-        public Function<T,R> getAsFunc(String s, R def) {
+        public Function<T,R> getAsFunc(String s) {
             if (s.contains("[") && s.contains("]")) {
                 String clazz = a(s);
                 JsonMethod<T, R> m = func.get(clazz);
@@ -174,8 +183,17 @@ public final class ConditionParser<T> {
                     return m.getAsFunction(e.getAsJsonArray());
                 }
             }
-            return (def != null) ? t -> def : null;
+            R type = tryConvert(s);
+            return (type != null) ? t -> type : null;
         }
+        private R tryConvert(String s) {
+            try {
+                return (converter != null) ? converter.apply(s) : null;
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
         private String a(String s) {
             StringBuilder ret = new StringBuilder();
             int loop = 0;

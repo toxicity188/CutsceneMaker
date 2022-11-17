@@ -79,7 +79,7 @@ public class ActionContainer {
         private void kill() {
             if (task != null) task.cancel();
             EvtUtil.unregister(this);
-            ActionContainer.this.tasks.remove(player);
+            tasks.remove(player);
         }
         private void load() {
             if (loop < actions.size()) {
@@ -92,8 +92,7 @@ public class ActionContainer {
                 }
                 else task = Bukkit.getScheduler().runTaskLater(pl, this::load,action.delay);
             } else {
-                task.cancel();
-                EvtUtil.unregister(this);
+                kill();
             }
         }
 

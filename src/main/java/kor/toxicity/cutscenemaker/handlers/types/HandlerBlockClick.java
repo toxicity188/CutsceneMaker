@@ -34,6 +34,7 @@ public class HandlerBlockClick extends ActionHandler {
     public boolean sneaking = false;
 
     private Predicate<PlayerInteractEvent> check = PlayerInteractEvent::hasBlock;
+    private Thread thread;
 
     public HandlerBlockClick(ActionContainer container) {
         super(container);
