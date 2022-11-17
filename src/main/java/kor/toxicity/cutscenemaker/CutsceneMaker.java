@@ -1,7 +1,10 @@
 package kor.toxicity.cutscenemaker;
 
 import kor.toxicity.cutscenemaker.data.*;
+import kor.toxicity.cutscenemaker.events.ActionReloadEndEvent;
+import kor.toxicity.cutscenemaker.events.ActionReloadStartEvent;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
+import kor.toxicity.cutscenemaker.util.EvtUtil;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -41,8 +44,10 @@ public final class CutsceneMaker extends JavaPlugin {
 
     void load(Runnable callback) {
         Bukkit.getScheduler().runTaskAsynchronously(this,() -> {
+            EvtUtil.call(new ActionReloadStartEvent());
             reload.forEach(Reloadable::reload);
             if (callback != null) callback.run();
+            EvtUtil.call(new ActionReloadEndEvent());
         });
     }
 
