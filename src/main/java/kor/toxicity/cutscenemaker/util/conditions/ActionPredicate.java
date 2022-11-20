@@ -32,4 +32,18 @@ public interface ActionPredicate<T> extends Predicate<T> {
         Objects.requireNonNull(predicate);
         return t -> test(t) || predicate.test(t);
     }
+
+    default ActionPredicate<T> match(String action, Predicate<T> predicate) {
+        Objects.requireNonNull(action);
+        Objects.requireNonNull(predicate);
+        switch (action) {
+            case "and":
+            case "&&":
+                return addAnd(predicate);
+            case "or":
+            case "||":
+                return addOr(predicate);
+        }
+        return this;
+    }
 }

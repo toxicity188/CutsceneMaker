@@ -37,7 +37,7 @@ public class ConfigWriter {
         section.set("y", location.getY());
         section.set("z", location.getZ());
         section.set("pitch", location.getPitch());
-        section.set("yaw", Math.abs(location.getYaw()));
+        section.set("yaw", location.getYaw());
         section.set("world", location.getWorld().getName());
     }
 }

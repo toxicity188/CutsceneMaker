@@ -7,6 +7,7 @@ import kor.toxicity.cutscenemaker.commands.SenderType;
 import kor.toxicity.cutscenemaker.data.ActionData;
 import kor.toxicity.cutscenemaker.util.ConfigWriter;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -15,6 +16,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.yaml.snakeyaml.Yaml;
@@ -97,6 +99,13 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
                 } catch (Exception e) {
                     send(pkg.getSender(), "sorry, cannot save location.");
                 }
+            }
+            @CommandHandler(aliases = {"tp"}, length = 1, description = "teleport to a registered location.", usage = "/cutscene teleport <name>", sender = SenderType.ENTITY)
+            public void teleport(CommandPacket pkg) {
+                String name = pkg.getArgs()[1];
+                Location loc = pl.getManager().getLocations().get(name);
+                if (loc != null) ((LivingEntity) pkg.getSender()).teleport(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
+                else send(pkg.getSender(), "location \"" + name + "\" not found.");
             }
         });
     }

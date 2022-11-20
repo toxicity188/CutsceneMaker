@@ -47,8 +47,11 @@ public class ActCinematic extends RepeatableAction {
             double y = (last.getY() - first.getY())/loop;
             double z = (last.getZ() - first.getZ())/loop;
             float pitch = (last.getPitch() - first.getPitch())/loop;
-            float t = last.getYaw() > first.getYaw() ? last.getYaw() - first.getYaw() : 360 + last.getYaw() - first.getYaw();
-            float yaw = ((cloak) ? -360 + t : t)/loop;
+
+            float yawPositive = last.getYaw() - first.getYaw();
+            float yawNegative = a(yawPositive);
+            float yaw = ((Math.abs(yawNegative) > Math.abs(yawPositive)) ? yawPositive : yawNegative) / loop;
+
 
             function = i -> {
                 double v1 = (double) i;
@@ -62,11 +65,14 @@ public class ActCinematic extends RepeatableAction {
 
                 Location get = new Location(first.getWorld(),first.getX() + x1, first.getY() + y1, first.getZ() + z1);
                 get.setPitch(first.getPitch() + pitch1);
-                get.setYaw(first.getPitch() + yaw1);
+                get.setYaw(first.getYaw() + yaw1);
 
                 return get;
             };
         } else CutsceneMaker.warn("unable to find location. (" + from + ", " + to + ")");
+    }
+    private float a(float f) {
+        return -360 + f;
     }
 
     @Override
