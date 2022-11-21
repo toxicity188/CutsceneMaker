@@ -20,7 +20,6 @@ public final class EventData extends CutsceneData{
 
     @Override
     public void reload() {
-        getPlugin().getManager().getCommandMap().clearCommands();
         handlers.forEach(ActionHandler::unregister);
         handlers.clear();
     }

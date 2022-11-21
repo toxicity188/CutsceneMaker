@@ -26,12 +26,14 @@ public final class CutsceneMaker extends JavaPlugin {
         this.getDataFolder().mkdir();
         new File(this.getDataFolder().getAbsolutePath() + "\\User").mkdir();
 
+        CutsceneCommand command = new CutsceneCommand(this);
         manager = new CutsceneManager(this);
+        reload.add(command::unregister);
         reload.add(new EventData(this));
         reload.add(new ItemData(this));
         reload.add(new LocationData(this));
         reload.add(new ActionData(this));
-        getCommand("cutscene").setExecutor(new CutsceneCommand(this));
+        getCommand("cutscene").setExecutor(command);
 
         load(() -> send("Plugin enabled."));
     }

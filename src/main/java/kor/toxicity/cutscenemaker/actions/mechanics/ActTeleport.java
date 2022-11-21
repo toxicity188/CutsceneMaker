@@ -62,6 +62,7 @@ public class ActTeleport extends RepeatableAction {
     public void initialize(LivingEntity entity) {
         TeleportRecord record = new TeleportRecord();
         record.loc = (absolute) ? new Location((world != null && Bukkit.getWorld(world) != null) ? Bukkit.getWorld(world) : entity.getWorld(), startX,startY,startZ) : entity.getLocation().clone().add(startX,startY,startZ);
+        if (!record.loc.getChunk().isLoaded()) record.loc.getChunk().load();
         if (Math.abs(setPitch) <= 90) record.loc.setPitch(-(float) setPitch);
         if (Math.abs(setYaw) < 180) record.loc.setYaw((float) setYaw);
         if (orient) {

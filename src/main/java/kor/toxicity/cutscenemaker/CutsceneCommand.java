@@ -6,32 +6,86 @@ import kor.toxicity.cutscenemaker.commands.CommandPacket;
 import kor.toxicity.cutscenemaker.commands.SenderType;
 import kor.toxicity.cutscenemaker.data.ActionData;
 import kor.toxicity.cutscenemaker.util.ConfigWriter;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
+import org.bukkit.command.*;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class CutsceneCommand implements CommandExecutor, TabCompleter {
 
+    private static final String FALLBACK_PREFIX = "cutscenemaker";
     private static final Map<JavaPlugin, CommandRecord> listeners = new HashMap<>();
+    private static final Set<PluginCommand> registeredCommand = new HashSet<>();
+    private static SimpleCommandMap commandMap;
+    private static Function<String,PluginCommand> createCommand;
 
+    @SuppressWarnings("unchecked")
+    public void unregister() {
+        Field field = Arrays.stream(commandMap.getClass().getDeclaredFields()).filter(f -> f.getType() == Map.class).findFirst().orElse(null);
+        try {
+            if (field != null) {
+                field.setAccessible(true);
+                Map<String, Command> knownCommand = (Map<String, Command>) field.get(commandMap);
+                registeredCommand.forEach(p -> {
+                    knownCommand.remove(p.getName());
+                    knownCommand.remove(FALLBACK_PREFIX + ":" + p.getName());
+                    p.unregister(commandMap);
+                });
+                field.setAccessible(false);
+                registeredCommand.clear();
+            }
+        } catch (Exception e) {
+            CutsceneMaker.warn("unable to unregister command.");
+        }
+    }
+    public static void createCommand(String name, CommandExecutor executor) {
+        if (commandMap == null) return;
+        try {
+            PluginCommand command = createCommand.apply(name);
+            command.setExecutor(executor);
+            commandMap.register(FALLBACK_PREFIX,command);
+            registeredCommand.add(command);
+        } catch (Exception e) {
+            CutsceneMaker.warn("unable to register command.");
+        }
+    }
     CutsceneCommand(CutsceneMaker pl) {
+        try {
+            Field map = Arrays.stream(Bukkit.getServer().getClass().getDeclaredFields()).filter(f -> f.getType() == SimpleCommandMap.class).findFirst().orElse(null);
+            if (map != null) {
+                map.setAccessible(true);
+                commandMap = (SimpleCommandMap) map.get(Bukkit.getServer());
+                Constructor<PluginCommand> constructor = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
+                constructor.setAccessible(true);
+                createCommand = s -> {
+                    try {
+                        return constructor.newInstance(s, pl);
+                    } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                        throw new RuntimeException(e);
+                    }
+                };
+            } else CutsceneMaker.warn("unable to find command map.");
+        } catch (Exception e) {
+            CutsceneMaker.warn("unable to load command map.");
+        }
+
         register(pl, new CommandListener() {
             @CommandHandler(aliases = {"l", "리스트"}, length = 0,description = "show list of registered commands.",usage = "/cutscene list",sender = {SenderType.CONSOLE, SenderType.PLAYER})
             public void list(CommandPacket pkg) {

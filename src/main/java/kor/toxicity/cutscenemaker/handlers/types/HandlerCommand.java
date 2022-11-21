@@ -1,5 +1,6 @@
 package kor.toxicity.cutscenemaker.handlers.types;
 
+import kor.toxicity.cutscenemaker.CutsceneCommand;
 import kor.toxicity.cutscenemaker.handlers.ActionHandler;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.DataField;
@@ -14,16 +15,13 @@ public class HandlerCommand extends ActionHandler {
     @DataField(aliases = {"cmd","c"}, throwable = true)
     public String command;
 
-    private final ActionContainer container;
-
     public HandlerCommand(ActionContainer container) {
         super(container);
-        this.container = container;
     }
 
     @Override
     protected void initialize() {
-        container.registerCommand(command,(sender, command1, label, args) -> {
+        CutsceneCommand.createCommand(command,(sender, command1, label, args) -> {
             if (sender instanceof LivingEntity) apply((LivingEntity) sender);
             return true;
         });

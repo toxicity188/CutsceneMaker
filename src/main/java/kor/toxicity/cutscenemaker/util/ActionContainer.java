@@ -116,17 +116,4 @@ public class ActionContainer {
 
     }
 
-    public void registerCommand(String name, CommandExecutor executor) {
-        if (pl.getManager().getCommandMap() == null) return;
-        try {
-            Constructor<PluginCommand> constructor = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
-            constructor.setAccessible(true);
-            PluginCommand command = constructor.newInstance(name, pl);
-            command.setExecutor(executor);
-            command.register(pl.getManager().getCommandMap());
-        } catch (Exception e) {
-            CutsceneMaker.send("unable to register command.");
-        }
-    }
-
 }

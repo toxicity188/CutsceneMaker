@@ -60,7 +60,10 @@ public class ActCinematic extends RepeatableAction {
                 float pitch1 = pitch * v2;
                 float yaw1 = yaw * v2;
 
-                return new Location(first.getWorld(),first.getX() + x1, first.getY() + y1, first.getZ() + z1,first.getYaw() + yaw1,first.getPitch() + pitch1);
+                Location ret = new Location(first.getWorld(),first.getX() + x1, first.getY() + y1, first.getZ() + z1);
+                ret.setPitch(first.getPitch() + pitch1);
+                ret.setYaw(first.getYaw() + yaw1);
+                return ret;
             };
         } else CutsceneMaker.warn("unable to find location. (" + from + ", " + to + ")");
     }
@@ -72,6 +75,8 @@ public class ActCinematic extends RepeatableAction {
     protected void initialize(LivingEntity entity) {
         if (first != null && last != null) {
             loops.put(entity,0);
+            if (!first.getChunk().isLoaded()) first.getChunk().load();
+            if (!last.getChunk().isLoaded()) last.getChunk().load();
         }
     }
 
