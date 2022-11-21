@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -22,6 +23,8 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,6 +39,8 @@ public final class CutsceneManager {
 
     @Getter
     private final Map<String, Location> locations = new HashMap<>();
+    @Getter
+    private SimpleCommandMap commandMap;
 
     CutsceneManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -45,6 +50,17 @@ public final class CutsceneManager {
         EvtUtil.register(plugin,user);
 
         ProtocolLib = ProtocolLibrary.getProtocolManager();
+
+        try {
+            Field map = Arrays.stream(Bukkit.getServer().getClass().getFields()).filter(f -> f.getType() == SimpleCommandMap.class).findFirst().orElse(null);
+            if (map != null) {
+                map.setAccessible(true);
+                commandMap = (SimpleCommandMap) map.get(Bukkit.getServer());
+            } else CutsceneMaker.warn("unable to find command map.");
+        } catch (Exception e) {
+            CutsceneMaker.warn("unable to load command map.");
+        }
+
         if (Bukkit.getPluginManager().isPluginEnabled("EffectLib")) EffectLib = new EffectManager(plugin);
         if (Bukkit.getPluginManager().isPluginEnabled("Skript")) {
             ActionData.addAction("skript", ActSetSkriptVar.class);

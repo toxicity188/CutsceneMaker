@@ -6,13 +6,17 @@ import kor.toxicity.cutscenemaker.events.ActionCancelEvent;
 import kor.toxicity.cutscenemaker.events.enums.CancelCause;
 import lombok.Getter;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -110,6 +114,19 @@ public class ActionContainer {
             }
         }
 
+    }
+
+    public void registerCommand(String name, CommandExecutor executor) {
+        if (pl.getManager().getCommandMap() == null) return;
+        try {
+            Constructor<PluginCommand> constructor = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
+            constructor.setAccessible(true);
+            PluginCommand command = constructor.newInstance(name, pl);
+            command.setExecutor(executor);
+            command.register(pl.getManager().getCommandMap());
+        } catch (Exception e) {
+            CutsceneMaker.send("unable to register command.");
+        }
     }
 
 }
