@@ -6,14 +6,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
+import org.codemc.worldguardwrapper.WorldGuardWrapper;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class RegionUtil {
     @Getter
     private static final RegionUtil instance = new RegionUtil();
 
-    public boolean inRegion(Entity entity, String name, String world) {
-        return WGBukkit.getRegionManager(world != null && Bukkit.getWorld(world) != null ? Bukkit.getWorld(world) : entity.getWorld()).getApplicableRegions(entity.getLocation()).getRegions().stream().anyMatch(l -> l.getId().equals(name));
+    public boolean inRegion(Entity entity, String name) {
+        return WorldGuardWrapper.getInstance().getRegions(entity.getLocation()).stream().anyMatch(l -> l.getId().equals(name));
     }
 
 }

@@ -8,6 +8,7 @@ softdepend:
   - EffectLib
   - Skript
   - WorldGuard
+  - Vault
 depend:
   - ProtocolLib
 commands:

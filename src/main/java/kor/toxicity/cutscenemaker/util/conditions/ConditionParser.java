@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.util.JsonMethod;
+import kor.toxicity.cutscenemaker.util.MoneyUtil;
 import kor.toxicity.cutscenemaker.util.RegionUtil;
 import kor.toxicity.cutscenemaker.util.TextParser;
 import lombok.Setter;
@@ -40,6 +41,12 @@ public final class ConditionParser<T> {
             return "<none>";
         });
         LIVING_ENTITY.STRING.addFunction("location",(e,j) -> TextParser.getInstance().toSimpleLoc(e.getLocation()));
+        LIVING_ENTITY.NUMBER.addFunction("money",(e,j) -> {
+            if (e instanceof Player) {
+                return MoneyUtil.getInstance().getMoney((Player) e);
+            }
+            return 0;
+        });
         LIVING_ENTITY.NUMBER.addFunction("healthpercentage",(e,j) -> e.getHealth()/e.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
         LIVING_ENTITY.NUMBER.addFunction("health",(e,j) -> e.getHealth());
         LIVING_ENTITY.NUMBER.addFunction("random",(e,j) -> {
@@ -67,7 +74,7 @@ public final class ConditionParser<T> {
         LIVING_ENTITY.BOOL.addFunction("op",(e,j) -> e.isOp());
         LIVING_ENTITY.BOOL.addFunction("inregion",(e,j) -> {
             if (j.size() > 0) {
-                return RegionUtil.getInstance().inRegion(e,j.get(0).getAsString(),j.size() > 1 ? j.get(1).getAsString() : null);
+                return RegionUtil.getInstance().inRegion(e,j.get(0).getAsString());
             }
             return false;
         });

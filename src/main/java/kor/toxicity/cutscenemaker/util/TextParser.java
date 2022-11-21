@@ -7,6 +7,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 
+import java.text.DecimalFormat;
 import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -45,5 +46,9 @@ public final class TextParser {
 
     public String uncolored(String s) {
         return ChatColor.stripColor(s);
+    }
+
+    public String applyComma(double d) {
+        return new DecimalFormat().format(d);
     }
 }
