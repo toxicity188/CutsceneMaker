@@ -48,6 +48,14 @@ public final class ActionData extends CutsceneData {
         actions.put("command", ActCommand.class);
         actions.put("cinematic", ActCinematic.class);
         actions.put("entry", ActEntry.class);
+
+        if (Bukkit.getPluginManager().isPluginEnabled("Skript")) {
+            actions.put("skript", ActSetSkriptVar.class);
+        }
+        if (Bukkit.getPluginManager().isPluginEnabled("Vault")) {
+            actions.put("addmoney", ActAddMoney.class);
+            actions.put("removemoney", ActRemoveMoney.class);
+        }
     }
     public ActionData(CutsceneMaker pl) {
         super(pl);

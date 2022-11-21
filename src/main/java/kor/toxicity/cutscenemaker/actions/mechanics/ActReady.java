@@ -73,10 +73,14 @@ public class ActReady extends CutsceneAction {
         toggle.add(player);
         player.setGameMode(GameMode.SPECTATOR);
         player.addPotionEffect(invisible);
+
+        if (!ActMark.LOCATION.containsKey(player)) ActMark.LOCATION.put(player,player.getLocation());
     }
     private static void off(Player player) {
         toggle.remove(player);
         player.setGameMode(GameMode.SURVIVAL);
         player.removePotionEffect(PotionEffectType.INVISIBILITY);
+
+        ActMark.LOCATION.remove(player);
     }
 }

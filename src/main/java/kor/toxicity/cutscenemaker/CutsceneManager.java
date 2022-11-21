@@ -50,9 +50,6 @@ public final class CutsceneManager {
         ProtocolLib = ProtocolLibrary.getProtocolManager();
 
         if (Bukkit.getPluginManager().isPluginEnabled("EffectLib")) EffectLib = new EffectManager(plugin);
-        if (Bukkit.getPluginManager().isPluginEnabled("Skript")) {
-            ActionData.addAction("skript", ActSetSkriptVar.class);
-        }
     }
 
     public BukkitTask runTaskTimer(Runnable task, long delay, long time) {
