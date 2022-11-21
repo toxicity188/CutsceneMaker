@@ -14,11 +14,11 @@ public final class TextParser {
     @Getter
     private static final TextParser instance = new TextParser();
 
-    public final String comma = ",";
+    public final String COMMA = ",";
 
 
     public String toSimpleLoc(Location loc) {
-        return loc.getX() + comma + loc.getY() + comma + loc.getZ();
+        return loc.getX() + COMMA + loc.getY() + COMMA + loc.getZ();
     }
 
     public String colored(String s) {
@@ -31,7 +31,7 @@ public final class TextParser {
         for (String s : text) {
             a.append(s);
             l ++;
-            if (l < text.size()) a.append(comma);
+            if (l < text.size()) a.append(COMMA);
         }
         return a.toString();
     }

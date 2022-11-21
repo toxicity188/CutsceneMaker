@@ -2,11 +2,14 @@ package kor.toxicity.cutscenemaker.util;
 
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
+import kor.toxicity.cutscenemaker.events.ActionCancelEvent;
+import kor.toxicity.cutscenemaker.events.enums.CancelCause;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -72,9 +75,20 @@ public class ActionContainer {
             load();
         }
         @EventHandler
-        public void onQuit(PlayerQuitEvent e) {
-            if (e.getPlayer().equals(player)) task.cancel();
+        public void quit(PlayerQuitEvent e) {
+            if (e.getPlayer().equals(player)) {
+                kill();
+                EvtUtil.call(new ActionCancelEvent(player,ActionContainer.this, CancelCause.QUIT));
+            }
         }
+        @EventHandler
+        public void death(EntityDeathEvent e) {
+            if (e.getEntity().equals(player)) {
+                kill();
+                EvtUtil.call(new ActionCancelEvent(player,ActionContainer.this, CancelCause.DEATH));
+            }
+        }
+
 
         private void kill() {
             if (task != null) task.cancel();

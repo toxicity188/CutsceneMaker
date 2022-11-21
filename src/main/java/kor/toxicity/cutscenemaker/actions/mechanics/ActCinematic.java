@@ -19,9 +19,6 @@ public class ActCinematic extends RepeatableAction {
     @DataField(aliases = "e",throwable = true)
     public String to;
 
-    @DataField(aliases = "c")
-    public boolean cloak = true;
-
     private final Map<LivingEntity,Integer> loops = new WeakHashMap<>();
     private final CutsceneManager manager;
     private Location first;
@@ -68,14 +65,13 @@ public class ActCinematic extends RepeatableAction {
         } else CutsceneMaker.warn("unable to find location. (" + from + ", " + to + ")");
     }
     private float a(float f) {
-        return -360 + f;
+        return ((f < 0) ? 1 : -1) * (360 - Math.abs(f));
     }
 
     @Override
     protected void initialize(LivingEntity entity) {
         if (first != null && last != null) {
             loops.put(entity,0);
-            entity.teleport(first, PlayerTeleportEvent.TeleportCause.PLUGIN);
         }
     }
 
