@@ -25,6 +25,7 @@ repositories {
 }
 
 dependencies {
+    compileOnly fileTree(dir: 'libs', include: ['*.jar'])
     compileOnly 'org.projectlombok:lombok:1.18.24'
     compileOnly 'com.github.SkriptLang:Skript:dev37c'
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
@@ -41,6 +42,7 @@ dependencies {
     compileOnly 'com.sk89q.worldedit:worldedit-core:6.1.4-SNAPSHOT'
     compileOnly 'com.github.Slikey:EffectLib:master'
     compileOnly "com.github.MilkBowl:VaultAPI:1.7"
+    compileOnly 'com.github.libraryaddict:LibsDisguises:10.0.31'
     compileOnly group: "com.comphenix.protocol", name: "ProtocolLib", version: "4.8.0"
     compileOnly 'org.spigotmc:spigot-api:1.12.2-R0.1-SNAPSHOT'
 

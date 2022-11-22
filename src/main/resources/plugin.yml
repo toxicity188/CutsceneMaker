@@ -9,6 +9,8 @@ softdepend:
   - Skript
   - WorldGuard
   - Vault
+  - MythicMobs
+  - LibsDisguises
 depend:
   - ProtocolLib
 commands:

@@ -11,6 +11,7 @@ import java.util.function.Function;
 public class MethodInterpreter {
 
     public static final String PERCENT = "%";
+
     private final List<Function<LivingEntity,String>> print;
     MethodInterpreter(String s) {
         print = new ArrayList<>();
@@ -41,5 +42,18 @@ public class MethodInterpreter {
 
     private String printNumber(double d) {
         return (d == Math.floor(d)) ? Integer.toString((int) d) : String.format("%.2f", d);
+    }
+
+    private Function<LivingEntity,?> get(String t) {
+        if (t.equals("")) return q -> PERCENT;
+        else {
+            Function<LivingEntity, ?> f = ConditionParser.LIVING_ENTITY.getAsFunc(t);
+            if (f != null) return e -> {
+                Object o = f.apply(e);
+                if (o instanceof Number) return printNumber(((Number) o).doubleValue());
+                else return o.toString();
+            };
+        }
+        return null;
     }
 }
