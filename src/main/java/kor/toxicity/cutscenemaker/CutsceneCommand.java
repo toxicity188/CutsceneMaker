@@ -228,7 +228,7 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
     }
 
     private static void send(CommandSender sender, String m) {
-        sender.sendMessage(ChatColor.AQUA + "[CutSceneMaker] " + ChatColor.WHITE + m);
+        sender.sendMessage(ChatColor.AQUA + "[CutsceneMaker] " + ChatColor.WHITE + m);
     }
 
     private static class CommandRecord {
