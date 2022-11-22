@@ -78,7 +78,10 @@ public class ActMessage extends RepeatableAction {
     }
     private void a(String s, Consumer<List<MethodInterpreter>> c) {
         if (s == null) return;
-        c.accept(Arrays.stream(TextParser.getInstance().split(s.replaceAll("&","§"),"/")).map(q -> MethodString.getInstance().parse(q)).collect(Collectors.toList()));
+        c.accept(Arrays.stream(TextParser.getInstance().split(s.replaceAll("&","§"),"/")).map(q -> MethodString.getInstance().parse(b(q))).collect(Collectors.toList()));
+    }
+    private String b(String s) {
+        return TextParser.getInstance().colored(s);
     }
 
     @Override
