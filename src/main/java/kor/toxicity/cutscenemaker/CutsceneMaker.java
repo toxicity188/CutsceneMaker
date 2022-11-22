@@ -13,6 +13,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 public final class CutsceneMaker extends JavaPlugin {

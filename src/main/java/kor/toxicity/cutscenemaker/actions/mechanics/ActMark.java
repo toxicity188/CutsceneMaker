@@ -46,6 +46,7 @@ public class ActMark extends CutsceneAction {
 
     @Override
     public void initialize() {
+        super.initialize();
         if (location != null) {
             String[] l = TextParser.getInstance().split(location,",");
             if (l.length >= 3) {

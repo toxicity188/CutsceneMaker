@@ -33,6 +33,7 @@ public class ActCinematic extends RepeatableAction {
 
     @Override
     public void initialize() {
+        super.initialize();
         Map<String,Location> loc = manager.getLocations();
         if (loc.containsKey(from) && loc.containsKey(to)) {
             first = loc.get(from);

@@ -2,12 +2,12 @@ package kor.toxicity.cutscenemaker.entities;
 
 import io.lumine.xikage.mythicmobs.MythicMobs;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
-import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -36,12 +36,21 @@ public class EntityManager implements Listener {
     public void setExecutor(CutsceneMaker maker) {
         EvtUtil.register(maker, this);
         LISTENER = new ListenerManager(maker);
-
+        Bukkit.getOnlinePlayers().forEach(this::put);
+    }
+    public CutsceneEntity get(String key) {
+        return entityMap.get(key);
+    }
+    public CutsceneEntity get(Player player, String key) {
+        return Optional.of(boundMobMap.get(player)).map(b -> b.entityMap.get(key)).orElse(null);
     }
 
     @EventHandler
     public void join(PlayerJoinEvent e) {
-        boundMobMap.put(e.getPlayer(),new PlayerBoundMob());
+        put(e.getPlayer());
+    }
+    private void put(Player p) {
+        boundMobMap.put(p,new PlayerBoundMob());
     }
     @EventHandler
     public void quit(PlayerQuitEvent e) {
@@ -85,8 +94,8 @@ public class EntityManager implements Listener {
     }
 
     private synchronized CutsceneEntity b(String key, Location location) {
-        try {
-            return new CutsceneEntity((LivingEntity) MythicMobs.inst().getMobManager().spawnMob(key, location).getEntity().getBukkitEntity());
+        try (MythicMobs instance = MythicMobs.inst()) {
+            return new CutsceneEntity((LivingEntity) instance.getMobManager().spawnMob(key, location).getEntity().getBukkitEntity());
         } catch (Exception e) {
             CutsceneMaker.warn("unable to find MythicMobs plugin.");
             return null;
@@ -108,7 +117,7 @@ public class EntityManager implements Listener {
             CutsceneEntity entity = e.entityMap.get(key);
             if (entity != null) {
                 entity.kill();
-                entityMap.remove(key);
+                e.entityMap.remove(key);
             }
         });
     }

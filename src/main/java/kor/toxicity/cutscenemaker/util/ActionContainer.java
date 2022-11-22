@@ -45,7 +45,7 @@ public class ActionContainer {
     }
     public void confirm() {
         if (record == 0) run = e -> {
-            for (CutsceneAction action : actions) action.apply(e);
+            for (CutsceneAction action : actions) action.call(e);
         };
         else run = e -> {
             if (tasks.containsKey(e)) tasks.get(e).kill();
@@ -102,7 +102,7 @@ public class ActionContainer {
         private void load() {
             if (loop < actions.size()) {
                 CutsceneAction action = actions.get(loop);
-                action.apply(player);
+                action.call(player);
                 loop++;
                 if (action.delay == 0) {
                     task = null;

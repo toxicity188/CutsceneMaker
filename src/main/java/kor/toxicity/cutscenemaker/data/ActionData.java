@@ -48,6 +48,8 @@ public final class ActionData extends CutsceneData {
         actions.put("command", ActCommand.class);
         actions.put("cinematic", ActCinematic.class);
         actions.put("entry", ActEntry.class);
+        actions.put("spawn", ActSpawn.class);
+        actions.put("kill", ActKill.class);
 
         if (Bukkit.getPluginManager().isPluginEnabled("Skript")) {
             actions.put("skript", ActSetSkriptVar.class);

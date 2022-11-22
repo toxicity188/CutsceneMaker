@@ -45,6 +45,7 @@ public class ActGiveItem extends CutsceneAction {
 
     @Override
     public void initialize() {
+        super.initialize();
         if (config != null) {
             give = ItemData.getItem(config);
         }

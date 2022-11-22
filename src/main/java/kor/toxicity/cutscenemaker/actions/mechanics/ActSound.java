@@ -37,6 +37,7 @@ public class ActSound extends RepeatableAction {
 
     @Override
     public void initialize() {
+        super.initialize();
         play = new SoundPlay();
     }
 

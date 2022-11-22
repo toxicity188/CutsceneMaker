@@ -19,6 +19,7 @@ public class ActEntityEffect extends RepeatableAction {
 
     @Override
     public void initialize() {
+        super.initialize();
         try {
             effect = EntityEffect.valueOf(type.toUpperCase());
         } catch (Exception e) {

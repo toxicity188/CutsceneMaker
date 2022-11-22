@@ -130,6 +130,7 @@ public class ActEntry extends CutsceneAction {
 
     @Override
     public void initialize() {
+        super.initialize();
         apply = entries.get(type);
         if (apply == null) {
             CutsceneMaker.warn("entry type \""+ type + "\" does not exists. changed chat type automatically");

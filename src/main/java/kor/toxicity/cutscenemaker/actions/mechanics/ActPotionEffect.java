@@ -31,6 +31,7 @@ public class ActPotionEffect extends CutsceneAction {
 
     @Override
     public void initialize() {
+        super.initialize();
         t = PotionEffectType.getByName(type);
         if (t == null) t = PotionEffectType.SPEED;
         effect = new PotionEffect(t,duration,strength,ambient,particle);

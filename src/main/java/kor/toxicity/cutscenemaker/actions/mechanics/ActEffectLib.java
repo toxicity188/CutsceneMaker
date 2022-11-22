@@ -28,6 +28,7 @@ public class ActEffectLib extends CutsceneAction {
 
     @Override
     public void initialize() {
+        super.initialize();
         section = new MemoryConfiguration();
         parameters.entrySet().forEach(e -> section.set(e.getKey(),e.getValue().getAsString().replaceAll("PI",Double.toString(Math.PI))));
     }

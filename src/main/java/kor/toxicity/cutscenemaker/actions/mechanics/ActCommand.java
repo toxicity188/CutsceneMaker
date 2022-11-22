@@ -26,6 +26,7 @@ public class ActCommand extends CutsceneAction {
 
     @Override
     public void initialize() {
+        super.initialize();
         if (console) consumer = e -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(),command);
         else {
             if (op) {

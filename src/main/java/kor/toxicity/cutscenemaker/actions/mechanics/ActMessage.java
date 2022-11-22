@@ -53,6 +53,7 @@ public class ActMessage extends RepeatableAction {
 
     @Override
     public void initialize() {
+        super.initialize();
         a(message,s -> m = s);
         a(subtitle,s -> st = s);
 

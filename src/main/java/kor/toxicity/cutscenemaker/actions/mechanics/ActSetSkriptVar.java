@@ -77,6 +77,7 @@ public class ActSetSkriptVar extends CutsceneAction {
 
     @Override
     public void initialize() {
+        super.initialize();
         if (data.containsKey(type)) parser = data.get(type);
         else parser = s -> s;
     }
