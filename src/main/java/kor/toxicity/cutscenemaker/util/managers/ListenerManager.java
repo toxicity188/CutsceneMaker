@@ -74,11 +74,18 @@ public class ListenerManager {
             listener.remove(l);
         }
     }
+    public void remove(PacketListener l) {
+        if (pkgListener != null && pkgListener.contains(l)) {
+            ProtocolLibrary.getProtocolManager().removePacketListener(l);
+            pkgListener.remove(l);
+        }
+    }
 
-    public void register(Consumer<PacketEvent> action, PacketType... type) {
+    public PacketListener register(Consumer<PacketEvent> action, PacketType... type) {
         if (pkgListener == null) pkgListener = new ArrayList<>();
         PacketListener l = packet.apply(type,action);
         ProtocolLibrary.getProtocolManager().addPacketListener(l);
         pkgListener.add(l);
+        return l;
     }
 }

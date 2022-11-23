@@ -76,7 +76,7 @@ public class ActEntry extends CutsceneAction {
 
             PacketContainer block = manager.createPacket(PacketType.Play.Server.BLOCK_CHANGE);
             block.getBlockPositionModifier().write(0,position);
-            block.getBlockData().write(0,WrappedBlockData.createData(WrappedMaterial.getInstance().getWrapper().getSign()));
+            block.getBlockData().write(0,WrappedBlockData.createData(WrappedMaterial.getWrapper().getSign()));
 
 
             try {
