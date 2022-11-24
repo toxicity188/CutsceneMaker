@@ -9,7 +9,8 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.EntityEvent;
 
 public class ActionStartEvent extends EntityEvent implements ICutsceneEvent, Cancellable {
-
+    @Getter
+    private static final HandlerList handlerList = new HandlerList();
     @Getter
     private final ActionContainer container;
     @Getter
@@ -23,7 +24,6 @@ public class ActionStartEvent extends EntityEvent implements ICutsceneEvent, Can
 
     @Override
     public HandlerList getHandlers() {
-        return ICutsceneEvent.HANDLER;
+        return handlerList;
     }
-
 }

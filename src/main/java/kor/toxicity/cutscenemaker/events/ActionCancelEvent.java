@@ -14,6 +14,8 @@ import org.bukkit.event.entity.EntityEvent;
 public class ActionCancelEvent extends EntityEvent implements ICutsceneEvent {
     //Cancelled Action
     @Getter
+    private static final HandlerList handlerList = new HandlerList();
+    @Getter
     private final ActionContainer container;
     //A reason of cancelling
     @Getter
@@ -27,6 +29,6 @@ public class ActionCancelEvent extends EntityEvent implements ICutsceneEvent {
 
     @Override
     public HandlerList getHandlers() {
-        return ICutsceneEvent.HANDLER;
+        return handlerList;
     }
 }

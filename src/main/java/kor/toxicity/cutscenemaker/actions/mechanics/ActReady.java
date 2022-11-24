@@ -2,6 +2,8 @@ package kor.toxicity.cutscenemaker.actions.mechanics;
 
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
+import kor.toxicity.cutscenemaker.events.ActionCancelEvent;
+import kor.toxicity.cutscenemaker.events.ActionStartEvent;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
 import org.bukkit.GameMode;
 import org.bukkit.entity.LivingEntity;
@@ -34,6 +36,10 @@ public class ActReady extends CutsceneAction {
             @EventHandler
             public void quit(PlayerQuitEvent e) {
                 if (toggle.contains(e.getPlayer())) off(e.getPlayer());
+            }
+            @EventHandler
+            public void start(ActionStartEvent e) {
+                if (e.getEntity() instanceof Player && toggle.contains((Player) e.getEntity())) e.setCancelled(true);
             }
             @EventHandler(priority = EventPriority.HIGHEST)
             public void interact(PlayerInteractEvent e) {

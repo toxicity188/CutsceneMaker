@@ -27,6 +27,7 @@ public abstract class ActionHandler implements Listener {
         handlers.put("command", HandlerCommand.class);
         handlers.put("entityclick", HandlerEntityClick.class);
         handlers.put("kill", HandlerKill.class);
+        handlers.put("walk",HandlerWalk.class);
     }
 
     private final ActionContainer container;

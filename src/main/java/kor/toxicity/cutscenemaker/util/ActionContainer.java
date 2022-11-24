@@ -5,6 +5,7 @@ import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.events.ActionCancelEvent;
 import kor.toxicity.cutscenemaker.events.enums.CancelCause;
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;
@@ -28,6 +29,8 @@ public class ActionContainer {
     private Predicate<LivingEntity> conditions;
     @Getter
     private int record;
+    @Getter
+    private long coolDown;
 
     private BukkitTask delay;
     private Consumer<LivingEntity> run;
@@ -51,6 +54,7 @@ public class ActionContainer {
             if (tasks.containsKey(e)) tasks.get(e).kill();
             tasks.put(e,new ActionRunning(e));
         };
+        coolDown = record;
     }
 
     public int size() {return actions.size();}
@@ -58,9 +62,13 @@ public class ActionContainer {
         conditions = cond;
     }
 
+    public void setCoolDown(long coolDown) {
+        this.coolDown = Math.max(coolDown * 20,4L);
+    }
+
     public boolean run(LivingEntity entity) {
         if ((conditions != null && !conditions.test(entity)) || delay != null) return false;
-        delay = Bukkit.getScheduler().runTaskLater(pl,() -> delay = null,4);
+        delay = Bukkit.getScheduler().runTaskLater(pl,() -> delay = null,Math.max(coolDown,4L));
         run.accept(entity);
         return true;
     }

@@ -50,6 +50,7 @@ public final class ActionData extends CutsceneData {
         actions.put("entry", ActEntry.class);
         actions.put("spawn", ActSpawn.class);
         actions.put("kill", ActKill.class);
+        actions.put("if", ActIf.class);
 
         if (Bukkit.getPluginManager().isPluginEnabled("Skript")) {
             actions.put("skript", ActSetSkriptVar.class);
@@ -93,17 +94,9 @@ public final class ActionData extends CutsceneData {
                     String[] get = t.split(" ");
                     if (cond != null) {
                         ActionPredicate<LivingEntity> add = ConditionParser.LIVING_ENTITY.find(get);
-                        if (add != null) cond = cond.addAnd(add);
+                        if (add != null) cond = cond.addAnd(getCond(add,get));
                     }
-                    else cond = ConditionParser.LIVING_ENTITY.find(get);
-                    if (cond != null && get.length > 4) switch (get[3]) {
-                        case "cast":
-                            cond = cond.cast(e -> start(get[4],e));
-                            break;
-                        case "castinstead":
-                            cond = cond.castInstead(e -> start(get[4],e));
-                            break;
-                    }
+                    else cond = getCond(ConditionParser.LIVING_ENTITY.find(get),get);
                 }
                 container.setConditions(cond);
             }
@@ -114,9 +107,20 @@ public final class ActionData extends CutsceneData {
                 });
             }
             container.confirm();
+            if (config.isSet(s + ".Cooldown")) container.setCoolDown(config.getInt(s + ".Cooldown", -1));
         });
         CutsceneMaker.send(ChatColor.GREEN + Integer.toString(actionContainer.size()) + " actions successfully loaded.");
     }
+    private ActionPredicate<LivingEntity> getCond(ActionPredicate<LivingEntity> cond, String[] get) {
+        if (cond != null && get.length > 4) switch (get[3]) {
+            case "cast":
+                return cond.cast(e -> start(get[4],e));
+            case "castinstead":
+                return cond.castInstead(e -> start(get[4],e));
+        }
+        return cond;
+    }
+
     private CutsceneAction a(String k) throws NoActionFoundException {
         String clazz = getFirst(k);
         if (!clazz.equals("") && actions.containsKey(clazz)) {
