@@ -4,6 +4,7 @@ import ch.njol.skript.variables.Variables;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.util.DataField;
+import kor.toxicity.cutscenemaker.util.functions.MethodInterpreter;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -14,10 +15,10 @@ import java.util.function.Function;
 public class ActSetSkriptVar extends CutsceneAction {
 
     @DataField(aliases = "n",throwable = true)
-    public String name;
+    public MethodInterpreter name;
 
     @DataField(aliases = "v",throwable = true)
-    public String value;
+    public MethodInterpreter value;
 
     @DataField
     public String type = "str";
@@ -89,7 +90,7 @@ public class ActSetSkriptVar extends CutsceneAction {
     @Override
     public void apply(LivingEntity entity) {
         if (entity instanceof Player) {
-            Variables.setVariable(name,parser.apply(value),null,false);
+            Variables.setVariable(name.print(entity),parser.apply(value.print(entity)),null,false);
         }
     }
 }

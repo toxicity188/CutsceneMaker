@@ -6,6 +6,7 @@ import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.util.DataField;
 import kor.toxicity.cutscenemaker.util.TextParser;
 import kor.toxicity.cutscenemaker.util.conditions.ConditionParser;
+import kor.toxicity.cutscenemaker.util.functions.MethodInterpreter;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -17,14 +18,14 @@ import java.util.function.Predicate;
 public class ActIf extends CutsceneAction {
 
     @DataField(aliases = "var", throwable = true)
-    public String variable;
+    public MethodInterpreter variable;
     @DataField(aliases = {"cond","parameter","para","c","p"},throwable = true)
     public String condition;
 
     @DataField(throwable = true)
-    public String then;
+    public MethodInterpreter then;
     @DataField(aliases = "else",throwable = true)
-    public String not;
+    public MethodInterpreter not;
 
     private Consumer<Player> apply;
     private final CutsceneManager manager;
@@ -46,9 +47,9 @@ public class ActIf extends CutsceneAction {
                 a();
             } else {
                 apply = e -> {
-                    Optional<Vars> optional = Optional.ofNullable(manager.getVars(e,variable));
-                    if (predicate.test(e)) optional.ifPresent(v -> v.setVar(then));
-                    else optional.ifPresent(v -> v.setVar(not));
+                    Optional<Vars> optional = Optional.ofNullable(manager.getVars(e,variable.print(e)));
+                    if (predicate.test(e)) optional.ifPresent(v -> v.setVar(then.print(e)));
+                    else optional.ifPresent(v -> v.setVar(not.print(e)));
                 };
             }
         }

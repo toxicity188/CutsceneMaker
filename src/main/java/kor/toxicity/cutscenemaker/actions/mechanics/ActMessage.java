@@ -21,8 +21,8 @@ import java.util.stream.IntStream;
 
 public class ActMessage extends RepeatableAction {
 
-    @DataField(aliases = "m")
-    public String message = "<none>";
+    @DataField(aliases = "m",throwable = true)
+    public String message;
     @DataField(aliases = "st")
     public String subtitle = "";
     @DataField(aliases = {"r","rand"})

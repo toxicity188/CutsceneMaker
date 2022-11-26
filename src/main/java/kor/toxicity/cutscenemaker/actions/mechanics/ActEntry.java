@@ -11,6 +11,7 @@ import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.data.ActionData;
 import kor.toxicity.cutscenemaker.material.WrappedMaterial;
 import kor.toxicity.cutscenemaker.util.DataField;
+import kor.toxicity.cutscenemaker.util.functions.MethodInterpreter;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
@@ -34,7 +35,7 @@ public class ActEntry extends CutsceneAction {
     }
     static {
         entries.put("chat",(p,t) -> {
-            if (t.message != null) p.sendMessage(t.message);
+            if (t.message != null) p.sendMessage(t.message.print(p));
             ListenerManager manager = t.manager.register();
             BukkitTask task = (t.wait > 0) ? t.manager.runTaskLaterAsynchronously(() -> {
                 manager.unregister();
@@ -81,7 +82,7 @@ public class ActEntry extends CutsceneAction {
 
             try {
                 manager.sendServerPacket(p,block);
-                if (t.message != null) p.sendSignChange(loc,new String[] {"", t.message,"",""});
+                if (t.message != null) p.sendSignChange(loc,new String[] {"", t.message.print(p),"",""});
                 manager.sendServerPacket(p,update);
                 ListenerManager listener = t.manager.register();
                 BukkitTask task = (t.wait > 0) ? t.manager.runTaskLaterAsynchronously(() -> {
@@ -110,7 +111,7 @@ public class ActEntry extends CutsceneAction {
     @DataField
     public String type = "chat";
     @DataField(aliases = "m")
-    public String message;
+    public MethodInterpreter message;
     @DataField
     public String var;
     @DataField(throwable = true)
