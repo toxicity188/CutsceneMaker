@@ -22,7 +22,6 @@ import java.util.Set;
 public class ActReady extends CutsceneAction {
 
     private static final Set<Player> toggle = new HashSet<>();
-    private static final PotionEffect invisible = new PotionEffect(PotionEffectType.INVISIBILITY,600,0,true,false);
 
     private static ListenerManager manager;
 
@@ -78,14 +77,12 @@ public class ActReady extends CutsceneAction {
     private static void on(Player player) {
         toggle.add(player);
         player.setGameMode(GameMode.SPECTATOR);
-        player.addPotionEffect(invisible);
 
         if (!ActMark.LOCATION.containsKey(player)) ActMark.LOCATION.put(player,player.getLocation());
     }
     private static void off(Player player) {
         toggle.remove(player);
         player.setGameMode(GameMode.SURVIVAL);
-        player.removePotionEffect(PotionEffectType.INVISIBILITY);
 
         ActMark.LOCATION.remove(player);
     }

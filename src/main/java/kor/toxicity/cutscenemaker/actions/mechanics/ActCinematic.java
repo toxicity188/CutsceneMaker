@@ -10,7 +10,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.function.Function;
+import java.util.stream.IntStream;
 
 public class ActCinematic extends RepeatableAction {
 
@@ -24,7 +24,7 @@ public class ActCinematic extends RepeatableAction {
     private Location first;
     private Location last;
 
-    private Function<Integer,Location> function;
+    private Location[] locations;
 
     public ActCinematic(CutsceneManager pl) {
         super(pl);
@@ -51,13 +51,12 @@ public class ActCinematic extends RepeatableAction {
             float yaw = ((Math.abs(yawNegative) > Math.abs(yawPositive)) ? yawPositive : yawNegative) / loop;
 
 
-            function = i -> {
-                double v1 = (double) i;
+            locations = IntStream.range(0,ticks).mapToObj(i -> {
                 float v2 = (float) i;
 
-                double x1 = x * v1;
-                double y1 = y * v1;
-                double z1 = z * v1;
+                double x1 = x * (double) i;
+                double y1 = y * (double) i;
+                double z1 = z * (double) i;
                 float pitch1 = pitch * v2;
                 float yaw1 = yaw * v2;
 
@@ -65,7 +64,7 @@ public class ActCinematic extends RepeatableAction {
                 ret.setPitch(first.getPitch() + pitch1);
                 ret.setYaw(first.getYaw() + yaw1);
                 return ret;
-            };
+            }).toArray(Location[]::new);
         } else CutsceneMaker.warn("unable to find location. (" + from + ", " + to + ")");
     }
     private float a(float f) {
@@ -85,7 +84,7 @@ public class ActCinematic extends RepeatableAction {
     protected void update(LivingEntity entity) {
         if (loops.containsKey(entity)) {
             int i = loops.get(entity);
-            entity.teleport(function.apply(i), PlayerTeleportEvent.TeleportCause.PLUGIN);
+            entity.teleport(locations[i], PlayerTeleportEvent.TeleportCause.PLUGIN);
             loops.put(entity,i + 1);
         }
     }

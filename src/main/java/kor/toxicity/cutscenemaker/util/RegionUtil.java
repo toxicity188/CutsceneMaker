@@ -9,7 +9,7 @@ import org.bukkit.entity.Entity;
 import org.codemc.worldguardwrapper.WorldGuardWrapper;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class RegionUtil {
+public final class RegionUtil {
     @Getter
     private static final RegionUtil instance = new RegionUtil();
 

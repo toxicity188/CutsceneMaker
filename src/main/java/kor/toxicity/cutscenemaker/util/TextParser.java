@@ -59,7 +59,7 @@ public final class TextParser {
     public Function<LivingEntity,Location> getBlockLocation(String world, String location) {
         if (location != null && location.contains(",")) {
             try {
-                double[] d = Arrays.stream(location.split(",")).mapToDouble(Double::parseDouble).map(Math::floor).toArray();
+                double[] d = Arrays.stream(location.split(",")).mapToDouble(Double::parseDouble).toArray();
                 if (d.length >= 3) {
                     if (world != null && Bukkit.getWorld(world) != null) {
                         Location loc = new Location(Bukkit.getWorld(world), d[0], d[1], d[2]);

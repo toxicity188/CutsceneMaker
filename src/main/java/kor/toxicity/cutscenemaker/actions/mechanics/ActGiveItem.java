@@ -68,7 +68,7 @@ public class ActGiveItem extends CutsceneAction {
             if (tag != null) {
                 Map<String, String> tags = new HashMap<>();
                 tag.entrySet().stream().filter(e -> e.getValue().getAsString() != null).forEach(e -> tags.put(e.getKey(), e.getValue().getAsString()));
-                ItemUtil.setInternalTag(give, tags);
+                give = ItemUtil.setInternalTag(give, tags);
             }
         }
     }

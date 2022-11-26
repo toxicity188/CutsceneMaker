@@ -33,6 +33,7 @@ public final class ConditionParser<T> {
     public final ConditionContainer<String> STRING = new ConditionContainer<>();
 
     static {
+        LIVING_ENTITY.STRING.addFunction("colon",(p,j) -> ":");
         LIVING_ENTITY.STRING.addFunction("tool",(p,j) -> {
             if (p instanceof Player) {
                 ItemStack i = ((Player) p).getInventory().getItemInMainHand();

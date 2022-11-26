@@ -7,6 +7,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 public abstract class RepeatableAction extends CutsceneAction{
 
@@ -17,7 +18,7 @@ public abstract class RepeatableAction extends CutsceneAction{
     @DataField(aliases = "async")
     public boolean asynchronous = true;
 
-    private final Map<LivingEntity, RepeatableRun> tasks = new HashMap<>();
+    private final Map<LivingEntity, RepeatableRun> tasks = new WeakHashMap<>();
     private final CutsceneManager manager;
 
     public RepeatableAction(CutsceneManager pl) {

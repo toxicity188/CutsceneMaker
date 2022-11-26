@@ -1,7 +1,5 @@
 package kor.toxicity.cutscenemaker.util;
 
-import java.text.DecimalFormat;
-
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,7 +8,7 @@ import org.bukkit.OfflinePlayer;
 import net.milkbowl.vault.economy.Economy;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class MoneyUtil{
+public final class MoneyUtil{
 	@Getter
 	private static final MoneyUtil instance = new MoneyUtil();
 	private final Economy economy = Bukkit.getServicesManager().getRegistration(Economy.class) != null ? Bukkit.getServicesManager().getRegistration(Economy.class).getProvider() : null;
