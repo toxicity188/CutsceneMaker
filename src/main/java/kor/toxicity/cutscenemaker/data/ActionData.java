@@ -134,11 +134,10 @@ public final class ActionData extends CutsceneData {
                 CutsceneAction a = c.getDeclaredConstructor(CutsceneManager.class).newInstance(getPlugin().getManager());
 
                 DataObject<CutsceneAction> obj = new DataObject<>(a);
-                String arg = matcher.group("argument");
-                if (arg != null) {
+                Optional.ofNullable(matcher.group("argument")).ifPresent(arg -> {
                     JsonElement e = parser.parse(arg.replaceAll("=", ":"));
                     obj.apply(e.getAsJsonObject());
-                }
+                });
                 if (!obj.isLoaded()) throw new NoValueFoundException("Class \"" + clazz + "\" must set value \"" + TextParser.getInstance().toSingleText(obj.getErrorField()) + "\"");
                 a.initialize();
                 return a;

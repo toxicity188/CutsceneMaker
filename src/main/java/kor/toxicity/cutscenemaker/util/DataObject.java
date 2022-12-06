@@ -21,19 +21,22 @@ public class DataObject<T> {
 
 
     public void apply(JsonObject j) {
-        assert j != null;
         List<Field> f = c();
         j.entrySet().forEach(e ->  f.stream().filter(a -> a.getName().equals(e.getKey()) || Arrays.asList(a(a).aliases()).contains(e.getKey())).findFirst().ifPresent(b -> b(t).accept(b, e.getValue())));
-        check = f.stream().filter(a -> {
+        check(f);
+    }
+    public boolean isLoaded() {
+        if (check == null) check(null);
+        return check.isEmpty();
+    }
+    private void check(List<Field> recycle) {
+        check = ((recycle != null) ? recycle : c()).stream().filter(a -> {
             try {
                 return a(a).throwable() && a.get(t) == null;
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
         }).map(Field::getName).collect(Collectors.toList());
-    }
-    public boolean isLoaded() {
-        return check.isEmpty();
     }
 
     public List<String> getErrorField() {

@@ -24,18 +24,18 @@ public class ItemBuilder {
 
         List<BiConsumer<Player,ItemMeta>> metaList = new ArrayList<>();
 
-        Optional.ofNullable(meta.getDisplayName()).ifPresent(d -> metaList.add((p,m) -> {
+        Optional.ofNullable(meta.getDisplayName()).ifPresent(d -> {
             MethodInterpreter printer = new MethodInterpreter(d);
-            if (printer.ANY_MATCH) m.setDisplayName(printer.print(p));
-        }));
-        Optional.ofNullable(meta.getLore()).ifPresent(l -> metaList.add((p,m) -> {
+            if (printer.ANY_MATCH) metaList.add((p,m) -> m.setDisplayName(printer.print(p)));
+        });
+        Optional.ofNullable(meta.getLore()).ifPresent(l -> {
             Stream<MethodInterpreter> printer = l.stream().map(MethodInterpreter::new);
-            if (printer.anyMatch(q -> q.ANY_MATCH)) m.setLore(printer.map(t -> t.print(p)).collect(Collectors.toList()));
-        }));
-        Optional.ofNullable(meta.getLocalizedName()).ifPresent(d -> metaList.add((p,m) -> {
+            if (printer.anyMatch(q -> q.ANY_MATCH)) metaList.add((p,m) -> m.setLore(printer.map(t -> t.print(p)).collect(Collectors.toList())));
+        });
+        Optional.ofNullable(meta.getLocalizedName()).ifPresent(d -> {
             MethodInterpreter printer = new MethodInterpreter(d);
-            if (printer.ANY_MATCH) m.setLocalizedName(printer.print(p));
-        }));
+            if (printer.ANY_MATCH) metaList.add((p,m) -> m.setLocalizedName(printer.print(p)));
+        });
 
         function = (metaList.size() > 0) ? p -> {
             ItemStack i = item.clone();
