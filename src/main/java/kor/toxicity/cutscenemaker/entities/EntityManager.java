@@ -89,11 +89,11 @@ public class EntityManager implements Listener {
         if (entity != null) entityMap.put(key,entity);
     }
 
-    private synchronized CutsceneEntity a(EntityType type, Location location) {
+    private CutsceneEntity a(EntityType type, Location location) {
         return new CutsceneEntity((LivingEntity) location.getWorld().spawnEntity(location,type));
     }
 
-    private synchronized CutsceneEntity b(String key, Location location) {
+    private CutsceneEntity b(String key, Location location) {
         try (MythicMobs instance = MythicMobs.inst()) {
             return new CutsceneEntity((LivingEntity) instance.getMobManager().spawnMob(key, location).getEntity().getBukkitEntity());
         } catch (Exception e) {
@@ -102,7 +102,7 @@ public class EntityManager implements Listener {
         }
     }
     private void c(Player p, Consumer<PlayerBoundMob> e) {
-        Optional.of(boundMobMap.get(p)).ifPresent(e);
+        Optional.ofNullable(boundMobMap.get(p)).ifPresent(e);
     }
 
     public void remove(String key) {

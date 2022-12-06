@@ -1,10 +1,8 @@
 package kor.toxicity.cutscenemaker.util;
 
-import com.sk89q.worldguard.bukkit.WGBukkit;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.codemc.worldguardwrapper.WorldGuardWrapper;
 
