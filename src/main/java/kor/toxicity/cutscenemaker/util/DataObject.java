@@ -3,7 +3,6 @@ package kor.toxicity.cutscenemaker.util;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import kor.toxicity.cutscenemaker.util.functions.MethodInterpreter;
-import kor.toxicity.cutscenemaker.util.functions.MethodString;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -55,7 +54,7 @@ public class DataObject<T> {
                 if (f.getType() == Boolean.TYPE) p = j.getAsBoolean();
                 if (f.getType() == String.class) p = j.getAsString();
                 if (f.getType() == JsonObject.class && j.isJsonObject()) p = j.getAsJsonObject();
-                if (f.getType() == MethodInterpreter.class) p = MethodString.getInstance().parse(j.getAsString());
+                if (f.getType() == MethodInterpreter.class) p = new MethodInterpreter(j.getAsString());
                 f.set(a, p);
             } catch (IllegalAccessException ignored) {}
         };

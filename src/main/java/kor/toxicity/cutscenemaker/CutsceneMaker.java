@@ -45,16 +45,14 @@ public final class CutsceneMaker extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        Bukkit.getScheduler().runTaskAsynchronously(this,() -> {
-            Bukkit.getOnlinePlayers().forEach(p -> Optional.of(manager.getVars(p)).ifPresent(f -> {
-                try {
-                    f.save(this);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }));
-            send("Plugin disabled.");
-        });
+        Bukkit.getOnlinePlayers().forEach(p -> Optional.of(manager.getVars(p)).ifPresent(f -> {
+            try {
+                f.save(this);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }));
+        send("Plugin disabled.");
     }
 
     void load(Runnable callback) {

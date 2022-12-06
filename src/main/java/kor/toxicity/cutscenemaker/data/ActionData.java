@@ -20,9 +20,11 @@ import org.bukkit.entity.LivingEntity;
 
 import java.util.*;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class ActionData extends CutsceneData {
-
+    private static final Pattern ACTION_PATTERN = Pattern.compile("^(?<name>\\w+)(?<argument>\\{((\\w|\\W)*)})?$", Pattern.UNICODE_CHARACTER_CLASS);
     private static final Map<String,Class<? extends CutsceneAction>> actions = new HashMap<>();
     private static final Map<String, ActionContainer> actionContainer = new HashMap<>();
     private final JsonParser parser = new JsonParser();
@@ -102,8 +104,8 @@ public final class ActionData extends CutsceneData {
             }
             if (events != null) {
                 events.forEach(e -> {
-                    String t = getFirst(e);
-                    EventData.addListener(container,t,parser.parse(getLast(e,t)).getAsJsonObject());
+                    Matcher matcher = ACTION_PATTERN.matcher(e);
+                    if (matcher.find()) EventData.addListener(container, matcher.group("name"), parser.parse(matcher.group("argument")).getAsJsonObject());
                 });
             }
             container.confirm();
@@ -122,16 +124,21 @@ public final class ActionData extends CutsceneData {
     }
 
     private CutsceneAction a(String k) throws NoActionFoundException {
-        String clazz = getFirst(k);
-        if (!clazz.equals("") && actions.containsKey(clazz)) {
+        Matcher matcher = ACTION_PATTERN.matcher(k);
+        if (!matcher.find()) throw new IllegalStateException("Unable to load statement \"" + k + "\".");
+
+        String clazz = matcher.group("name");
+        if (actions.containsKey(clazz)) {
             try {
                 Class<? extends CutsceneAction> c = actions.get(clazz);
                 CutsceneAction a = c.getDeclaredConstructor(CutsceneManager.class).newInstance(getPlugin().getManager());
-                JsonElement e = parser.parse(k.substring(clazz.length()).replaceAll("=",":"));
 
                 DataObject<CutsceneAction> obj = new DataObject<>(a);
-
-                obj.apply(e.getAsJsonObject());
+                String arg = matcher.group("argument");
+                if (arg != null) {
+                    JsonElement e = parser.parse(arg.replaceAll("=", ":"));
+                    obj.apply(e.getAsJsonObject());
+                }
                 if (!obj.isLoaded()) throw new NoValueFoundException("Class \"" + clazz + "\" must set value \"" + TextParser.getInstance().toSingleText(obj.getErrorField()) + "\"");
                 a.initialize();
                 return a;
@@ -141,19 +148,6 @@ public final class ActionData extends CutsceneData {
         } else {
             throw new NoActionFoundException("Unable to load Action \"" + clazz + "\".");
         }
-    }
-
-    private String getFirst(String s) {
-        StringBuilder ret = new StringBuilder();
-        int loop = 0;
-        while (loop < s.length() && !String.valueOf(s.charAt(loop)).equals("{")) {
-            ret.append(s.charAt(loop));
-            loop ++;
-        }
-        return ret.toString().replaceAll(" ","");
-    }
-    private String getLast(String t, String first) {
-        return t.substring(first.length()).replaceAll("=",":");
     }
 
     public static void addAction(String name, Class<? extends CutsceneAction> action) {

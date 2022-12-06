@@ -5,6 +5,7 @@ import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.data.ItemData;
 import kor.toxicity.cutscenemaker.util.DataField;
+import kor.toxicity.cutscenemaker.util.ItemBuilder;
 import kor.toxicity.cutscenemaker.util.ItemUtil;
 import kor.toxicity.cutscenemaker.util.TextParser;
 import org.bukkit.Material;
@@ -16,6 +17,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ActGiveItem extends CutsceneAction {
@@ -37,7 +39,7 @@ public class ActGiveItem extends CutsceneAction {
     public String config;
 
 
-    private ItemStack give;
+    private Function<Player,ItemStack> apply;
 
     public ActGiveItem(CutsceneManager pl) {
         super(pl);
@@ -47,9 +49,10 @@ public class ActGiveItem extends CutsceneAction {
     public void initialize() {
         super.initialize();
         if (config != null) {
-            give = ItemData.getItem(config);
+            apply = p -> ItemData.getItem(p,config);
         }
-        if (give == null) {
+        if (apply == null) {
+            ItemStack give;
             try {
                 give = new ItemStack(Material.valueOf(type));
             } catch (Exception e) {
@@ -70,12 +73,17 @@ public class ActGiveItem extends CutsceneAction {
                 tag.entrySet().stream().filter(e -> e.getValue().getAsString() != null).forEach(e -> tags.put(e.getKey(), e.getValue().getAsString()));
                 give = ItemUtil.setInternalTag(give, tags);
             }
+            ItemBuilder builder = new ItemBuilder(give);
+            apply = builder::get;
         }
     }
 
     @Override
     public void apply(LivingEntity entity) {
-        if (entity instanceof Player) ((Player) entity).getInventory().addItem(give);
+        if (entity instanceof Player) {
+            Player p = ((Player) entity);
+            p.getInventory().addItem(apply.apply(p));
+        }
     }
     private String a(String t) {
         return TextParser.getInstance().colored(t);

@@ -1,7 +1,6 @@
 package kor.toxicity.cutscenemaker.util.conditions;
 
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
@@ -19,9 +18,12 @@ import org.bukkit.inventory.ItemStack;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class ConditionParser<T> {
 
+    private static final Pattern FUNCTION_PATTERN = Pattern.compile("(?<name>\\w+)(?<argument>\\[((\\w|,)*)])", Pattern.UNICODE_CHARACTER_CLASS);
     private static final JsonParser parser = new JsonParser();
     public static final ConditionParser<LivingEntity> LIVING_ENTITY = new ConditionParser<>();
 
@@ -182,14 +184,13 @@ public final class ConditionParser<T> {
 
 
         public Function<T,R> getAsFunc(String s) {
-            if (s.contains("[") && s.contains("]")) {
-                String clazz = a(s);
-                JsonMethod<T, R> m = func.get(clazz);
-                String p = b(s.substring(clazz.length()));
-                JsonElement e = (!p.equals("")) ? parser.parse(p) : new JsonArray();
-                if (m != null && e != null && e.isJsonArray()) {
-                    return m.getAsFunction(e.getAsJsonArray());
-                }
+            Matcher matcher = FUNCTION_PATTERN.matcher(s);
+
+            if (matcher.find()) {
+                JsonMethod<T, R> m = func.get(matcher.group("name"));
+                JsonElement e = parser.parse(matcher.group("argument"));
+
+                if (m != null && e != null && e.isJsonArray()) return m.getAsFunction(e.getAsJsonArray());
             }
             R type = tryConvert(s);
             return (type != null) ? t -> type : null;
@@ -202,23 +203,5 @@ public final class ConditionParser<T> {
             }
         }
 
-        private String a(String s) {
-            StringBuilder ret = new StringBuilder();
-            int loop = 0;
-            while (loop < s.length() && !String.valueOf(s.charAt(loop)).equals("[")) {
-                ret.append(s.charAt(loop));
-                loop ++;
-            }
-            return ret.toString().replaceAll(" ","");
-        }
-        private String b(String s) {
-            StringBuilder ret = new StringBuilder("[");
-            int loop = 1;
-            while (loop  < s.length() && !String.valueOf(s.charAt(loop - 1)).equals("]")) {
-                ret.append(s.charAt(loop ));
-                loop ++;
-            }
-            return ret.toString().replaceAll(" ","");
-        }
     }
 }

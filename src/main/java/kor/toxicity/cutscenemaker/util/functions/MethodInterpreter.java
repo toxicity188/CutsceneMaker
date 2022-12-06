@@ -12,7 +12,9 @@ public class MethodInterpreter {
 
     public static final String PERCENT = "%";
     private final Function<LivingEntity,String> apply;
-    MethodInterpreter(String s) {
+    public final boolean ANY_MATCH;
+
+    public MethodInterpreter(String s) {
         List<Function<LivingEntity,String>> print = new ArrayList<>();
         int loop = 0;
         for (String t : TextParser.getInstance().split(s,PERCENT)) {
@@ -22,13 +24,19 @@ public class MethodInterpreter {
                 if (function != null) print.add(function);
             } else print.add(q -> t);
         }
-        apply = (print.size() == 1) ? e -> print.get(0).apply(e) : e -> {
-            StringBuilder t = new StringBuilder();
-            for (Function<LivingEntity, String> f : print) {
-                t.append(f.apply(e));
-            }
-            return t.toString();
-        };
+        if (print.size() == 1) {
+            ANY_MATCH = false;
+            apply = print.get(0);
+        } else {
+            ANY_MATCH = true;
+            apply = e -> {
+                StringBuilder t = new StringBuilder();
+                for (Function<LivingEntity, String> f : print) {
+                    t.append(f.apply(e));
+                }
+                return t.toString();
+            };
+        }
     }
 
     public String print(LivingEntity e) {

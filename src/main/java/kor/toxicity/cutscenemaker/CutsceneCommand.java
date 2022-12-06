@@ -6,6 +6,7 @@ import kor.toxicity.cutscenemaker.commands.CommandPacket;
 import kor.toxicity.cutscenemaker.commands.SenderType;
 import kor.toxicity.cutscenemaker.data.ActionData;
 import kor.toxicity.cutscenemaker.util.ConfigWriter;
+import kor.toxicity.cutscenemaker.util.ItemBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -128,7 +129,7 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
                             break;
                         case "get":
                             if (config.isSet(args[3]) && config.isItemStack(args[3])) {
-                                player.getInventory().addItem(config.getItemStack(args[3]));
+                                player.getInventory().addItem(new ItemBuilder(config.getItemStack(args[3])).get(player));
                                 send(player, "successfully get.");
                             } else send(player, "item not found.");
                             break;
