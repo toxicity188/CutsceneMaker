@@ -15,7 +15,10 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -23,11 +26,9 @@ import java.util.regex.Pattern;
 
 public final class ConditionParser<T> {
 
-    private static final Pattern FUNCTION_PATTERN = Pattern.compile("(?<name>\\w+)(?<argument>\\[((\\w|,)*)])", Pattern.UNICODE_CHARACTER_CLASS);
+    private static final Pattern FUNCTION_PATTERN = Pattern.compile("(?<name>\\w+)(?<argument>\\[((\\w|,|\\s|\")*)])", Pattern.UNICODE_CHARACTER_CLASS);
     private static final JsonParser parser = new JsonParser();
     public static final ConditionParser<LivingEntity> LIVING_ENTITY = new ConditionParser<>();
-
-
     private final Set<ConditionContainer<?>> types = new LinkedHashSet<>();
 
     public final ConditionContainer<Number> NUMBER = new ConditionContainer<>();
@@ -82,7 +83,22 @@ public final class ConditionParser<T> {
             return false;
         });
 
+
+        LIVING_ENTITY.NUMBER.addFunction("num", (e,j) -> {
+            if (j.size() == 0 || !(e instanceof Player)) return 0;
+            return CutsceneMaker.getVars((Player) e,j.get(0).getAsString()).getAsNum();
+        });
+        LIVING_ENTITY.BOOL.addFunction("bool", (e,j) -> {
+            if (j.size() == 0 || !(e instanceof Player)) return false;
+            return CutsceneMaker.getVars((Player) e,j.get(0).getAsString()).getAsBool();
+        });
+        LIVING_ENTITY.STRING.addFunction("str", (e,j) -> {
+            if (j.size() == 0 || !(e instanceof Player)) return "<none>";
+            return CutsceneMaker.getVars((Player) e,j.get(0).getAsString()).getVar();
+        });
+
     }
+
     public Function<T,?> getAsFunc(String t) {
         ConditionContainer<?> parse = types.stream().filter(c -> c.getAsFunc(t) != null).findFirst().orElse(null);
         return (parse != null) ? parse.getAsFunc(t) : null;
@@ -125,18 +141,6 @@ public final class ConditionParser<T> {
         STRING.addOperator("==", String::equals);
         STRING.addOperator("!=", (a,b) -> !a.equals(b));
 
-        NUMBER.addFunction("num", (e,j) -> {
-            if (j.size() == 0 || !(e instanceof Player)) return 0;
-            return CutsceneMaker.getVars((Player) e,j.get(0).getAsString()).getAsNum();
-        });
-        BOOL.addFunction("bool", (e,j) -> {
-            if (j.size() == 0 || !(e instanceof Player)) return false;
-            return CutsceneMaker.getVars((Player) e,j.get(0).getAsString()).getAsBool();
-        });
-        STRING.addFunction("str", (e,j) -> {
-            if (j.size() == 0 || !(e instanceof Player)) return "<none>";
-            return CutsceneMaker.getVars((Player) e,j.get(0).getAsString()).getVar();
-        });
     }
 
     public class ConditionContainer<R> {

@@ -2,7 +2,6 @@ package kor.toxicity.cutscenemaker.actions.mechanics;
 
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
-import kor.toxicity.cutscenemaker.events.ActionCancelEvent;
 import kor.toxicity.cutscenemaker.events.ActionStartEvent;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
 import org.bukkit.GameMode;
@@ -13,19 +12,28 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.*;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
-public class ActReady extends CutsceneAction {
+public class ActSlate extends CutsceneAction {
 
     private static final Set<Player> toggle = new HashSet<>();
+    private static final List<Consumer<Player>> tasksOn = new ArrayList<>();
+    private static final List<Consumer<Player>> tasksOff = new ArrayList<>();
+    public static void addSlateOnTask(Consumer<Player> task) {
+        tasksOn.add(task);
+    }
+    public static void addSlateOffTask(Consumer<Player> task) {
+        tasksOff.add(task);
+    }
 
     private static ListenerManager manager;
 
-    public ActReady(CutsceneManager pl) {
+    public ActSlate(CutsceneManager pl) {
         super(pl);
         if (manager == null) manager = pl.register(new Listener() {
             @EventHandler
@@ -77,12 +85,14 @@ public class ActReady extends CutsceneAction {
     private static void on(Player player) {
         toggle.add(player);
         player.setGameMode(GameMode.SPECTATOR);
+        for (Consumer<Player> p : tasksOn) p.accept(player);
 
         if (!ActMark.LOCATION.containsKey(player)) ActMark.LOCATION.put(player,player.getLocation());
     }
     private static void off(Player player) {
         toggle.remove(player);
         player.setGameMode(GameMode.SURVIVAL);
+        for (Consumer<Player> p : tasksOff) p.accept(player);
 
         ActMark.LOCATION.remove(player);
     }

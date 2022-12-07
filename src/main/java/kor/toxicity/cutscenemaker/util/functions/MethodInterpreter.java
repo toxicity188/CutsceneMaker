@@ -44,7 +44,7 @@ public class MethodInterpreter {
     }
 
     private String printNumber(double d) {
-        return (d == Math.floor(d)) ? Integer.toString((int) d) : String.format("%.2f", d);
+        return (d == Math.floor(d)) ? TextParser.getInstance().applyComma(d) : String.format("%.2f", d);
     }
 
     private Function<LivingEntity,String> get(String t) {

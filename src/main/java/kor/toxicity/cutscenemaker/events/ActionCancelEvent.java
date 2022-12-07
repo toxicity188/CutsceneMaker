@@ -12,14 +12,12 @@ import org.bukkit.event.entity.EntityEvent;
  * This event might be called when Action is stopped unsafely, like quitting or dying.
  */
 public class ActionCancelEvent extends EntityEvent implements ICutsceneEvent {
-    //Cancelled Action
     @Getter
     private static final HandlerList handlerList = new HandlerList();
     @Getter
-    private final ActionContainer container;
-    //A reason of cancelling
+    private final ActionContainer container; //Cancelled Action
     @Getter
-    private final CancelCause cause;
+    private final CancelCause cause; //A reason of cancellation
 
     public ActionCancelEvent(Entity what, ActionContainer container, CancelCause cause) {
         super(what);

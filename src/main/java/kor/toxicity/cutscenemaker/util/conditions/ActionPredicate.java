@@ -37,10 +37,8 @@ public interface ActionPredicate<T> extends Predicate<T> {
         Objects.requireNonNull(action);
         Objects.requireNonNull(predicate);
         switch (action) {
-            case "and":
             case "&&":
                 return addAnd(predicate);
-            case "or":
             case "||":
                 return addOr(predicate);
         }
