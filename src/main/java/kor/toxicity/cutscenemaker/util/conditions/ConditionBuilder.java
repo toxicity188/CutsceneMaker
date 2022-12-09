@@ -4,6 +4,7 @@ package kor.toxicity.cutscenemaker.util.conditions;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
+import kor.toxicity.cutscenemaker.data.ItemData;
 import kor.toxicity.cutscenemaker.util.JsonMethod;
 import kor.toxicity.cutscenemaker.util.MoneyUtil;
 import kor.toxicity.cutscenemaker.util.RegionUtil;
@@ -15,10 +16,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -81,6 +79,13 @@ public final class ConditionBuilder<T> {
                 return RegionUtil.getInstance().inRegion(e,j.get(0).getAsString());
             }
             return false;
+        });
+        LIVING_ENTITY.BOOL.addFunction("hasitem",(e,j) -> {
+            if (!(e instanceof Player) || j.size() == 0) return false;
+            Player p = (Player) e;
+            ItemStack item = ItemData.getItem(p,j.get(0).getAsString());
+            if (item == null) return false;
+            return Arrays.asList(p.getInventory().getContents()).contains(item);
         });
 
 
@@ -191,7 +196,7 @@ public final class ConditionBuilder<T> {
             Matcher matcher = FUNCTION_PATTERN.matcher(s);
 
             if (matcher.find()) {
-                JsonMethod<T, R> m = func.get(matcher.group("name"));
+                JsonMethod<T, R> m = func.get(matcher.group("name").toLowerCase());
                 JsonElement e = parser.parse(matcher.group("argument"));
 
                 if (m != null && e != null && e.isJsonArray()) return m.getAsFunction(e.getAsJsonArray());

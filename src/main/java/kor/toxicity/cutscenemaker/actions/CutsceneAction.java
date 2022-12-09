@@ -29,6 +29,7 @@ public abstract class CutsceneAction {
     }
     protected abstract void apply(LivingEntity entity);
     public void initialize() {
+        if (delay < 0) delay = 0;
         if (target != null) {
             invoke = e -> {
                 if (e instanceof Player) Optional.of(EntityManager.getInstance().get((Player) e,target)).map(CutsceneEntity::getEntity).ifPresent(this::apply);

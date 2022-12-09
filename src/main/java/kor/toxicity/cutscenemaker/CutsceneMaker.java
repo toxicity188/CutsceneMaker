@@ -32,6 +32,7 @@ public final class CutsceneMaker extends JavaPlugin {
         CutsceneCommand command = new CutsceneCommand(this);
         manager = new CutsceneManager(this);
         reload.add(command::unregister);
+        reload.add(() -> CutsceneConfig.getInstance().load(this));
         reload.add(new EventData(this));
         reload.add(new ItemData(this));
         reload.add(new LocationData(this));

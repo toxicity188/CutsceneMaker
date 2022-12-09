@@ -158,7 +158,7 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
             @CommandHandler(aliases = {"tp"}, length = 1, description = "teleport to a registered location.", usage = "/cutscene teleport <name>", sender = SenderType.ENTITY)
             public void teleport(CommandPacket pkg) {
                 String name = pkg.getArgs()[1];
-                Location loc = pl.getManager().getLocations().get(name);
+                Location loc = pl.getManager().getLocations().getValue(name);
                 if (loc != null) ((LivingEntity) pkg.getSender()).teleport(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
                 else send(pkg.getSender(), "location \"" + name + "\" not found.");
             }

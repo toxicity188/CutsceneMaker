@@ -40,8 +40,8 @@ public class ActMessage extends RepeatableAction {
     public int fadeout = 10;
 
 
-    private List<MethodInterpreter> m;
-    private List<MethodInterpreter> st;
+    private MethodInterpreter[] m;
+    private MethodInterpreter[] st;
     private BiConsumer<LivingEntity,Integer> act;
     private final Map<LivingEntity,Integer> id;
 
@@ -53,8 +53,8 @@ public class ActMessage extends RepeatableAction {
     @Override
     public void initialize() {
         super.initialize();
-        a(message,s -> m = s);
-        a(subtitle,s -> st = s);
+        m = a(message);
+        st = a(subtitle);
 
         switch (type) {
             default:
@@ -63,21 +63,21 @@ public class ActMessage extends RepeatableAction {
                     Consumer<LivingEntity> c = e -> IntStream.range(0, blank).forEach(i -> e.sendMessage(""));
                     act = (e, i) -> {
                         c.accept(e);
-                        e.sendMessage(m.get(Math.min(m.size()-1,i)).print(e));
+                        e.sendMessage(m[Math.min(m.length-1,i)].print(e));
                         c.accept(e);
                     };
-                } else act = (e,i) -> e.sendMessage(m.get(Math.min(m.size()-1,i)).print(e));
+                } else act = (e,i) -> e.sendMessage(m[Math.min(m.length-1,i)].print(e));
                 break;
             case "title":
                 act = (e,i) -> {
-                    if (e instanceof Player) ((Player) e).sendTitle(m.get(Math.min(m.size()-1,i)).print(e), st.get(Math.min(st.size()-1,i)).print(e), fadein, stay, fadeout);
+                    if (e instanceof Player) ((Player) e).sendTitle(m[Math.min(m.length-1,i)].print(e), st[Math.min(st.length-1,i)].print(e), fadein, stay, fadeout);
                 };
                 break;
         }
     }
-    private void a(String s, Consumer<List<MethodInterpreter>> c) {
-        if (s == null) return;
-        c.accept(Arrays.stream(TextUtil.getInstance().split(s.replaceAll("&","§"),"/")).map(q -> new MethodInterpreter(b(q))).collect(Collectors.toList()));
+    private MethodInterpreter[] a(String s) {
+        if (s == null) return null;
+        return Arrays.stream(TextUtil.getInstance().split(TextUtil.getInstance().colored(s), "//")).map(q -> new MethodInterpreter(b(q))).toArray(MethodInterpreter[]::new);
     }
     private String b(String s) {
         return TextUtil.getInstance().colored(s);

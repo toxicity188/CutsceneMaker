@@ -1,5 +1,6 @@
 package kor.toxicity.cutscenemaker.actions.mechanics;
 
+import kor.toxicity.cutscenemaker.CutsceneConfig;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.events.ActionStartEvent;
@@ -91,7 +92,7 @@ public class ActSlate extends CutsceneAction {
     }
     private static void off(Player player) {
         toggle.remove(player);
-        player.setGameMode(GameMode.SURVIVAL);
+        player.setGameMode(CutsceneConfig.getInstance().getDefaultGameMode());
         for (Consumer<Player> p : tasksOff) p.accept(player);
 
         ActMark.LOCATION.remove(player);

@@ -3,6 +3,7 @@ package kor.toxicity.cutscenemaker;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import de.slikey.effectlib.EffectManager;
+import kor.toxicity.cutscenemaker.util.DataContainer;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
@@ -11,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -33,7 +35,7 @@ public final class CutsceneManager {
     private final ProtocolManager ProtocolLib;
 
     @Getter
-    private final Map<String, Location> locations = new HashMap<>();
+    private final DataContainer<Location> locations = new DataContainer<>();
 
     CutsceneManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -77,7 +79,14 @@ public final class CutsceneManager {
 
         @EventHandler
         public void onJoin(PlayerJoinEvent e) {
-            load(e.getPlayer());
+            Player player = e.getPlayer();
+            if (CutsceneConfig.getInstance().isChangeGameMode()) {
+                GameMode mode = CutsceneConfig.getInstance().getDefaultGameMode();
+                if (!player.isOp() && player.getGameMode() != mode) {
+                    player.setGameMode(mode);
+                }
+            }
+            load(player);
         }
         private void load(Player player) {
             Bukkit.getScheduler().runTaskAsynchronously(plugin,() -> {
@@ -87,7 +96,7 @@ public final class CutsceneManager {
                 } catch (Exception t) {
                     c.register(plugin);
                 }
-                c.autoSave(plugin, 300);
+                c.autoSave(plugin, CutsceneConfig.getInstance().getAutoSaveTime());
                 container.put(player, c);
             });
         }

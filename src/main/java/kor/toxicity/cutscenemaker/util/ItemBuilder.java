@@ -29,8 +29,8 @@ public class ItemBuilder {
             if (printer.ANY_MATCH) metaList.add((p,m) -> m.setDisplayName(printer.print(p)));
         });
         Optional.ofNullable(meta.getLore()).ifPresent(l -> {
-            Stream<MethodInterpreter> printer = l.stream().map(MethodInterpreter::new);
-            if (printer.anyMatch(q -> q.ANY_MATCH)) metaList.add((p,m) -> m.setLore(printer.map(t -> t.print(p)).collect(Collectors.toList())));
+            List<MethodInterpreter> printer = l.stream().map(MethodInterpreter::new).collect(Collectors.toList());
+            if (printer.stream().anyMatch(q -> q.ANY_MATCH)) metaList.add((p,m) -> m.setLore(printer.stream().map(t -> t.print(p)).collect(Collectors.toList())));
         });
         Optional.ofNullable(meta.getLocalizedName()).ifPresent(d -> {
             MethodInterpreter printer = new MethodInterpreter(d);

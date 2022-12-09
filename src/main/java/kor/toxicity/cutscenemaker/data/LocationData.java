@@ -2,6 +2,7 @@ package kor.toxicity.cutscenemaker.data;
 
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
+import kor.toxicity.cutscenemaker.util.DataContainer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -16,10 +17,10 @@ public final class LocationData extends CutsceneData {
 
     @Override
     public void reload() {
-        Map<String, Location> loc = getPlugin().getManager().getLocations();
+        DataContainer<Location> loc = getPlugin().getManager().getLocations();
         loc.clear();
         ConfigLoad config = getPlugin().read("Locations");
-        config.getAllFiles().forEach(s -> {
+        config.forEach((f,n) -> n.forEach(s -> {
             double x = config.getDouble(s + ".x",0D);
             double y = config.getDouble(s + ".y",0D);
             double z = config.getDouble(s + ".z",0D);
@@ -30,9 +31,9 @@ public final class LocationData extends CutsceneData {
                 Location save = new Location(Bukkit.getWorld(world),x,y,z);
                 save.setPitch(pitch);
                 save.setYaw(yaw);
-                loc.put(s,save);
+                loc.put(f,s,save);
             } else CutsceneMaker.warn("unable to find world \""+ world +"\"");
-        });
+        }));
         CutsceneMaker.send(ChatColor.GREEN + Integer.toString(loc.size()) + " locations successfully loaded.");
     }
 }

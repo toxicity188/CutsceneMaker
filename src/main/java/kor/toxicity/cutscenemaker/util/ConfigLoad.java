@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.MemorySection;
@@ -67,6 +68,9 @@ public class ConfigLoad {
 		List<String> t = new ArrayList<>();
 		keyList.forEach((a,b) -> t.addAll(b));
 		return t;
+	}
+	public void forEach(BiConsumer<String,List<String>> consumer) {
+		keyList.forEach(consumer);
 	}
 
 

@@ -22,7 +22,7 @@ public class ActWarp extends CutsceneAction {
     @Override
     public void initialize() {
         super.initialize();
-        loc = manager.getLocations().get(location);
+        loc = manager.getLocations().getValue(location);
         if (loc == null) CutsceneMaker.warn("unable to find a location named \"" + location + "\"");
     }
 
