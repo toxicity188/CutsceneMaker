@@ -7,7 +7,7 @@ import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.util.JsonMethod;
 import kor.toxicity.cutscenemaker.util.MoneyUtil;
 import kor.toxicity.cutscenemaker.util.RegionUtil;
-import kor.toxicity.cutscenemaker.util.TextParser;
+import kor.toxicity.cutscenemaker.util.TextUtil;
 import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
@@ -24,11 +24,11 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public final class ConditionParser<T> {
+public final class ConditionBuilder<T> {
 
     private static final Pattern FUNCTION_PATTERN = Pattern.compile("(?<name>\\w+)(?<argument>\\[((\\w|,|\\s|\")*)])", Pattern.UNICODE_CHARACTER_CLASS);
     private static final JsonParser parser = new JsonParser();
-    public static final ConditionParser<LivingEntity> LIVING_ENTITY = new ConditionParser<>();
+    public static final ConditionBuilder<LivingEntity> LIVING_ENTITY = new ConditionBuilder<>();
     private final Set<ConditionContainer<?>> types = new LinkedHashSet<>();
 
     public final ConditionContainer<Number> NUMBER = new ConditionContainer<>();
@@ -44,7 +44,7 @@ public final class ConditionParser<T> {
             }
             return "<none>";
         });
-        LIVING_ENTITY.STRING.addFunction("location",(e,j) -> TextParser.getInstance().toSimpleLoc(e.getLocation()));
+        LIVING_ENTITY.STRING.addFunction("location",(e,j) -> TextUtil.getInstance().toSimpleLoc(e.getLocation()));
         LIVING_ENTITY.NUMBER.addFunction("money",(e,j) -> {
             if (e instanceof Player) {
                 return MoneyUtil.getInstance().getMoney((Player) e);
@@ -115,7 +115,7 @@ public final class ConditionParser<T> {
         }
     }
 
-    private ConditionParser() {
+    private ConditionBuilder() {
         NUMBER.converter = Double::parseDouble;
         STRING.converter = s -> s;
         BOOL.converter = s -> {

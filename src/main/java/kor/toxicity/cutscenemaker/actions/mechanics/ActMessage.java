@@ -4,7 +4,7 @@ import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.RepeatableAction;
 import kor.toxicity.cutscenemaker.util.DataField;
 import kor.toxicity.cutscenemaker.util.functions.MethodInterpreter;
-import kor.toxicity.cutscenemaker.util.TextParser;
+import kor.toxicity.cutscenemaker.util.TextUtil;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -77,10 +77,10 @@ public class ActMessage extends RepeatableAction {
     }
     private void a(String s, Consumer<List<MethodInterpreter>> c) {
         if (s == null) return;
-        c.accept(Arrays.stream(TextParser.getInstance().split(s.replaceAll("&","§"),"/")).map(q -> new MethodInterpreter(b(q))).collect(Collectors.toList()));
+        c.accept(Arrays.stream(TextUtil.getInstance().split(s.replaceAll("&","§"),"/")).map(q -> new MethodInterpreter(b(q))).collect(Collectors.toList()));
     }
     private String b(String s) {
-        return TextParser.getInstance().colored(s);
+        return TextUtil.getInstance().colored(s);
     }
 
     @Override

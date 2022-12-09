@@ -4,8 +4,8 @@ import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.util.DataField;
-import kor.toxicity.cutscenemaker.util.TextParser;
-import kor.toxicity.cutscenemaker.util.conditions.ConditionParser;
+import kor.toxicity.cutscenemaker.util.TextUtil;
+import kor.toxicity.cutscenemaker.util.conditions.ConditionBuilder;
 import kor.toxicity.cutscenemaker.util.functions.MethodInterpreter;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import org.bukkit.entity.LivingEntity;
@@ -38,11 +38,11 @@ public class ActIf extends CutsceneAction {
     @Override
     public void initialize() {
         super.initialize();
-        String[] str = TextParser.getInstance().split(condition, " ");
+        String[] str = TextUtil.getInstance().split(condition, " ");
         if (str.length < 3) {
             a();
         } else {
-            Predicate<LivingEntity> predicate = ConditionParser.LIVING_ENTITY.find(str);
+            Predicate<LivingEntity> predicate = ConditionBuilder.LIVING_ENTITY.find(str);
             if (predicate == null) {
                 a();
             } else {

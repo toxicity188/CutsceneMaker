@@ -11,9 +11,9 @@ import kor.toxicity.cutscenemaker.exceptions.NoValueFoundException;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
 import kor.toxicity.cutscenemaker.util.DataObject;
-import kor.toxicity.cutscenemaker.util.TextParser;
+import kor.toxicity.cutscenemaker.util.TextUtil;
 import kor.toxicity.cutscenemaker.util.conditions.ActionPredicate;
-import kor.toxicity.cutscenemaker.util.conditions.ConditionParser;
+import kor.toxicity.cutscenemaker.util.conditions.ConditionBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.LivingEntity;
@@ -25,7 +25,8 @@ import java.util.regex.Pattern;
 
 public final class ActionData extends CutsceneData {
     private static final Pattern ACTION_PATTERN = Pattern.compile("^(?<name>\\w+)(?<argument>\\{((\\w|\\W)*)})?$", Pattern.UNICODE_CHARACTER_CLASS);
-    private static final Map<String,Class<? extends CutsceneAction>> actions = new HashMap<>();
+    private static final Pattern DELAY_PATTERN = Pattern.compile("^delay(\\s*)(?<ticks>[0-9]+$)", Pattern.UNICODE_CHARACTER_CLASS);
+    private static final Map<String, Class<? extends CutsceneAction>> actions = new HashMap<>();
     private static final Map<String, ActionContainer> actionContainer = new HashMap<>();
     private final JsonParser parser = new JsonParser();
 
@@ -53,6 +54,7 @@ public final class ActionData extends CutsceneData {
         actions.put("spawn", ActSpawn.class);
         actions.put("kill", ActKill.class);
         actions.put("if", ActIf.class);
+        actions.put("warp", ActWarp.class);
 
         if (Bukkit.getPluginManager().isPluginEnabled("Skript")) {
             actions.put("skript", ActSetSkriptVar.class);
@@ -95,10 +97,10 @@ public final class ActionData extends CutsceneData {
                 for (String t : condition) {
                     String[] get = t.split(" ");
                     if (cond != null) {
-                        ActionPredicate<LivingEntity> add = ConditionParser.LIVING_ENTITY.find(get);
+                        ActionPredicate<LivingEntity> add = ConditionBuilder.LIVING_ENTITY.find(get);
                         if (add != null) cond = cond.addAnd(getCond(add,get));
                     }
-                    else cond = getCond(ConditionParser.LIVING_ENTITY.find(get),get);
+                    else cond = getCond(ConditionBuilder.LIVING_ENTITY.find(get),get);
                 }
                 container.setConditions(cond);
             }
@@ -124,6 +126,14 @@ public final class ActionData extends CutsceneData {
     }
 
     private CutsceneAction a(String k) throws NoActionFoundException {
+        Matcher delay = DELAY_PATTERN.matcher(k.toLowerCase());
+        if (delay.find()) {
+            CutsceneAction action = new ActDummy(getPlugin().getManager());
+            action.delay = Integer.parseInt(delay.group("ticks"));
+            action.initialize();
+            return action;
+        }
+
         Matcher matcher = ACTION_PATTERN.matcher(k);
         if (!matcher.find()) throw new IllegalStateException("Unable to load statement \"" + k + "\".");
 
@@ -138,7 +148,7 @@ public final class ActionData extends CutsceneData {
                     JsonElement e = parser.parse(arg.replaceAll("=", ":"));
                     obj.apply(e.getAsJsonObject());
                 });
-                if (!obj.isLoaded()) throw new NoValueFoundException("Class \"" + clazz + "\" must set value \"" + TextParser.getInstance().toSingleText(obj.getErrorField()) + "\"");
+                if (!obj.isLoaded()) throw new NoValueFoundException("Class \"" + clazz + "\" must set value \"" + TextUtil.getInstance().toSingleText(obj.getErrorField()) + "\"");
                 a.initialize();
                 return a;
             } catch (Exception e) {

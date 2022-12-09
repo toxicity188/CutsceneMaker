@@ -103,19 +103,19 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
                 long time = System.currentTimeMillis();
                 pl.load(() -> send(pkg.getSender(),"load finished. (" + (System.currentTimeMillis() - time - 50) + "ms)"));
             }
-            @CommandHandler(aliases = "실행", length = 1,description = "run Action that has loaded.",usage = "/cutscene run <name>",sender = {SenderType.ENTITY})
+            @CommandHandler(aliases = "실행", length = 1,description = "run Action.",usage = "/cutscene run <name>",sender = {SenderType.ENTITY})
             public void run(CommandPacket pkg) {
                 boolean r = ActionData.start(pkg.getArgs()[1],(LivingEntity) pkg.getSender());
                 if (!r) send(pkg.getSender(), "run failed.");
                 else send(pkg.getSender(),"run success!");
             }
-            @CommandHandler(aliases = "아이템", length = 3,description = "get or set item.",usage = "/cutscene item <get/set> <file> <key>",sender = {SenderType.PLAYER})
+            @CommandHandler(aliases = "아이템", length = 3,description = "get or set item in file data.",usage = "/cutscene item <get/set> <file> <key>",sender = {SenderType.PLAYER})
             public void item(CommandPacket pkg) {
                 String[] args = pkg.getArgs();
                 Player player = (Player) pkg.getSender();
                 ItemStack item = player.getInventory().getItemInMainHand();
                 if (item == null || item.getType() == Material.AIR) {
-                    send(pkg.getSender(), "hand item you want to save.");
+                    send(pkg.getSender(), "hold the item you want to save.");
                     return;
                 }
                 try {
@@ -130,7 +130,7 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
                         case "get":
                             if (config.isSet(args[3]) && config.isItemStack(args[3])) {
                                 player.getInventory().addItem(new ItemBuilder(config.getItemStack(args[3])).get(player));
-                                send(player, "successfully get.");
+                                send(player, "successfully got.");
                             } else send(player, "item not found.");
                             break;
                         case "set":
@@ -140,7 +140,7 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
                             break;
                     }
                 } catch (Exception e) {
-                    send(player, "sorry, cannot save item.");
+                    send(player, "cannot save item.");
                 }
             }
             @CommandHandler(aliases = {"좌표","loc"}, length = 2,description = "save your location to file data.",usage = "/cutscene location <file> <key>",sender = {SenderType.PLAYER})
@@ -152,7 +152,7 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
                     writer.save();
                     send(pkg.getSender(), "successfully saved.");
                 } catch (Exception e) {
-                    send(pkg.getSender(), "sorry, cannot save location.");
+                    send(pkg.getSender(), "cannot save location.");
                 }
             }
             @CommandHandler(aliases = {"tp"}, length = 1, description = "teleport to a registered location.", usage = "/cutscene teleport <name>", sender = SenderType.ENTITY)

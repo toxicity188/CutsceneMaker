@@ -4,7 +4,7 @@ import kor.toxicity.cutscenemaker.handlers.ActionHandler;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.DataField;
 import kor.toxicity.cutscenemaker.util.RegionUtil;
-import kor.toxicity.cutscenemaker.util.TextParser;
+import kor.toxicity.cutscenemaker.util.TextUtil;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
@@ -44,7 +44,7 @@ public class HandlerWalk extends ActionHandler {
 
     @Override
     protected void initialize() {
-        Function<LivingEntity, Location> function = TextParser.getInstance().getBlockLocation(world,location);
+        Function<LivingEntity, Location> function = TextUtil.getInstance().getBlockLocation(world,location);
         if (function != null) build(e -> {
             Player p = e.getPlayer();
             Location loc = p.getLocation();

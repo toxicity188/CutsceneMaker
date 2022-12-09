@@ -3,7 +3,7 @@ package kor.toxicity.cutscenemaker.actions.mechanics;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.util.DataField;
-import kor.toxicity.cutscenemaker.util.TextParser;
+import kor.toxicity.cutscenemaker.util.TextUtil;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -48,7 +48,7 @@ public class ActMark extends CutsceneAction {
     public void initialize() {
         super.initialize();
         if (location != null) {
-            String[] l = TextParser.getInstance().split(location,",");
+            String[] l = TextUtil.getInstance().split(location,",");
             if (l.length >= 3) {
                 double[] d = Arrays.stream(l).mapToDouble(s -> {
                     try {

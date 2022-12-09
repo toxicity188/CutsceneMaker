@@ -4,7 +4,7 @@ import kor.toxicity.cutscenemaker.handlers.ActionHandler;
 import kor.toxicity.cutscenemaker.handlers.enums.EventClickType;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.DataField;
-import kor.toxicity.cutscenemaker.util.TextParser;
+import kor.toxicity.cutscenemaker.util.TextUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -70,7 +70,7 @@ public class HandlerBlockClick extends ActionHandler {
         if (action != null) {
             try {
                 List<Action> act = new ArrayList<>();
-                Arrays.stream(TextParser.getInstance().split(action, "or")).map(s -> {
+                Arrays.stream(TextUtil.getInstance().split(action, "or")).map(s -> {
                     try {
                         return EventClickType.valueOf(s.toUpperCase());
                     } catch (Exception e) {

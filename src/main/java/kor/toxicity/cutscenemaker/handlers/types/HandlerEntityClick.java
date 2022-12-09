@@ -3,7 +3,7 @@ package kor.toxicity.cutscenemaker.handlers.types;
 import kor.toxicity.cutscenemaker.handlers.ActionHandler;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.DataField;
-import kor.toxicity.cutscenemaker.util.TextParser;
+import kor.toxicity.cutscenemaker.util.TextUtil;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
@@ -33,7 +33,7 @@ public class HandlerEntityClick extends ActionHandler {
         }
         if (name != null) {
             String n = name.replaceAll("_"," ");
-            build(e -> TextParser.getInstance().getEntityName(e.getRightClicked()).equals(n));
+            build(e -> TextUtil.getInstance().getEntityName(e.getRightClicked()).equals(n));
         }
         type = null;
         name = null;

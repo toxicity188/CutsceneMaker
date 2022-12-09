@@ -3,9 +3,8 @@ package kor.toxicity.cutscenemaker.handlers.types;
 import kor.toxicity.cutscenemaker.handlers.ActionHandler;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.DataField;
-import kor.toxicity.cutscenemaker.util.TextParser;
+import kor.toxicity.cutscenemaker.util.TextUtil;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDeathEvent;
 
@@ -37,7 +36,7 @@ public class HandlerKill extends ActionHandler {
                 build(e -> e.getEntityType() == t);
             } catch (Exception ignored) {}
         }
-        if (name != null) build(e -> TextParser.getInstance().getEntityName(e.getEntity()).equals(name));
+        if (name != null) build(e -> TextUtil.getInstance().getEntityName(e.getEntity()).equals(name));
         type = null;
     }
 

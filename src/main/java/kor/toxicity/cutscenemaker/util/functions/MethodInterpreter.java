@@ -1,7 +1,7 @@
 package kor.toxicity.cutscenemaker.util.functions;
 
-import kor.toxicity.cutscenemaker.util.TextParser;
-import kor.toxicity.cutscenemaker.util.conditions.ConditionParser;
+import kor.toxicity.cutscenemaker.util.TextUtil;
+import kor.toxicity.cutscenemaker.util.conditions.ConditionBuilder;
 import org.bukkit.entity.LivingEntity;
 
 import java.util.ArrayList;
@@ -17,7 +17,7 @@ public class MethodInterpreter {
     public MethodInterpreter(String s) {
         List<Function<LivingEntity,String>> print = new ArrayList<>();
         int loop = 0;
-        for (String t : TextParser.getInstance().split(s,PERCENT)) {
+        for (String t : TextUtil.getInstance().split(s,PERCENT)) {
             loop ++;
             if (Math.floorMod(loop,2) == 0) {
                 Function<LivingEntity,String> function = get(t);
@@ -44,13 +44,13 @@ public class MethodInterpreter {
     }
 
     private String printNumber(double d) {
-        return (d == Math.floor(d)) ? TextParser.getInstance().applyComma(d) : String.format("%.2f", d);
+        return (d == Math.floor(d)) ? TextUtil.getInstance().applyComma(d) : String.format("%.2f", d);
     }
 
     private Function<LivingEntity,String> get(String t) {
         if (t.equals("")) return q -> PERCENT;
         else {
-            Function<LivingEntity, ?> f = ConditionParser.LIVING_ENTITY.getAsFunc(t);
+            Function<LivingEntity, ?> f = ConditionBuilder.LIVING_ENTITY.getAsFunc(t);
             if (f != null) return e -> {
                 Object o = f.apply(e);
                 if (o instanceof Number) return printNumber(((Number) o).doubleValue());

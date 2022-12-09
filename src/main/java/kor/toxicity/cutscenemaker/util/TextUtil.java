@@ -15,9 +15,9 @@ import java.util.List;
 import java.util.function.Function;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class TextParser {
+public final class TextUtil {
     @Getter
-    private static final TextParser instance = new TextParser();
+    private static final TextUtil instance = new TextUtil();
 
     public final String COMMA = ",";
 

@@ -7,7 +7,7 @@ import kor.toxicity.cutscenemaker.data.ItemData;
 import kor.toxicity.cutscenemaker.util.DataField;
 import kor.toxicity.cutscenemaker.util.ItemBuilder;
 import kor.toxicity.cutscenemaker.util.ItemUtil;
-import kor.toxicity.cutscenemaker.util.TextParser;
+import kor.toxicity.cutscenemaker.util.TextUtil;
 import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -86,6 +86,6 @@ public class ActGiveItem extends CutsceneAction {
         }
     }
     private String a(String t) {
-        return TextParser.getInstance().colored(t);
+        return TextUtil.getInstance().colored(t);
     }
 }
