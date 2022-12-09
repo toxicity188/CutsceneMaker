@@ -5,7 +5,10 @@ import kor.toxicity.cutscenemaker.commands.CommandListener;
 import kor.toxicity.cutscenemaker.commands.CommandPacket;
 import kor.toxicity.cutscenemaker.commands.SenderType;
 import kor.toxicity.cutscenemaker.data.ActionData;
+import kor.toxicity.cutscenemaker.events.ActionReloadEndEvent;
+import kor.toxicity.cutscenemaker.events.ActionReloadStartEvent;
 import kor.toxicity.cutscenemaker.util.ConfigWriter;
+import kor.toxicity.cutscenemaker.util.EvtUtil;
 import kor.toxicity.cutscenemaker.util.ItemBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -39,7 +42,7 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
 
     @SuppressWarnings("unchecked")
     public void unregister() {
-        Field field = Arrays.stream(commandMap.getClass().getDeclaredFields()).filter(f -> f.getType() == Map.class).findFirst().orElse(null);
+        Field field = Arrays.stream(SimpleCommandMap.class.getDeclaredFields()).filter(f -> Map.class.isAssignableFrom(f.getType())).findFirst().orElse(null);
         try {
             if (field != null) {
                 field.setAccessible(true);
@@ -69,7 +72,7 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
     }
     CutsceneCommand(CutsceneMaker pl) {
         try {
-            Field map = Arrays.stream(Bukkit.getServer().getClass().getDeclaredFields()).filter(f -> f.getType() == SimpleCommandMap.class).findFirst().orElse(null);
+            Field map = Arrays.stream(Bukkit.getServer().getClass().getDeclaredFields()).filter(f -> SimpleCommandMap.class.isAssignableFrom(f.getType())).findFirst().orElse(null);
             if (map != null) {
                 map.setAccessible(true);
                 commandMap = (SimpleCommandMap) map.get(Bukkit.getServer());
@@ -100,8 +103,9 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
             }
             @CommandHandler(aliases = {"re","rd","리로드"}, length = 0, description = "reload this plugin.", usage = "/cutscene reload", sender = {SenderType.CONSOLE, SenderType.PLAYER})
             public void reload(CommandPacket pkg) {
-                long time = System.currentTimeMillis();
-                pl.load(() -> send(pkg.getSender(),"load finished. (" + (System.currentTimeMillis() - time - 50) + "ms)"));
+                EvtUtil.call(new ActionReloadStartEvent());
+                pl.load(t -> send(pkg.getSender(),"load finished. (" + t + "ms)"));
+                EvtUtil.call(new ActionReloadEndEvent());
             }
             @CommandHandler(aliases = "실행", length = 1,description = "run Action.",usage = "/cutscene run <name>",sender = {SenderType.ENTITY})
             public void run(CommandPacket pkg) {

@@ -35,7 +35,7 @@ public final class ActionData extends CutsceneData {
         actions.put("dummy", ActDummy.class);
         actions.put("effectlib", ActEffectLib.class);
         actions.put("message", ActMessage.class);
-        actions.put("give", ActGiveItem.class);
+        actions.put("item", ActItem.class);
         actions.put("sound", ActSound.class);
         actions.put("set",ActSetVariable.class);
         actions.put("add",ActAddVariable.class);

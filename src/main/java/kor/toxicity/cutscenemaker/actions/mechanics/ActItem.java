@@ -4,10 +4,7 @@ import com.google.gson.JsonObject;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.data.ItemData;
-import kor.toxicity.cutscenemaker.util.DataField;
-import kor.toxicity.cutscenemaker.util.ItemBuilder;
-import kor.toxicity.cutscenemaker.util.ItemUtil;
-import kor.toxicity.cutscenemaker.util.TextUtil;
+import kor.toxicity.cutscenemaker.util.*;
 import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -20,7 +17,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ActGiveItem extends CutsceneAction {
+public class ActItem extends CutsceneAction {
 
     @DataField(aliases = "n")
     public String name = "";
@@ -35,13 +32,16 @@ public class ActGiveItem extends CutsceneAction {
     @DataField
     public JsonObject tag;
 
+    @DataField(aliases = "g")
+    public boolean give;
+
     @DataField(aliases = "c")
     public String config;
 
 
     private Function<Player,ItemStack> apply;
 
-    public ActGiveItem(CutsceneManager pl) {
+    public ActItem(CutsceneManager pl) {
         super(pl);
     }
 
@@ -82,7 +82,14 @@ public class ActGiveItem extends CutsceneAction {
     public void apply(LivingEntity entity) {
         if (entity instanceof Player) {
             Player p = ((Player) entity);
-            p.getInventory().addItem(apply.apply(p));
+            ItemStack item = apply.apply(p);
+            if (give) p.getInventory().addItem(item);
+            else {
+                InvUtil.getInstance().getSimilarItem(p,item).ifPresent(i -> {
+                    if (i.getAmount() > item.getAmount()) i.setAmount(i.getAmount() - item.getAmount());
+                    else p.getInventory().remove(item);
+                });
+            }
         }
     }
     private String a(String t) {

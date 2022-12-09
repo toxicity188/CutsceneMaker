@@ -16,7 +16,7 @@ public abstract class RepeatableAction extends CutsceneAction{
     @DataField(aliases = "t")
     public int ticks = 1;
     @DataField(aliases = "async")
-    public boolean asynchronous = true;
+    public boolean asynchronous = false;
 
     private final Map<LivingEntity, RepeatableRun> tasks = new WeakHashMap<>();
     private final CutsceneManager manager;

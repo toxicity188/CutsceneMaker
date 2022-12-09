@@ -23,7 +23,7 @@ public class ActCinematic extends RepeatableAction {
     @DataField(aliases = "n")
     public String node;
 
-    private final Map<LivingEntity,Integer> loops = new WeakHashMap<>();;
+    private final Map<LivingEntity,Integer> loops = new WeakHashMap<>();
     private final CutsceneManager manager;
     private Location first;
     private Location last;

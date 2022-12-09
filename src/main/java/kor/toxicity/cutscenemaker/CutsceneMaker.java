@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public final class CutsceneMaker extends JavaPlugin {
 
@@ -41,7 +42,7 @@ public final class CutsceneMaker extends JavaPlugin {
 
         EntityManager.getInstance().setExecutor(this);
 
-        load(() -> send("Plugin enabled."));
+        load(t -> send("Plugin enabled."));
     }
 
     @Override
@@ -56,12 +57,11 @@ public final class CutsceneMaker extends JavaPlugin {
         send("Plugin disabled.");
     }
 
-    void load(Runnable callback) {
+    void load(Consumer<Long> callback) {
         Bukkit.getScheduler().runTaskAsynchronously(this,() -> {
-            EvtUtil.call(new ActionReloadStartEvent());
+            long time = System.currentTimeMillis();
             reload.forEach(Reloadable::reload);
-            if (callback != null) callback.run();
-            EvtUtil.call(new ActionReloadEndEvent());
+            if (callback != null) callback.accept(System.currentTimeMillis() - time);
         });
     }
 

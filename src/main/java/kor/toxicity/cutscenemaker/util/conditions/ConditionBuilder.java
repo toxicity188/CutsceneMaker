@@ -5,10 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.data.ItemData;
-import kor.toxicity.cutscenemaker.util.JsonMethod;
-import kor.toxicity.cutscenemaker.util.MoneyUtil;
-import kor.toxicity.cutscenemaker.util.RegionUtil;
-import kor.toxicity.cutscenemaker.util.TextUtil;
+import kor.toxicity.cutscenemaker.util.*;
 import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
@@ -85,10 +82,14 @@ public final class ConditionBuilder<T> {
             Player p = (Player) e;
             ItemStack item = ItemData.getItem(p,j.get(0).getAsString());
             if (item == null) return false;
-            return Arrays.asList(p.getInventory().getContents()).contains(item);
+            return InvUtil.getInstance().has(p,item);
         });
 
 
+        LIVING_ENTITY.NUMBER.addFunction("emptyspace",(e,j) -> {
+            if (!(e instanceof Player)) return 0;
+            return InvUtil.getInstance().emptySpace((Player) e);
+        });
         LIVING_ENTITY.NUMBER.addFunction("num", (e,j) -> {
             if (j.size() == 0 || !(e instanceof Player)) return 0;
             return CutsceneMaker.getVars((Player) e,j.get(0).getAsString()).getAsNum();
