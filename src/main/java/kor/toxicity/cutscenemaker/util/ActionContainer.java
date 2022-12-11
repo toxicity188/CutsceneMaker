@@ -2,6 +2,8 @@ package kor.toxicity.cutscenemaker.util;
 
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
+import kor.toxicity.cutscenemaker.actions.mechanics.ActAction;
+import kor.toxicity.cutscenemaker.actions.mechanics.ActEntry;
 import kor.toxicity.cutscenemaker.events.ActionCancelEvent;
 import kor.toxicity.cutscenemaker.events.enums.CancelCause;
 import lombok.Getter;
@@ -27,11 +29,10 @@ public class ActionContainer {
     private Predicate<LivingEntity> conditions;
     @Getter
     private int record;
-    @Getter
-    private long coolDown;
 
     private BukkitTask delay;
     private Consumer<LivingEntity> run;
+    public List<Consumer<Map<String,ActionContainer>>> lateCheck;
 
     private final Map<LivingEntity,ActionRunning> tasks = new WeakHashMap<>();
 
@@ -43,6 +44,33 @@ public class ActionContainer {
     public void add(CutsceneAction act) {
         actions.add(act);
         record += act.delay;
+
+        if (act instanceof ActAction) {
+            ActAction action = (ActAction) act;
+            addCheckTask(m -> {
+                if (!m.containsKey(action.name)) {
+                    CutsceneMaker.warn("the action \"" + action.name + "\"does not exists!");
+                    actions.remove(act);
+                } else {
+                    record += m.get(action.name).record;
+                }
+            });
+        }
+        if (act instanceof ActEntry) {
+            ActEntry action = (ActEntry) act;
+            addCheckTask(m -> {
+                if (!m.containsKey(action.callback)) {
+                    CutsceneMaker.warn("the action \"" + action.callback + "\"does not exists!");
+                    actions.remove(act);
+                } else {
+                    record += Math.max(action.wait,1)*20;
+                }
+            });
+        }
+    }
+    private void addCheckTask(Consumer<Map<String,ActionContainer>> check) {
+        if (lateCheck == null) lateCheck = new ArrayList<>();
+        lateCheck.add(check);
     }
     public void confirm() {
         if (record == 0) run = e -> {
@@ -52,7 +80,6 @@ public class ActionContainer {
             if (tasks.containsKey(e)) tasks.get(e).kill();
             tasks.put(e,new ActionRunning(e));
         };
-        coolDown = record;
     }
 
     public int size() {return actions.size();}
@@ -60,13 +87,13 @@ public class ActionContainer {
         conditions = cond;
     }
 
-    public void setCoolDown(long coolDown) {
-        this.coolDown = Math.max(coolDown * 20,4L);
+    public void setCoolDown(int coolDown) {
+        this.record = Math.max(coolDown * 20,4);
     }
 
     public boolean run(LivingEntity entity) {
         if ((conditions != null && !conditions.test(entity)) || delay != null) return false;
-        delay = Bukkit.getScheduler().runTaskLater(pl,() -> delay = null,Math.max(coolDown,4L));
+        delay = Bukkit.getScheduler().runTaskLater(pl,() -> delay = null,Math.max(record,4L));
         run.accept(entity);
         return true;
     }

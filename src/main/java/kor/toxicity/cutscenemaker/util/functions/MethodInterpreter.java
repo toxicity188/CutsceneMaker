@@ -18,11 +18,12 @@ public class MethodInterpreter {
         List<Function<LivingEntity,String>> print = new ArrayList<>();
         int loop = 0;
         for (String t : TextUtil.getInstance().split(s,PERCENT)) {
+            String colored = TextUtil.getInstance().colored(t);
             loop ++;
             if (Math.floorMod(loop,2) == 0) {
-                Function<LivingEntity,String> function = get(t);
+                Function<LivingEntity,String> function = get(colored);
                 if (function != null) print.add(function);
-            } else print.add(q -> t);
+            } else print.add(q -> colored);
         }
         if (print.size() == 1) {
             ANY_MATCH = false;

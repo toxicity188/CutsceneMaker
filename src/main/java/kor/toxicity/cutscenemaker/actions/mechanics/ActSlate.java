@@ -6,6 +6,7 @@ import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.events.ActionStartEvent;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -95,6 +96,8 @@ public class ActSlate extends CutsceneAction {
         player.setGameMode(CutsceneConfig.getInstance().getDefaultGameMode());
         for (Consumer<Player> p : tasksOff) p.accept(player);
 
+        Location back = ActMark.LOCATION.get(player);
+        if (back != null) player.teleport(back, PlayerTeleportEvent.TeleportCause.PLUGIN);
         ActMark.LOCATION.remove(player);
     }
 }

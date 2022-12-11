@@ -113,6 +113,12 @@ public final class ActionData extends CutsceneData {
             container.confirm();
             if (config.isSet(s + ".Cooldown")) container.setCoolDown(config.getInt(s + ".Cooldown", -1));
         });
+        actionContainer.forEach((a,b) -> {
+            if (b.lateCheck != null) {
+                b.lateCheck.forEach(c -> c.accept(actionContainer));
+                b.lateCheck = null;
+            }
+        });
         CutsceneMaker.send(ChatColor.GREEN + Integer.toString(actionContainer.size()) + " actions successfully loaded.");
     }
     private ActionPredicate<LivingEntity> getCond(ActionPredicate<LivingEntity> cond, String[] get) {

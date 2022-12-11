@@ -37,7 +37,7 @@ public class ActEntry extends CutsceneAction {
         entries.put("chat",(p,t) -> {
             if (t.message != null) p.sendMessage(t.message.print(p));
             ListenerManager manager = t.manager.register();
-            BukkitTask task = (t.wait > 0) ? t.manager.runTaskLaterAsynchronously(() -> {
+            BukkitTask task = (t.wait > 0) ? t.manager.runTaskLater(() -> {
                 manager.unregister();
                 if (t.fail != null) p.sendMessage(t.fail);
             },t.wait * 20L) : null;
@@ -85,7 +85,7 @@ public class ActEntry extends CutsceneAction {
                 if (t.message != null) p.sendSignChange(loc,new String[] {"", t.message.print(p),"",""});
                 manager.sendServerPacket(p,update);
                 ListenerManager listener = t.manager.register();
-                BukkitTask task = (t.wait > 0) ? t.manager.runTaskLaterAsynchronously(() -> {
+                BukkitTask task = (t.wait > 0) ? t.manager.runTaskLater(() -> {
                     listener.unregister();
                     p.closeInventory();
                     if (t.fail != null) p.sendMessage(t.fail);
@@ -145,7 +145,7 @@ public class ActEntry extends CutsceneAction {
     }
 
     private void invoke(Player player, String value) {
-        if (var != null) CutsceneMaker.getVars(player,var).setVar(value);
+        if (var != null && !value.equals("")) CutsceneMaker.getVars(player,var).setVar(value);
         ActionData.start(callback,player);
     }
 }

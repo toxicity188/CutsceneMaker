@@ -85,6 +85,12 @@ public final class ConditionBuilder<T> {
             return InvUtil.getInstance().has(p,item);
         });
 
+        LIVING_ENTITY.NUMBER.addFunction("storage",(e,j) -> {
+            if (!(e instanceof Player)) return 0;
+            Player p = (Player) e;
+            return InvUtil.getInstance().storage(p,(j.size() > 0) ? ItemData.getItem(p,j.get(0).getAsString()) : null);
+        });
+
 
         LIVING_ENTITY.NUMBER.addFunction("emptyspace",(e,j) -> {
             if (!(e instanceof Player)) return 0;

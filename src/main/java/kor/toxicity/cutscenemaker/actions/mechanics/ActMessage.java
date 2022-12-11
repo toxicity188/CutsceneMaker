@@ -3,19 +3,17 @@ package kor.toxicity.cutscenemaker.actions.mechanics;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.RepeatableAction;
 import kor.toxicity.cutscenemaker.util.DataField;
-import kor.toxicity.cutscenemaker.util.functions.MethodInterpreter;
 import kor.toxicity.cutscenemaker.util.TextUtil;
+import kor.toxicity.cutscenemaker.util.functions.MethodInterpreter;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class ActMessage extends RepeatableAction {
@@ -77,10 +75,7 @@ public class ActMessage extends RepeatableAction {
     }
     private MethodInterpreter[] a(String s) {
         if (s == null) return null;
-        return Arrays.stream(TextUtil.getInstance().split(TextUtil.getInstance().colored(s), "//")).map(q -> new MethodInterpreter(b(q))).toArray(MethodInterpreter[]::new);
-    }
-    private String b(String s) {
-        return TextUtil.getInstance().colored(s);
+        return Arrays.stream(TextUtil.getInstance().split(s, "//")).map(MethodInterpreter::new).toArray(MethodInterpreter[]::new);
     }
 
     @Override
