@@ -67,7 +67,7 @@ public class HandlerWalk extends ActionHandler {
 
     @EventHandler
     public void walk(PlayerMoveEvent e) {
-        if (check.test(e)) {
+        if (check == null || check.test(e)) {
             if (!toggle.contains(e.getPlayer())) {
                 toggle.add(e.getPlayer());
                 apply(e.getPlayer());

@@ -3,30 +3,30 @@ package kor.toxicity.cutscenemaker.handlers.types;
 import kor.toxicity.cutscenemaker.handlers.ActionHandler;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.DataField;
+import kor.toxicity.quest.Quest;
+import kor.toxicity.quest.events.DialogCompleteEvent;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 import java.util.function.Predicate;
 
-public class HandlerChat extends ActionHandler {
+public class HandlerDialogComplete extends ActionHandler {
 
-    @DataField(aliases = {"msg","m"})
-    public String message;
+    @DataField(aliases = "n")
+    public String name;
 
-    private Predicate<AsyncPlayerChatEvent> check;
+    private Predicate<DialogCompleteEvent> check;
 
-    public HandlerChat(ActionContainer container) {
+    public HandlerDialogComplete(ActionContainer container) {
         super(container);
     }
 
     @Override
     protected void initialize() {
-        if (message != null) check = e -> e.getMessage().equals(message);
-        else check = e -> true;
+        if (name != null) check = d -> d.getDialog() == Quest.pl.getGlobalDialog(name);
     }
 
     @EventHandler
-    public void chat(AsyncPlayerChatEvent e) {
+    public void complete(DialogCompleteEvent e) {
         if (check == null || check.test(e)) apply(e.getPlayer());
     }
 }

@@ -22,8 +22,11 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 public final class CutsceneManager {
 
@@ -37,6 +40,9 @@ public final class CutsceneManager {
     @Getter
     private final DataContainer<Location> locations = new DataContainer<>();
 
+    private static final List<Player> delays = new ArrayList<>(1 << 8);
+    private static Function<Player,Boolean> applyDelay;
+
     CutsceneManager(JavaPlugin plugin) {
         this.plugin = plugin;
 
@@ -44,9 +50,20 @@ public final class CutsceneManager {
         Bukkit.getOnlinePlayers().forEach(this.user::load);
         EvtUtil.register(plugin,user);
 
+        applyDelay = p -> {
+            if (!delays.contains(p)) {
+                delays.add(p);
+                runTaskLaterAsynchronously(() -> delays.remove(p), 4);
+                return true;
+            } else return false;
+        };
+
         ProtocolLib = ProtocolLibrary.getProtocolManager();
 
         if (Bukkit.getPluginManager().isPluginEnabled("EffectLib")) EffectLib = new EffectManager(plugin);
+    }
+    public static boolean onDelay(Player player) {
+        return applyDelay == null || applyDelay.apply(player);
     }
 
     public BukkitTask runTaskTimer(Runnable task, long delay, long time) {

@@ -27,7 +27,7 @@ public abstract class RepeatableAction extends CutsceneAction{
     }
 
     @Override
-    public void apply(LivingEntity entity) {
+    public final void apply(LivingEntity entity) {
         initialize(entity);
         if (ticks <= 1) {
             update(entity);

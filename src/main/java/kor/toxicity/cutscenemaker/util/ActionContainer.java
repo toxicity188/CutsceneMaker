@@ -93,7 +93,7 @@ public class ActionContainer {
 
     public boolean run(LivingEntity entity) {
         if ((conditions != null && !conditions.test(entity)) || delay != null) return false;
-        delay = Bukkit.getScheduler().runTaskLater(pl,() -> delay = null,Math.max(record,4L));
+        delay = Bukkit.getScheduler().runTaskLater(pl,() -> delay = null, record);
         run.accept(entity);
         return true;
     }

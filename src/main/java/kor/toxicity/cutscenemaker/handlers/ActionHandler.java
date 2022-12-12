@@ -8,6 +8,7 @@ import kor.toxicity.cutscenemaker.util.DataObject;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
@@ -28,6 +29,9 @@ public abstract class ActionHandler implements Listener {
         handlers.put("entityclick", HandlerEntityClick.class);
         handlers.put("kill", HandlerKill.class);
         handlers.put("walk",HandlerWalk.class);
+        if (Bukkit.getPluginManager().isPluginEnabled("Quest")) {
+            handlers.put("dialogcomplete", HandlerDialogComplete.class);
+        }
     }
 
     private final ActionContainer container;

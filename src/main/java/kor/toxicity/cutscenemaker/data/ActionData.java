@@ -63,6 +63,9 @@ public final class ActionData extends CutsceneData {
             actions.put("addmoney", ActAddMoney.class);
             actions.put("removemoney", ActRemoveMoney.class);
         }
+        if (Bukkit.getPluginManager().isPluginEnabled("Quest")) {
+            actions.put("dialog", ActDialog.class);
+        }
     }
     public ActionData(CutsceneMaker pl) {
         super(pl);

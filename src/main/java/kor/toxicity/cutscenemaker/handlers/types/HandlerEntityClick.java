@@ -1,5 +1,6 @@
 package kor.toxicity.cutscenemaker.handlers.types;
 
+import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.handlers.ActionHandler;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.DataField;
@@ -35,6 +36,7 @@ public class HandlerEntityClick extends ActionHandler {
             String n = name.replaceAll("_"," ");
             build(e -> TextUtil.getInstance().getEntityName(e.getRightClicked()).equals(n));
         }
+        build(e -> CutsceneManager.onDelay(e.getPlayer()));
         type = null;
         name = null;
 
@@ -46,6 +48,6 @@ public class HandlerEntityClick extends ActionHandler {
 
     @EventHandler
     public void interact(PlayerInteractAtEntityEvent e) {
-        if (check.test(e)) apply(e.getPlayer());
+        if (check == null || check.test(e)) apply(e.getPlayer());
     }
 }

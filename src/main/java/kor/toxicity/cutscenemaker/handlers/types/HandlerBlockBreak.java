@@ -3,6 +3,7 @@ package kor.toxicity.cutscenemaker.handlers.types;
 import kor.toxicity.cutscenemaker.handlers.ActionHandler;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.DataField;
+import kor.toxicity.quest.Quest;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -65,7 +66,7 @@ public class HandlerBlockBreak extends ActionHandler {
 
     @EventHandler
     public void BlockBreak(BlockBreakEvent e) {
-        if (check.test(e)) {
+        if (check == null || check.test(e)) {
             if (cancel) e.setCancelled(true);
             apply(e.getPlayer());
         }

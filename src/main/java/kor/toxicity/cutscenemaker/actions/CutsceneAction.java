@@ -24,7 +24,7 @@ public abstract class CutsceneAction {
     public CutsceneAction(CutsceneManager pl) {
     }
 
-    public void call(LivingEntity entity) {
+    public final void call(LivingEntity entity) {
         invoke.accept(entity);
     }
     protected abstract void apply(LivingEntity entity);
@@ -32,7 +32,7 @@ public abstract class CutsceneAction {
         if (delay < 0) delay = 0;
         if (target != null) {
             invoke = e -> {
-                if (e instanceof Player) Optional.of(EntityManager.getInstance().get((Player) e,target)).map(CutsceneEntity::getEntity).ifPresent(this::apply);
+                if (e instanceof Player) Optional.ofNullable(EntityManager.getInstance().get((Player) e,target)).map(CutsceneEntity::getEntity).ifPresent(this::apply);
             };
         } else {
             invoke = this::apply;

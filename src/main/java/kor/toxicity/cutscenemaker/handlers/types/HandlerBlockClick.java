@@ -1,5 +1,6 @@
 package kor.toxicity.cutscenemaker.handlers.types;
 
+import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.handlers.ActionHandler;
 import kor.toxicity.cutscenemaker.handlers.enums.EventClickType;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
@@ -81,6 +82,7 @@ public class HandlerBlockClick extends ActionHandler {
             } catch (Exception ignored) {}
         }
         if (sneaking) build(e -> e.getPlayer().isSneaking());
+        build(e -> CutsceneManager.onDelay(e.getPlayer()));
         type = null;
         location = null;
         world = null;

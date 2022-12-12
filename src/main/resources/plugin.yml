@@ -11,6 +11,7 @@ softdepend:
   - Vault
   - MythicMobs
   - LibsDisguises
+  - Quest
 depend:
   - ProtocolLib
 commands:
