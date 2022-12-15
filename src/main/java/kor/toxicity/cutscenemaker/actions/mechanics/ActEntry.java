@@ -10,8 +10,8 @@ import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.data.ActionData;
 import kor.toxicity.cutscenemaker.material.WrappedMaterial;
-import kor.toxicity.cutscenemaker.util.DataField;
-import kor.toxicity.cutscenemaker.util.functions.MethodInterpreter;
+import kor.toxicity.cutscenemaker.util.reflect.DataField;
+import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
@@ -111,7 +111,7 @@ public class ActEntry extends CutsceneAction {
     @DataField
     public String type = "chat";
     @DataField(aliases = "m")
-    public MethodInterpreter message;
+    public FunctionPrinter message;
     @DataField
     public String var;
     @DataField(throwable = true)

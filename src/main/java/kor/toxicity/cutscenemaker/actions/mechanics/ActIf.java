@@ -3,10 +3,10 @@ package kor.toxicity.cutscenemaker.actions.mechanics;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
-import kor.toxicity.cutscenemaker.util.DataField;
+import kor.toxicity.cutscenemaker.util.reflect.DataField;
 import kor.toxicity.cutscenemaker.util.TextUtil;
-import kor.toxicity.cutscenemaker.util.conditions.ConditionBuilder;
-import kor.toxicity.cutscenemaker.util.functions.MethodInterpreter;
+import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
+import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -18,14 +18,14 @@ import java.util.function.Predicate;
 public class ActIf extends CutsceneAction {
 
     @DataField(aliases = "var", throwable = true)
-    public MethodInterpreter variable;
+    public FunctionPrinter variable;
     @DataField(aliases = {"cond","parameter","para","c","p"},throwable = true)
     public String condition;
 
     @DataField(throwable = true)
-    public MethodInterpreter then;
+    public FunctionPrinter then;
     @DataField(aliases = "else",throwable = true)
-    public MethodInterpreter not;
+    public FunctionPrinter not;
 
     private Consumer<Player> apply;
     private final CutsceneManager manager;

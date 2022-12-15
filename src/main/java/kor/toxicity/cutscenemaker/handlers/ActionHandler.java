@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 import kor.toxicity.cutscenemaker.events.ActionStartEvent;
 import kor.toxicity.cutscenemaker.handlers.types.*;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
-import kor.toxicity.cutscenemaker.util.DataObject;
+import kor.toxicity.cutscenemaker.util.reflect.DataObject;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

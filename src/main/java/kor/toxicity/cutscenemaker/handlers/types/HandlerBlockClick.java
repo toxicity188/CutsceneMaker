@@ -4,7 +4,7 @@ import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.handlers.ActionHandler;
 import kor.toxicity.cutscenemaker.handlers.enums.EventClickType;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
-import kor.toxicity.cutscenemaker.util.DataField;
+import kor.toxicity.cutscenemaker.util.reflect.DataField;
 import kor.toxicity.cutscenemaker.util.TextUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

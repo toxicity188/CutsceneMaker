@@ -3,12 +3,8 @@ package kor.toxicity.cutscenemaker.handlers.types;
 import kor.toxicity.cutscenemaker.CutsceneCommand;
 import kor.toxicity.cutscenemaker.handlers.ActionHandler;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
-import kor.toxicity.cutscenemaker.util.DataField;
+import kor.toxicity.cutscenemaker.util.reflect.DataField;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-
-import java.util.function.Predicate;
 
 public class HandlerCommand extends ActionHandler {
 

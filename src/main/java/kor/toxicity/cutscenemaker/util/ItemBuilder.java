@@ -1,6 +1,6 @@
 package kor.toxicity.cutscenemaker.util;
 
-import kor.toxicity.cutscenemaker.util.functions.MethodInterpreter;
+import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -24,15 +24,15 @@ public class ItemBuilder {
         List<BiConsumer<Player,ItemMeta>> metaList = new ArrayList<>();
 
         Optional.ofNullable(meta.getDisplayName()).ifPresent(d -> {
-            MethodInterpreter printer = new MethodInterpreter(d);
+            FunctionPrinter printer = new FunctionPrinter(d);
             if (printer.ANY_MATCH) metaList.add((p,m) -> m.setDisplayName(printer.print(p)));
         });
         Optional.ofNullable(meta.getLore()).ifPresent(l -> {
-            List<MethodInterpreter> printer = l.stream().map(MethodInterpreter::new).collect(Collectors.toList());
+            List<FunctionPrinter> printer = l.stream().map(FunctionPrinter::new).collect(Collectors.toList());
             if (printer.stream().anyMatch(q -> q.ANY_MATCH)) metaList.add((p,m) -> m.setLore(printer.stream().map(t -> t.print(p)).collect(Collectors.toList())));
         });
         Optional.ofNullable(meta.getLocalizedName()).ifPresent(d -> {
-            MethodInterpreter printer = new MethodInterpreter(d);
+            FunctionPrinter printer = new FunctionPrinter(d);
             if (printer.ANY_MATCH) metaList.add((p,m) -> m.setLocalizedName(printer.print(p)));
         });
 

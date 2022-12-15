@@ -2,8 +2,8 @@ package kor.toxicity.cutscenemaker.actions.mechanics;
 
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
-import kor.toxicity.cutscenemaker.util.DataField;
-import kor.toxicity.cutscenemaker.util.functions.MethodInterpreter;
+import kor.toxicity.cutscenemaker.util.reflect.DataField;
+import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 public class ActCommand extends CutsceneAction {
 
     @DataField(aliases = "c", throwable = true)
-    public MethodInterpreter command;
+    public FunctionPrinter command;
     @DataField(aliases = "o")
     public boolean op;
     @DataField(aliases = "b")

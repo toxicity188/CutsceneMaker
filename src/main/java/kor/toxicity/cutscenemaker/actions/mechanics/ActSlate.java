@@ -4,9 +4,11 @@ import kor.toxicity.cutscenemaker.CutsceneConfig;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.events.ActionStartEvent;
+import kor.toxicity.cutscenemaker.util.reflect.DataField;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -76,17 +78,33 @@ public class ActSlate extends CutsceneAction {
         });
     }
 
+    @DataField(aliases = "c")
+    public boolean change = true;
+    @DataField(aliases = "g")
+    public boolean grounding = true;
+
     @Override
     public void apply(LivingEntity entity) {
         if (entity instanceof Player) {
             Player player = (Player) entity;
             if (toggle.contains(player)) off(player);
-            else on(player);
+            else on(player,change,grounding);
         }
     }
-    private static void on(Player player) {
+    private static void on(Player player, boolean change, boolean grounding) {
         toggle.add(player);
-        player.setGameMode(GameMode.SPECTATOR);
+        if (change) player.setGameMode(GameMode.SPECTATOR);
+        else {
+            if (grounding) {
+                Location loc = player.getLocation();
+                int y = (int) Math.floor(loc.getY());
+                while (loc.getY() > -48 && loc.getBlock().getType() != Material.AIR) {
+                    loc.setY(y - 1);
+                }
+                loc.setY(loc.getY() + 1);
+                player.teleport(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
+            }
+        }
         for (Consumer<Player> p : tasksOn) p.accept(player);
 
         if (!ActMark.LOCATION.containsKey(player)) ActMark.LOCATION.put(player,player.getLocation());

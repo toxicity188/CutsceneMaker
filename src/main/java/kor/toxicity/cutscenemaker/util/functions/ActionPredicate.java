@@ -1,4 +1,4 @@
-package kor.toxicity.cutscenemaker.util.conditions;
+package kor.toxicity.cutscenemaker.util.functions;
 
 import java.util.Objects;
 import java.util.function.Consumer;

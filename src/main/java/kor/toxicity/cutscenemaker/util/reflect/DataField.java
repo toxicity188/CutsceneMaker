@@ -1,4 +1,4 @@
-package kor.toxicity.cutscenemaker.util;
+package kor.toxicity.cutscenemaker.util.reflect;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

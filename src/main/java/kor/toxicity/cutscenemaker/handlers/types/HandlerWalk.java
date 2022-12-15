@@ -2,7 +2,7 @@ package kor.toxicity.cutscenemaker.handlers.types;
 
 import kor.toxicity.cutscenemaker.handlers.ActionHandler;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
-import kor.toxicity.cutscenemaker.util.DataField;
+import kor.toxicity.cutscenemaker.util.reflect.DataField;
 import kor.toxicity.cutscenemaker.util.RegionUtil;
 import kor.toxicity.cutscenemaker.util.TextUtil;
 import org.bukkit.Location;

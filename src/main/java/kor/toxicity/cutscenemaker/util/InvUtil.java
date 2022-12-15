@@ -15,15 +15,15 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class InvUtil {
+public final class InvUtil {
     @Getter
     private static final InvUtil instance = new InvUtil();
 
     public boolean has(Player player, ItemStack target) {
-        return Arrays.stream(player.getInventory().getContents()).anyMatch(i -> i.isSimilar(target) && i.getAmount() >= target.getAmount());
+        return Arrays.stream(player.getInventory().getContents()).anyMatch(i -> i != null && i.isSimilar(target) && i.getAmount() >= target.getAmount());
     }
     public Optional<ItemStack> getSimilarItem(Player player, ItemStack target) {
-        return Arrays.stream(player.getInventory().getContents()).filter(i -> i.isSimilar(target) && i.getAmount() >= target.getAmount()).findFirst();
+        return Arrays.stream(player.getInventory().getContents()).filter(i -> i != null && i.isSimilar(target) && i.getAmount() >= target.getAmount()).findFirst();
     }
     public int emptySpace(Player player) {
         Inventory inv = player.getInventory();

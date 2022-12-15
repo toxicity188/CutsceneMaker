@@ -33,7 +33,7 @@ public final class CutsceneManager {
     private final JavaPlugin plugin;
     private final CutsceneUser user;
     @Getter
-    private EffectManager EffectLib = null;
+    private EffectManager EffectLib;
     @Getter
     private final ProtocolManager ProtocolLib;
 

@@ -3,8 +3,8 @@ package kor.toxicity.cutscenemaker.actions.mechanics;
 import ch.njol.skript.variables.Variables;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
-import kor.toxicity.cutscenemaker.util.DataField;
-import kor.toxicity.cutscenemaker.util.functions.MethodInterpreter;
+import kor.toxicity.cutscenemaker.util.reflect.DataField;
+import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -15,10 +15,10 @@ import java.util.function.Function;
 public class ActSetSkriptVar extends CutsceneAction {
 
     @DataField(aliases = "n",throwable = true)
-    public MethodInterpreter name;
+    public FunctionPrinter name;
 
     @DataField(aliases = "v",throwable = true)
-    public MethodInterpreter value;
+    public FunctionPrinter value;
 
     @DataField
     public String type = "str";

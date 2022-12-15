@@ -4,7 +4,7 @@ import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.RepeatableAction;
 import kor.toxicity.cutscenemaker.util.DataContainer;
-import kor.toxicity.cutscenemaker.util.DataField;
+import kor.toxicity.cutscenemaker.util.reflect.DataField;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.player.PlayerTeleportEvent;

@@ -4,8 +4,7 @@ package kor.toxicity.cutscenemaker.actions;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.entities.CutsceneEntity;
 import kor.toxicity.cutscenemaker.entities.EntityManager;
-import kor.toxicity.cutscenemaker.util.DataField;
-import org.bukkit.entity.Entity;
+import kor.toxicity.cutscenemaker.util.reflect.DataField;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 

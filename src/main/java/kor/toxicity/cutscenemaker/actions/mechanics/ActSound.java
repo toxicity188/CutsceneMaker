@@ -1,7 +1,7 @@
 package kor.toxicity.cutscenemaker.actions.mechanics;
 
 import kor.toxicity.cutscenemaker.CutsceneManager;
-import kor.toxicity.cutscenemaker.util.DataField;
+import kor.toxicity.cutscenemaker.util.reflect.DataField;
 import kor.toxicity.cutscenemaker.actions.RepeatableAction;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;

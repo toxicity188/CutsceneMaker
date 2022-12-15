@@ -62,7 +62,7 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
     public static void createCommand(String name, CommandExecutor executor) {
         if (commandMap == null) return;
         try {
-            PluginCommand command = createCommand.apply(name);
+            PluginCommand command = createCommand.apply(name.toLowerCase());
             command.setExecutor(executor);
             commandMap.register(FALLBACK_PREFIX,command);
             registeredCommand.add(command);

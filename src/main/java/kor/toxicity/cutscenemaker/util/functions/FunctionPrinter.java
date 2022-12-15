@@ -1,20 +1,19 @@
 package kor.toxicity.cutscenemaker.util.functions;
 
 import kor.toxicity.cutscenemaker.util.TextUtil;
-import kor.toxicity.cutscenemaker.util.conditions.ConditionBuilder;
 import org.bukkit.entity.LivingEntity;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-public class MethodInterpreter {
+public class FunctionPrinter {
 
     public static final String PERCENT = "%";
     private final Function<LivingEntity,String> apply;
     public final boolean ANY_MATCH;
 
-    public MethodInterpreter(String s) {
+    public FunctionPrinter(String s) {
         List<Function<LivingEntity,String>> print = new ArrayList<>();
         int loop = 0;
         for (String t : TextUtil.getInstance().split(s,PERCENT)) {

@@ -1,6 +1,7 @@
-package kor.toxicity.cutscenemaker.util.conditions;
+package kor.toxicity.cutscenemaker.util.functions;
 
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
@@ -48,22 +49,55 @@ public final class ConditionBuilder<T> {
         });
         LIVING_ENTITY.NUMBER.addFunction("healthpercentage",(e,j) -> e.getHealth()/e.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
         LIVING_ENTITY.NUMBER.addFunction("health",(e,j) -> e.getHealth());
-        LIVING_ENTITY.NUMBER.addFunction("random",(e,j) -> {
-            try {
-                double d = (j.size() > 0) ? j.get(0).getAsDouble() : 0D;
-                double r = (j.size() > 1) ? j.get(1).getAsDouble() : 1D;
-                return ThreadLocalRandom.current().nextDouble(d,r);
-            } catch (Exception t) {
-                return 0;
+        LIVING_ENTITY.NUMBER.addFunction("random",new CheckableFunction<LivingEntity, Number>() {
+            private final ThreadLocalRandom random = ThreadLocalRandom.current();
+            @Override
+            public boolean check(JsonArray array) {
+                for (int i = 0; i < array.size(); i++) {
+                    try {
+                        array.get(i).getAsDouble();
+                    } catch (Exception e) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            @Override
+            public Number apply(LivingEntity entity, JsonArray p) {
+                switch (p.size()) {
+                    case 0:
+                        return random.nextDouble();
+                    case 1:
+                        return random.nextDouble(p.get(0).getAsDouble());
+                    default:
+                        return random.nextDouble(p.get(0).getAsDouble(),p.get(1).getAsDouble());
+                }
             }
         });
-        LIVING_ENTITY.NUMBER.addFunction("randomInt",(e,j) -> {
-            try {
-                int d = (j.size() > 0) ? j.get(0).getAsInt() : 0;
-                int r = (j.size() > 1) ? j.get(1).getAsInt() : 1;
-                return ThreadLocalRandom.current().nextInt(d,r);
-            } catch (Exception t) {
-                return 0;
+        LIVING_ENTITY.NUMBER.addFunction("randomInt", new CheckableFunction<LivingEntity, Number>() {
+            private final ThreadLocalRandom random = ThreadLocalRandom.current();
+            @Override
+            public boolean check(JsonArray array) {
+                for (int i = 0; i < array.size(); i++) {
+                    try {
+                        array.get(i).getAsInt();
+                    } catch (Exception e) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            @Override
+            public Number apply(LivingEntity entity, JsonArray p) {
+                switch (p.size()) {
+                    case 0:
+                        return random.nextInt();
+                    case 1:
+                        return random.nextInt(p.get(0).getAsInt());
+                    default:
+                        return random.nextInt(p.get(0).getAsInt(),p.get(1).getAsInt());
+                }
             }
         });
         LIVING_ENTITY.STRING.addFunction("name",(e,j) -> {
@@ -158,7 +192,7 @@ public final class ConditionBuilder<T> {
     public class ConditionContainer<R> {
 
         private final Map<String, ComparisonOperator<R>> comp;
-        private final Map<String, JsonMethod<T, R>> func;
+        private final Map<String, JsonFunction<T, R>> func;
         @Setter
         private Function<String, R> converter;
 
@@ -187,14 +221,14 @@ public final class ConditionBuilder<T> {
         public void addOperator(String name,ComparisonOperator<R> operator) {
             comp.put(name.toLowerCase(),operator);
         }
-        public void addFunction(String name, JsonMethod<T, R> function) {
+        public void addFunction(String name, JsonFunction<T, R> function) {
             func.put(name.toLowerCase(),function);
         }
 
         public ComparisonOperator<R> getOperator(String name) {
             return comp.get(name.toLowerCase());
         }
-        public JsonMethod<T,R> getFunction(String name) {
+        public JsonFunction<T,R> getFunction(String name) {
             return func.get(name.toLowerCase());
         }
 
@@ -203,10 +237,17 @@ public final class ConditionBuilder<T> {
             Matcher matcher = FUNCTION_PATTERN.matcher(s);
 
             if (matcher.find()) {
-                JsonMethod<T, R> m = func.get(matcher.group("name").toLowerCase());
+                JsonFunction<T, R> m = func.get(matcher.group("name").toLowerCase());
                 JsonElement e = parser.parse(matcher.group("argument"));
 
-                if (m != null && e != null && e.isJsonArray()) return m.getAsFunction(e.getAsJsonArray());
+                if (m != null && e != null && e.isJsonArray()) {
+                    JsonArray array = e.getAsJsonArray();
+                    if (m instanceof CheckableFunction && !((CheckableFunction<T, R>) m).check(array)) {
+                        CutsceneMaker.warn("The argument \"" + matcher.group("argument") + "\" is not valid at the function \"" + matcher.group("name") + "\".");
+                        return null;
+                    }
+                    return m.getAsFunction(array);
+                }
             }
             R type = tryConvert(s);
             return (type != null) ? t -> type : null;

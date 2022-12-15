@@ -2,9 +2,9 @@ package kor.toxicity.cutscenemaker.actions.mechanics;
 
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.RepeatableAction;
-import kor.toxicity.cutscenemaker.util.DataField;
+import kor.toxicity.cutscenemaker.util.reflect.DataField;
 import kor.toxicity.cutscenemaker.util.TextUtil;
-import kor.toxicity.cutscenemaker.util.functions.MethodInterpreter;
+import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -38,8 +38,8 @@ public class ActMessage extends RepeatableAction {
     public int fadeout = 10;
 
 
-    private MethodInterpreter[] m;
-    private MethodInterpreter[] st;
+    private FunctionPrinter[] m;
+    private FunctionPrinter[] st;
     private BiConsumer<LivingEntity,Integer> act;
     private final Map<LivingEntity,Integer> id;
 
@@ -73,9 +73,9 @@ public class ActMessage extends RepeatableAction {
                 break;
         }
     }
-    private MethodInterpreter[] a(String s) {
+    private FunctionPrinter[] a(String s) {
         if (s == null) return null;
-        return Arrays.stream(TextUtil.getInstance().split(s, "//")).map(MethodInterpreter::new).toArray(MethodInterpreter[]::new);
+        return Arrays.stream(TextUtil.getInstance().split(s, "//")).map(FunctionPrinter::new).toArray(FunctionPrinter[]::new);
     }
 
     @Override
