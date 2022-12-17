@@ -130,19 +130,43 @@ public final class ConditionBuilder<T> {
             if (!(e instanceof Player)) return 0;
             return InvUtil.getInstance().emptySpace((Player) e);
         });
-        LIVING_ENTITY.NUMBER.addFunction("num", (e,j) -> {
-            if (j.size() == 0 || !(e instanceof Player)) return 0;
-            return CutsceneMaker.getVars((Player) e,j.get(0).getAsString()).getAsNum();
+        LIVING_ENTITY.NUMBER.addFunction("num", new CheckableFunction<LivingEntity, Number>() {
+            @Override
+            public boolean check(JsonArray array) {
+                return array.size() > 0;
+            }
+            @Override
+            public Number apply(LivingEntity entity, JsonArray p) {
+                if (!(entity instanceof Player)) return 0;
+                return CutsceneMaker.getVars((Player) entity,p.get(0).getAsString()).getAsNum();
+            }
         });
-        LIVING_ENTITY.BOOL.addFunction("bool", (e,j) -> {
-            if (j.size() == 0 || !(e instanceof Player)) return false;
-            return CutsceneMaker.getVars((Player) e,j.get(0).getAsString()).getAsBool();
+        LIVING_ENTITY.BOOL.addFunction("bool", new CheckableFunction<LivingEntity, Boolean>() {
+            @Override
+            public boolean check(JsonArray array) {
+                return array.size() > 0;
+            }
+            @Override
+            public Boolean apply(LivingEntity entity, JsonArray array) {
+                if (!(entity instanceof Player)) return false;
+                return CutsceneMaker.getVars((Player) entity,array.get(0).getAsString()).getAsBool();
+            }
         });
-        LIVING_ENTITY.STRING.addFunction("str", (e,j) -> {
-            if (j.size() == 0 || !(e instanceof Player)) return "<none>";
-            return CutsceneMaker.getVars((Player) e,j.get(0).getAsString()).getVar();
+        LIVING_ENTITY.STRING.addFunction("str", new CheckableFunction<LivingEntity, String>() {
+            @Override
+            public boolean check(JsonArray array) {
+                return array.size() > 0;
+            }
+            @Override
+            public String apply(LivingEntity entity, JsonArray array) {
+                if (!(entity instanceof Player)) return "<none>";
+                return CutsceneMaker.getVars((Player) entity,array.get(0).getAsString()).getVar();
+            }
         });
 
+    }
+    public static boolean isFunction(String target) {
+        return FUNCTION_PATTERN.matcher(target).find();
     }
 
     public Function<T,?> getAsFunc(String t) {

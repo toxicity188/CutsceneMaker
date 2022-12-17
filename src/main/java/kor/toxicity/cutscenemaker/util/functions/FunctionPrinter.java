@@ -14,6 +14,11 @@ public class FunctionPrinter {
     public final boolean ANY_MATCH;
 
     public FunctionPrinter(String s) {
+        if (ConditionBuilder.isFunction(s)) {
+            ANY_MATCH = true;
+            apply = convert(s);
+            return;
+        }
         List<Function<LivingEntity,String>> print = new ArrayList<>();
         int loop = 0;
         for (String t : TextUtil.getInstance().split(s,PERCENT)) {
@@ -29,8 +34,9 @@ public class FunctionPrinter {
             apply = print.get(0);
         } else {
             ANY_MATCH = true;
+            StringBuilder t = new StringBuilder();
             apply = e -> {
-                StringBuilder t = new StringBuilder();
+                t.setLength(0);
                 for (Function<LivingEntity, String> f : print) {
                     t.append(f.apply(e));
                 }
@@ -49,14 +55,16 @@ public class FunctionPrinter {
 
     private Function<LivingEntity,String> get(String t) {
         if (t.equals("")) return q -> PERCENT;
-        else {
-            Function<LivingEntity, ?> f = ConditionBuilder.LIVING_ENTITY.getAsFunc(t);
-            if (f != null) return e -> {
+        else return convert(t);
+    }
+    private Function<LivingEntity,String> convert(String t) {
+        Function<LivingEntity, ?> f = ConditionBuilder.LIVING_ENTITY.getAsFunc(t);
+        if (f != null) {
+            return e -> {
                 Object o = f.apply(e);
                 if (o instanceof Number) return printNumber(((Number) o).doubleValue());
                 else return o.toString();
             };
-        }
-        return null;
+        } else return null;
     }
 }

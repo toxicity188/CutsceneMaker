@@ -6,7 +6,7 @@ import java.util.function.Function;
 
 @FunctionalInterface
 public interface JsonFunction<T,R> {
-    R apply(T t, JsonArray p);
+    R apply(T t, JsonArray array);
 
     default Function<T, R> getAsFunction(JsonArray j) {
         return t -> apply(t,j);

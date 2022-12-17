@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.MemorySection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -84,6 +85,10 @@ public class ConfigLoad {
 	public Set<String> getKeys(String key) {
 		if (!this.main.contains(key) && !this.main.isConfigurationSection(key)) return null;
 		return this.main.getConfigurationSection(key).getKeys(false);
+	}
+	public ConfigurationSection getConfigurationSection(String key) {
+		if (!this.main.contains(key) && !this.main.isConfigurationSection(key)) return null;
+		return this.main.getConfigurationSection(key);
 	}
 	public List<String> getStringList(String key) {
 		if (!this.main.contains(key) && !this.main.isConfigurationSection(key)) return null;

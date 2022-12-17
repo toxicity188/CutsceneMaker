@@ -22,6 +22,7 @@ repositories {
     maven { url = 'https://repo.destroystokyo.com/repository/maven-public/' }
     maven { url "https://maven.enginehub.org/repo/" }
     maven { url "https://repo.codemc.org/repository/maven-public/"}
+    maven { url = uri("https://repo.papermc.io/repository/maven-public/") }
     maven {
         name = 'citizens-repo'
         url = 'https://maven.citizensnpcs.co/repo'

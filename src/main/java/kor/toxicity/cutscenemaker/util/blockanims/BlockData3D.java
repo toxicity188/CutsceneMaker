@@ -1,15 +1,18 @@
 package kor.toxicity.cutscenemaker.util.blockanims;
 
 import kor.toxicity.cutscenemaker.CutsceneMaker;
+import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 public class BlockData3D {
+    @Getter
     private final Set<BlockData> data;
 
     public static BlockData3D of(Location from, Location to) {
@@ -25,6 +28,9 @@ public class BlockData3D {
         return data3D;
     }
 
+    private BlockData3D(int size) {
+        data = new HashSet<>(size);
+    }
     private BlockData3D(Location from, Location to) {
         World world = from.getWorld();
 
@@ -84,5 +90,31 @@ public class BlockData3D {
             hash = 31 * hash + datum.hashCode();
         }
         return hash;
+    }
+
+    public static BlockData3D fromList(World world, List<String> list) {
+        try {
+            BlockData3D data3D = new BlockData3D(list.size());
+            for (String s : list) {
+                data3D.data.add(BlockData.fromString(world,s));
+            }
+            return data3D;
+        } catch (Exception e) {
+            CutsceneMaker.warn("Unable to load 3D block data.");
+            return null;
+        }
+    }
+    public static BlockData3D fromString(World world, String string) {
+        try {
+            String[] t = string.split("/");
+            BlockData3D data3D = new BlockData3D(t.length);
+            for (String s : t) {
+                data3D.data.add(BlockData.fromString(world,s));
+            }
+            return data3D;
+        } catch (Exception e) {
+            CutsceneMaker.warn("Unable to load 3D block data.");
+            return null;
+        }
     }
 }
