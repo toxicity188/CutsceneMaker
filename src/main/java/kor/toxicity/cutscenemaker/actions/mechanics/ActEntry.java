@@ -134,7 +134,7 @@ public class ActEntry extends CutsceneAction {
         super.initialize();
         apply = entries.get(type);
         if (apply == null) {
-            CutsceneMaker.warn("entry type \""+ type + "\" does not exists. changed chat type automatically");
+            CutsceneMaker.warn("entry type \""+ type + "\" does not exists. so changed to chat type automatically");
             apply = entries.get("chat");
         }
     }

@@ -37,4 +37,7 @@ public final class ItemData extends CutsceneData{
     public static ItemStack getItem(Player player, String name) {
         return Optional.ofNullable(instance.items.get(name)).map(i -> i.get(player)).orElse(null);
     }
+    public static boolean isSet(String name) {
+        return instance.items.containsKey(name);
+    }
 }

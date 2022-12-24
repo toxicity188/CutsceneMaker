@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 public final class ConditionBuilder<T> {
 
     private static final Pattern FUNCTION_PATTERN = Pattern.compile("(?<name>\\w+)(?<argument>\\[((\\w|,|\\s|\")*)])", Pattern.UNICODE_CHARACTER_CLASS);
-    private static final JsonParser parser = new JsonParser();
+    private static final JsonParser PARSER = new JsonParser();
     public static final ConditionBuilder<LivingEntity> LIVING_ENTITY = new ConditionBuilder<>();
     private final Set<ConditionContainer<?>> types = new LinkedHashSet<>();
 
@@ -262,7 +262,7 @@ public final class ConditionBuilder<T> {
 
             if (matcher.find()) {
                 JsonFunction<T, R> m = func.get(matcher.group("name").toLowerCase());
-                JsonElement e = parser.parse(matcher.group("argument"));
+                JsonElement e = PARSER.parse(matcher.group("argument"));
 
                 if (m != null && e != null && e.isJsonArray()) {
                     JsonArray array = e.getAsJsonArray();
