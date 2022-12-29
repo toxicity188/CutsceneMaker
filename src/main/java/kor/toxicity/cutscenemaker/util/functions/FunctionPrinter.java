@@ -14,25 +14,22 @@ public class FunctionPrinter {
     public final boolean ANY_MATCH;
 
     public FunctionPrinter(String s) {
-        if (ConditionBuilder.isFunction(s)) {
-            ANY_MATCH = true;
-            apply = convert(s);
-            return;
-        }
-        List<Function<LivingEntity,String>> print = new ArrayList<>();
-        int loop = 0;
-        for (String t : TextUtil.getInstance().split(s,PERCENT)) {
-            String colored = TextUtil.getInstance().colored(t);
-            loop ++;
-            if (Math.floorMod(loop,2) == 0) {
-                Function<LivingEntity,String> function = get(colored);
-                if (function != null) print.add(function);
-            } else print.add(q -> colored);
-        }
-        if (print.size() == 1) {
+        String[] split = TextUtil.getInstance().split(s,PERCENT);
+        if (split.length == 1) {
             ANY_MATCH = false;
-            apply = print.get(0);
+            String colored = TextUtil.getInstance().colored(split[0]);
+            apply = t -> colored;
         } else {
+            List<Function<LivingEntity,String>> print = new ArrayList<>(split.length);
+            int loop = 0;
+            for (String t : split) {
+                String colored = TextUtil.getInstance().colored(t);
+                loop ++;
+                if (Math.floorMod(loop,2) == 0) {
+                    Function<LivingEntity,String> function = get(colored);
+                    if (function != null) print.add(function);
+                } else print.add(q -> colored);
+            }
             ANY_MATCH = true;
             StringBuilder t = new StringBuilder();
             apply = e -> {

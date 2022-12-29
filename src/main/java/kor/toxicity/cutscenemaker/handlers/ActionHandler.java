@@ -1,6 +1,7 @@
 package kor.toxicity.cutscenemaker.handlers;
 
 import com.google.gson.JsonObject;
+import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.events.ActionStartEvent;
 import kor.toxicity.cutscenemaker.handlers.types.*;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
@@ -29,6 +30,8 @@ public abstract class ActionHandler implements Listener {
         handlers.put("entityclick", HandlerEntityClick.class);
         handlers.put("kill", HandlerKill.class);
         handlers.put("walk",HandlerWalk.class);
+        handlers.put("join", HandlerJoin.class);
+        handlers.put("respawn", HandlerRespawn.class);
         if (Bukkit.getPluginManager().isPluginEnabled("Quest")) {
             handlers.put("dialogcomplete", HandlerDialogComplete.class);
         }
@@ -61,7 +64,7 @@ public abstract class ActionHandler implements Listener {
                     return handler;
                 }
             } catch (Exception ignored) {}
-        }
+        } else CutsceneMaker.warn("unable to find the event name \"" + name + "\"");
         return null;
     }
     public final void unregister() {

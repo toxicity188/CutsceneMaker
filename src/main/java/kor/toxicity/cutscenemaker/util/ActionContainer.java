@@ -45,17 +45,6 @@ public class ActionContainer {
         actions.add(act);
         record += act.delay;
 
-        if (act instanceof ActAction) {
-            ActAction action = (ActAction) act;
-            addCheckTask(m -> {
-                if (!m.containsKey(action.name)) {
-                    CutsceneMaker.warn("the action \"" + action.name + "\"does not exists!");
-                    actions.remove(act);
-                } else {
-                    record += m.get(action.name).record;
-                }
-            });
-        }
         if (act instanceof ActEntry) {
             ActEntry action = (ActEntry) act;
             addCheckTask(m -> {

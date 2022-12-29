@@ -19,7 +19,7 @@ public final class TextUtil {
     @Getter
     private static final TextUtil instance = new TextUtil();
 
-    public final String COMMA = ",";
+    public static final String COMMA = ",";
 
 
     public String toSimpleLoc(Location loc) {

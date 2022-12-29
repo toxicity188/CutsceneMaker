@@ -82,16 +82,18 @@ public class ActSlate extends CutsceneAction {
     public boolean change = true;
     @DataField(aliases = "g")
     public boolean grounding = true;
+    @DataField(aliases = "s")
+    public boolean save = true;
 
     @Override
     public void apply(LivingEntity entity) {
         if (entity instanceof Player) {
             Player player = (Player) entity;
             if (toggle.contains(player)) off(player);
-            else on(player,change,grounding);
+            else on(player,save,change,grounding);
         }
     }
-    private static void on(Player player, boolean change, boolean grounding) {
+    private static void on(Player player, boolean save, boolean change, boolean grounding) {
         toggle.add(player);
         if (change) player.setGameMode(GameMode.SPECTATOR);
         else {
@@ -107,7 +109,7 @@ public class ActSlate extends CutsceneAction {
         }
         for (Consumer<Player> p : tasksOn) p.accept(player);
 
-        if (!ActMark.LOCATION.containsKey(player)) ActMark.LOCATION.put(player,player.getLocation());
+        if (save && !ActMark.LOCATION.containsKey(player)) ActMark.LOCATION.put(player,player.getLocation());
     }
     private static void off(Player player) {
         toggle.remove(player);

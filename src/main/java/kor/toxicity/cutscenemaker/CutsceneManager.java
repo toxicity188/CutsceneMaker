@@ -3,6 +3,7 @@ package kor.toxicity.cutscenemaker;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import de.slikey.effectlib.EffectManager;
+import kor.toxicity.cutscenemaker.events.UserDataLoadEvent;
 import kor.toxicity.cutscenemaker.util.DataContainer;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
@@ -16,6 +17,7 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -94,7 +96,7 @@ public final class CutsceneManager {
 
         private final Map<Player, VarsContainer> container = new HashMap<>();
 
-        @EventHandler
+        @EventHandler(priority = EventPriority.HIGHEST)
         public void onJoin(PlayerJoinEvent e) {
             Player player = e.getPlayer();
             if (CutsceneConfig.getInstance().isChangeGameMode()) {
@@ -115,9 +117,10 @@ public final class CutsceneManager {
                 }
                 c.autoSave(plugin, CutsceneConfig.getInstance().getAutoSaveTime());
                 container.put(player, c);
+                Bukkit.getScheduler().runTask(plugin,() -> EvtUtil.call(new UserDataLoadEvent(player)));
             });
         }
-        @EventHandler
+        @EventHandler(priority = EventPriority.MONITOR)
         public void onQuit(PlayerQuitEvent e) {
             Bukkit.getScheduler().runTaskAsynchronously(plugin,() -> {
                 VarsContainer c = container.get(e.getPlayer());

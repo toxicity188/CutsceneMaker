@@ -1,6 +1,7 @@
 package kor.toxicity.cutscenemaker.data;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
@@ -28,7 +29,7 @@ public final class ActionData extends CutsceneData {
     private static final Pattern DELAY_PATTERN = Pattern.compile("^delay(\\s*)(?<ticks>[0-9]+$)", Pattern.UNICODE_CHARACTER_CLASS);
     private static final Map<String, Class<? extends CutsceneAction>> actions = new HashMap<>();
     private static final Map<String, ActionContainer> actionContainer = new HashMap<>();
-    private final JsonParser parser = new JsonParser();
+    private static final JsonParser PARSER = new JsonParser();
 
     static {
         actions.put("teleport", ActTeleport.class);
@@ -110,7 +111,10 @@ public final class ActionData extends CutsceneData {
             if (events != null) {
                 events.forEach(e -> {
                     Matcher matcher = ACTION_PATTERN.matcher(e);
-                    if (matcher.find()) EventData.addListener(container, matcher.group("name"), parser.parse(matcher.group("argument")).getAsJsonObject());
+                    if (matcher.find()) {
+                        String arg = matcher.group("argument");
+                        EventData.addListener(container, matcher.group("name"), (arg != null) ? PARSER.parse(arg).getAsJsonObject() : new JsonObject());
+                    } else CutsceneMaker.warn("Unable to load statement \"" + e + "\".");
                 });
             }
             container.confirm();
@@ -154,7 +158,7 @@ public final class ActionData extends CutsceneData {
 
                 DataObject<CutsceneAction> obj = new DataObject<>(a);
                 Optional.ofNullable(matcher.group("argument")).ifPresent(arg -> {
-                    JsonElement e = parser.parse(arg.replaceAll("=", ":"));
+                    JsonElement e = PARSER.parse(arg.replaceAll("=", ":"));
                     obj.apply(e.getAsJsonObject());
                 });
                 if (!obj.isLoaded()) throw new NoValueFoundException("Class \"" + clazz + "\" must set value \"" + TextUtil.getInstance().toSingleText(obj.getErrorField()) + "\"");

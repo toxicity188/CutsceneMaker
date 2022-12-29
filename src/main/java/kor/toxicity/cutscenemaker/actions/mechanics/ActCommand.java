@@ -15,9 +15,9 @@ public class ActCommand extends CutsceneAction {
     @DataField(aliases = "c", throwable = true)
     public FunctionPrinter command;
     @DataField(aliases = "o")
-    public boolean op;
+    public boolean op = false;
     @DataField(aliases = "b")
-    public boolean console;
+    public boolean console = false;
 
     private Consumer<Player> consumer;
 

@@ -10,6 +10,8 @@ import kor.toxicity.cutscenemaker.events.ActionReloadStartEvent;
 import kor.toxicity.cutscenemaker.util.ConfigWriter;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
 import kor.toxicity.cutscenemaker.util.ItemBuilder;
+import kor.toxicity.cutscenemaker.util.vars.Vars;
+import kor.toxicity.cutscenemaker.util.vars.VarsContainer;
 import org.bukkit.*;
 import org.bukkit.command.*;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -88,7 +90,7 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
         }
 
         register(pl, new CommandListener() {
-            @CommandHandler(aliases = {"l", "리스트"}, length = 0,description = "show list of registered commands.",usage = "/cutscene list",sender = {SenderType.CONSOLE, SenderType.PLAYER})
+            @CommandHandler(aliases = {"리스트"}, length = 0,description = "show list of registered commands.",usage = "/cutscene list",sender = {SenderType.CONSOLE, SenderType.PLAYER})
             public void list(CommandPacket pkg) {
                 listeners.forEach((key, value) -> {
                     send(pkg.getSender(), ChatColor.GRAY + "-----< " + key.getName() + " >-----");
@@ -104,13 +106,13 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
                 pl.load(t -> send(pkg.getSender(),"load finished. (" + t + "ms)"));
                 EvtUtil.call(new ActionReloadEndEvent());
             }
-            @CommandHandler(aliases = "실행", length = 1,description = "run Action.",usage = "/cutscene run <name>",sender = {SenderType.ENTITY})
+            @CommandHandler(aliases = {"실행","r"}, length = 1,description = "run Action.",usage = "/cutscene run <name>",sender = {SenderType.ENTITY})
             public void run(CommandPacket pkg) {
                 boolean r = ActionData.start(pkg.getArgs()[1],(LivingEntity) pkg.getSender());
                 if (!r) send(pkg.getSender(), "run failed.");
                 else send(pkg.getSender(),"run success!");
             }
-            @CommandHandler(aliases = "아이템", length = 3,description = "get or set item in file data.",usage = "/cutscene item <get/set> <file> <key>",sender = {SenderType.PLAYER})
+            @CommandHandler(aliases = {"아이템","i"}, length = 3,description = "get or set item in file data.",usage = "/cutscene item <get/set> <file> <key>",sender = {SenderType.PLAYER})
             public void item(CommandPacket pkg) {
                 String[] args = pkg.getArgs();
                 Player player = (Player) pkg.getSender();
@@ -144,7 +146,7 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
                     send(player, "cannot save item.");
                 }
             }
-            @CommandHandler(aliases = {"좌표","loc"}, length = 2,description = "save your location to file data.",usage = "/cutscene location <file> <key>",sender = {SenderType.PLAYER})
+            @CommandHandler(aliases = {"좌표","loc","l"}, length = 2,description = "save your location to file data.",usage = "/cutscene location <file> <key>",sender = {SenderType.PLAYER})
             public void location(CommandPacket pkg) {
                 String[] args = pkg.getArgs();
                 try {
@@ -162,6 +164,21 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
                 Location loc = pl.getManager().getLocations().getValue(name);
                 if (loc != null) ((LivingEntity) pkg.getSender()).teleport(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
                 else send(pkg.getSender(), "location \"" + name + "\" not found.");
+            }
+            @CommandHandler(aliases = {"var","v"}, length = 3, description = "access to specific player's variables.", usage = "/cutscene variables <player> <name> <value>", sender = {SenderType.CONSOLE, SenderType.PLAYER})
+            public void variables(CommandPacket pkg) {
+                String[] args = pkg.getArgs();
+                Player player = Bukkit.getPlayer(args[1]);
+                if (player == null) {
+                    send(pkg.getSender(),"unknown player's name.");
+                } else {
+                    VarsContainer container = pl.getManager().getVars(player);
+                    if (container != null) {
+                        Vars vars = container.get(args[2]);
+                        send(pkg.getSender(), "successfully changed. (" + vars.getVar() + " to " + args[3] + ")");
+                        vars.setVar(args[3]);
+                    }
+                }
             }
         });
     }
