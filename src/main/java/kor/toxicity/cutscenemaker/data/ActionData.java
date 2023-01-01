@@ -56,6 +56,7 @@ public final class ActionData extends CutsceneData {
         actions.put("kill", ActKill.class);
         actions.put("if", ActIf.class);
         actions.put("warp", ActWarp.class);
+        actions.put("leap", ActLeap.class);
 
         if (Bukkit.getPluginManager().isPluginEnabled("Skript")) {
             actions.put("skript", ActSetSkriptVar.class);
@@ -89,7 +90,7 @@ public final class ActionData extends CutsceneData {
                         CutsceneAction a = a(k);
                         container.add(a);
                     } catch (Exception e) {
-                        Bukkit.getLogger().log(Level.WARNING,"[CutsceneMaker] Error: " + e.getMessage() + " (Action " + s + ")");
+                        CutsceneMaker.warn("Error: " + e.getMessage() + " (Action " + s + ")");
                     }
                 });
             }

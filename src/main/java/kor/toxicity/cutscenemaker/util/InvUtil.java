@@ -3,6 +3,7 @@ package kor.toxicity.cutscenemaker.util;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -18,6 +19,10 @@ import java.util.stream.IntStream;
 public final class InvUtil {
     @Getter
     private static final InvUtil instance = new InvUtil();
+
+    public Inventory create(String name, int rows) {
+        return Bukkit.createInventory(null,Math.min(Math.max(1,rows),6)*9,name);
+    }
 
     public boolean has(Player player, ItemStack target) {
         return Arrays.stream(player.getInventory().getContents()).anyMatch(i -> i != null && i.isSimilar(target) && i.getAmount() >= target.getAmount());

@@ -4,6 +4,7 @@ import kor.toxicity.cutscenemaker.data.*;
 import kor.toxicity.cutscenemaker.entities.EntityManager;
 import kor.toxicity.cutscenemaker.events.ActionReloadEndEvent;
 import kor.toxicity.cutscenemaker.events.ActionReloadStartEvent;
+import kor.toxicity.cutscenemaker.quests.DialogData;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
@@ -38,6 +39,7 @@ public final class CutsceneMaker extends JavaPlugin {
         reload.add(new ItemData(this));
         reload.add(new LocationData(this));
         reload.add(new ActionData(this));
+        reload.add(new DialogData(this));
         getCommand("cutscene").setExecutor(command);
 
         EntityManager.getInstance().setExecutor(this);

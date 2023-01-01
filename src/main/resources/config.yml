@@ -1,3 +1,5 @@
 default-game-mode: survival #오피가 아닌 유저가 관전자 상태에서 해제될 때, 기본이 되는 게임모드입니다.
 change-game-mode: true #유저가 접속할 시 위의 게임모드로 변경할 지 여부입니다.
 auto-save-time: 300 #유저가 접속한 이후로 변수 데이터를 세이브하는 주기입니다. 초 단위입니다.
+
+default-dialog-reader: BOOK

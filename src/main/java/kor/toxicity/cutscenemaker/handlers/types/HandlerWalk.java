@@ -5,8 +5,10 @@ import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.reflect.DataField;
 import kor.toxicity.cutscenemaker.util.RegionUtil;
 import kor.toxicity.cutscenemaker.util.TextUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -22,7 +24,7 @@ public class HandlerWalk extends ActionHandler {
     @DataField(aliases = "loc")
     public String location;
     @DataField
-    public double range = 1;
+    public double range = 0.5;
     @DataField(aliases = "w")
     public String world;
     @DataField(aliases = "b")
@@ -44,13 +46,18 @@ public class HandlerWalk extends ActionHandler {
 
     @Override
     protected void initialize() {
-        Function<LivingEntity, Location> function = TextUtil.getInstance().getBlockLocation(world,location);
-        if (function != null) build(e -> {
-            Player p = e.getPlayer();
-            Location loc = p.getLocation();
-            Location loc2 = function.apply(p);
-            return loc.getWorld().equals(loc2.getWorld()) && loc2.distance(loc) < range;
-        });
+        if (location != null) {
+            Function<LivingEntity, Location> function = TextUtil.getInstance().getBlockLocation(world, location);
+            if (function != null) build(e -> {
+                Player p = e.getPlayer();
+                Location loc = p.getLocation();
+                Location loc2 = function.apply(p);
+                return loc.getWorld().equals(loc2.getWorld()) && loc2.distance(loc) < range;
+            });
+        } else if (world != null) {
+            World world1 = Bukkit.getWorld(world);
+            if (world1 != null) build(e -> e.getPlayer().getWorld().equals(world1));
+        }
         if (block != null) {
             try {
                 Material material = Material.valueOf(block.toUpperCase());

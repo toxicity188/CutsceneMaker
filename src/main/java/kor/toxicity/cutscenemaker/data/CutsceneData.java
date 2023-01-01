@@ -2,10 +2,10 @@ package kor.toxicity.cutscenemaker.data;
 
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 
-abstract class CutsceneData implements Reloadable {
+public abstract class CutsceneData implements Reloadable {
     private final CutsceneMaker pl;
 
-    CutsceneData(CutsceneMaker pl) {
+    public CutsceneData(CutsceneMaker pl) {
         this.pl = pl;
     }
 
