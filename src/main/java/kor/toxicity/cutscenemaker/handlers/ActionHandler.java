@@ -38,10 +38,13 @@ public abstract class ActionHandler implements Listener {
     }
 
     private final ActionContainer container;
-    public final void apply(final LivingEntity entity) {
+    protected final void apply(final LivingEntity entity) {
+        apply(entity,null);
+    }
+    protected final void apply(final LivingEntity entity, Map<String,String> localVariables) {
         ActionStartEvent event = new ActionStartEvent(entity,container);
         EvtUtil.call(event);
-        if (!event.isCancelled()) container.run(entity);
+        if (!event.isCancelled()) container.run(entity,localVariables);
     }
 
     protected abstract void initialize();

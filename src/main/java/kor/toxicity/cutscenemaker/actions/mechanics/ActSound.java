@@ -1,6 +1,7 @@
 package kor.toxicity.cutscenemaker.actions.mechanics;
 
 import kor.toxicity.cutscenemaker.CutsceneManager;
+import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import kor.toxicity.cutscenemaker.util.reflect.DataField;
 import kor.toxicity.cutscenemaker.actions.RepeatableAction;
 import org.bukkit.entity.Entity;
@@ -14,7 +15,7 @@ import java.util.function.Consumer;
 public class ActSound extends RepeatableAction {
 
     @DataField(aliases = "s", throwable = true)
-    public String sound;
+    public FunctionPrinter sound;
     @DataField(aliases = "v")
     public float volume = 1.0F;
     @DataField(aliases = "vs")
@@ -61,11 +62,11 @@ public class ActSound extends RepeatableAction {
 
         private final Random rand = ThreadLocalRandom.current();
 
-        private final Consumer<Entity> send = (global) ? e -> e.getWorld().playSound(e.getLocation(),sound,v,p) : e -> {
-            if (e instanceof Player) ((Player) e).playSound(e.getLocation(),sound,v,p);
+        private final Consumer<LivingEntity> send = (global) ? e -> e.getWorld().playSound(e.getLocation(),sound.print(e),v,p) : e -> {
+            if (e instanceof Player) ((Player) e).playSound(e.getLocation(),sound.print(e),v,p);
         };
 
-        private void action(Entity entity) {
+        private void action(LivingEntity entity) {
             if (volumeSpread != 0) v = 2F*(rand.nextFloat()-0.5F)*volumeSpread+volume;
             if (pitchSpread != 0) p = 2F*(rand.nextFloat()-0.5F)*pitchSpread+pitch;
             send.accept(entity);

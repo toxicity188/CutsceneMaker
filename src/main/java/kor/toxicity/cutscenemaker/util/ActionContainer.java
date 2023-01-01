@@ -2,13 +2,13 @@ package kor.toxicity.cutscenemaker.util;
 
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
-import kor.toxicity.cutscenemaker.actions.mechanics.ActAction;
 import kor.toxicity.cutscenemaker.actions.mechanics.ActEntry;
 import kor.toxicity.cutscenemaker.events.ActionCancelEvent;
 import kor.toxicity.cutscenemaker.events.enums.CancelCause;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -31,7 +32,7 @@ public class ActionContainer {
     private int record;
 
     private BukkitTask delay;
-    private Consumer<LivingEntity> run;
+    private BiConsumer<LivingEntity,Map<String,String>> run;
     public List<Consumer<Map<String,ActionContainer>>> lateCheck;
 
     private final Map<LivingEntity,ActionRunning> tasks = new WeakHashMap<>();
@@ -62,12 +63,24 @@ public class ActionContainer {
         lateCheck.add(check);
     }
     public void confirm() {
-        if (record == 0) run = e -> {
-            for (CutsceneAction action : actions) action.call(e);
+        if (record == 0) run = (e,m) -> {
+            if (m != null && e instanceof Player) {
+                Player p = (Player) e;
+                m.forEach((k,v) -> pl.getManager().getVars(p).get(k).setVar(v));
+                for (CutsceneAction action : actions) action.call(p);
+                m.forEach((k,v) -> pl.getManager().getVars(p).remove(k));
+            } else {
+                for (CutsceneAction action : actions) action.call(e);
+            }
+
         };
-        else run = e -> {
+        else run = (e,m) -> {
             if (tasks.containsKey(e)) tasks.get(e).kill();
-            tasks.put(e,new ActionRunning(e));
+            if (m != null && e instanceof Player) {
+                tasks.put(e, new ActionRunning((Player) e,m));
+            } else {
+                tasks.put(e, new ActionRunning(e));
+            }
         };
     }
 
@@ -81,9 +94,12 @@ public class ActionContainer {
     }
 
     public boolean run(LivingEntity entity) {
+        return run(entity,null);
+    }
+    public boolean run(LivingEntity entity, Map<String,String> localVariables) {
         if ((conditions != null && !conditions.test(entity)) || delay != null) return false;
         delay = Bukkit.getScheduler().runTaskLater(pl,() -> delay = null, record);
-        run.accept(entity);
+        run.accept(entity,localVariables);
         return true;
     }
 
@@ -93,10 +109,18 @@ public class ActionContainer {
         private int loop;
         private final LivingEntity player;
 
+        private final Map<String,String> localVars;
 
-
-        private ActionRunning(LivingEntity player) {
+        private ActionRunning(LivingEntity entity) {
+            this.player = entity;
+            localVars = null;
+            EvtUtil.register(pl,this);
+            load();
+        }
+        private ActionRunning(Player player, Map<String,String> localVariables) {
             this.player = player;
+            localVars = localVariables;
+            localVars.forEach((k,v) -> pl.getManager().getVars(player).get(k).setVar(v));
             EvtUtil.register(pl,this);
             load();
         }
@@ -120,6 +144,7 @@ public class ActionContainer {
             if (task != null) task.cancel();
             EvtUtil.unregister(this);
             tasks.remove(player);
+            if (localVars != null) localVars.forEach((k,v) -> pl.getManager().getVars((Player) player).remove(k));
         }
         private void load() {
             if (loop < actions.size()) {
