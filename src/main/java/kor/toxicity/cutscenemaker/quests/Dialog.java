@@ -361,7 +361,7 @@ public final class Dialog {
         private String sub(String full) {
             String substring = full.substring(0, count);
             while (((substring.length() >= 2) ? last(substring,2) : substring).contains("§")) {
-                count = Math.max(count + 2,full.length());
+                count = Math.min(count + 2,full.length());
                 substring = full.substring(0,count);
             }
             return substring;

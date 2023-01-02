@@ -12,6 +12,7 @@ import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
 import kor.toxicity.cutscenemaker.util.gui.MouseButton;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -31,7 +32,6 @@ public final class QuestData extends CutsceneData {
     static final Map<String,Dialog> DIALOG_MAP = new HashMap<>();
     static final Map<String,QuestSet> QUEST_SET_MAP = new HashMap<>();
     private static final Map<String,NPCData> NPC_MAP = new HashMap<>();
-    private boolean reloaded = false;
     public static void run(String name, Player player, String talker) {
         Dialog dialog = DIALOG_MAP.get(name);
         if (dialog != null) dialog.run(player,talker,null);
@@ -57,6 +57,30 @@ public final class QuestData extends CutsceneData {
                     }
                 }
             }
+        });
+        getPlugin().getCommand("quest").setExecutor((sender, command, label, args) -> {
+            if (sender instanceof Player) {
+                Player p = (Player) sender;
+                Inventory inventory = InvUtil.getInstance().create("진행중인 퀘스트 목록",3);
+                int i = 9;
+                for (String s : getPlugin().getManager().getVars(p).getVars().keySet()) {
+                    if (s.startsWith("quest.")) {
+                        String name = s.substring("quest.".length());
+                        QuestSet questSet = QUEST_SET_MAP.get(name);
+                        if (questSet != null) {
+                            inventory.setItem(i,questSet.getIcon(p));
+                            i++;
+                        }
+                    }
+                }
+                GuiRegister.registerNewGui(new GuiAdapter(p,inventory) {
+                    @Override
+                    public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
+
+                    }
+                });
+            }
+            return true;
         });
     }
 
@@ -100,31 +124,7 @@ public final class QuestData extends CutsceneData {
         CutsceneMaker.send(ChatColor.GREEN + Integer.toString(QUEST_SET_MAP.size()) + " QuestSets successfully loaded.");
         CutsceneMaker.send(ChatColor.GREEN + Integer.toString(DIALOG_MAP.size()) + " Dialogs successfully loaded.");
         CutsceneMaker.send(ChatColor.GREEN + Integer.toString(NPC_MAP.size()) + " NPCs successfully loaded.");
-        CutsceneCommand.createCommand("quest",(sender, command, label, args) -> {
-            if (sender instanceof Player) {
-                Player p = (Player) sender;
-                Inventory inventory = InvUtil.getInstance().create("진행중인 퀘스트 목록",3);
-                int i = 9;
-                for (String s : getPlugin().getManager().getVars(p).getVars().keySet()) {
-                    if (s.startsWith("quest.")) {
-                        String name = s.substring("quest.".length());
-                        QuestSet questSet = QUEST_SET_MAP.get(name);
-                        if (questSet != null) {
-                            inventory.setItem(i,questSet.getIcon(p));
-                            i++;
-                        }
-                    }
-                }
-                GuiRegister.registerNewGui(new GuiAdapter(p,inventory) {
-                    @Override
-                    public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
 
-                    }
-                });
-            }
-            return true;
-        });
-        reloaded = true;
     }
 
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)

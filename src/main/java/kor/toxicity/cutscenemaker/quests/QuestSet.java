@@ -183,23 +183,27 @@ public final class QuestSet {
         private final FunctionPrinter lore;
 
         private QuestListener(ConfigurationSection section) {
-            lore = new FunctionPrinter(section.getString("lore","fail to read custom lore."));
-            if (stringSet(section,"condition")) {
-                String[] t = TextUtil.getInstance().split(section.getString("condition")," ");
+            lore = new FunctionPrinter(section.getString("Lore","fail to read custom lore."));
+            if (stringSet(section,"Condition")) {
+                String[] t = TextUtil.getInstance().split(section.getString("Condition")," ");
                 if (t.length >= 3) condition = ConditionBuilder.LIVING_ENTITY.find(t);
             }
-            if (stringSet(section,"variable")) {
-                if (stringSet(section,"event")) {
+            if (stringSet(section,"Variable")) {
+                if (stringSet(section,"Event")) {
                     ActionContainer container = new ActionContainer(plugin);
                     ActAddVariable variable = new ActAddVariable(plugin.getManager());
-                    variable.name = section.getString("variable");
+                    variable.name = section.getString("Variable");
                     variable.value = 1;
                     variable.initialize();
                     container.add(variable);
-                    container.setConditions(p -> has((Player) p));
+                    container.setConditions(e -> {
+                        Player p = (Player) e;
+                        return has(p) && !isCompleted(p);
+                    });
+
                     container.confirm();
 
-                    ActionData.addHandler(section.getString("event"), container);
+                    ActionData.addHandler(section.getString("Event"), container);
                 }
             } else throw new RuntimeException("variable value not found.");
 
