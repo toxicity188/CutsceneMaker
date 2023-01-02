@@ -42,7 +42,7 @@ public class ConfigLoad {
 	}
 	public void QuestConfig_Load(File folder, String file, String key) throws IOException, InvalidConfigurationException {
 		File config = new File(folder, file);
-		if (config.exists() && file.contains("yml")) {
+		if (config.exists() && file.contains(".yml")) {
 			if (file.contains(".yml")) fileList.add(file.replaceAll(".yml",""));
 			if (!key.equals("")) {
 				this.main.createSection(key);
@@ -63,8 +63,6 @@ public class ConfigLoad {
 		}
 	}
 
-	public List<String> getFileList() {return this.fileList;}
-	public List<String> getValueList(String s) {return this.keyList.get(s);}
 	public List<String> getAllFiles() {
 		List<String> t = new ArrayList<>();
 		keyList.forEach((a,b) -> t.addAll(b));

@@ -2,6 +2,7 @@ package kor.toxicity.cutscenemaker.util.vars;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -13,6 +14,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 public class VarsContainer {
@@ -20,6 +22,7 @@ public class VarsContainer {
     private final Player player;
     private BukkitTask task;
     private static final Map<String, Vars> global = new HashMap<>();
+    @Getter
     private final Map<String,Vars> vars = new HashMap<>();
 
     public VarsContainer(Player player) {
@@ -36,7 +39,6 @@ public class VarsContainer {
             }
         },delay,delay);
     }
-
     public void stop() {
         if (task != null) task.cancel();
     }

@@ -8,6 +8,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,6 +20,11 @@ import java.util.stream.IntStream;
 public final class InvUtil {
     @Getter
     private static final InvUtil instance = new InvUtil();
+
+    public String getItemName(ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        return (meta.getDisplayName() != null) ? meta.getDisplayName() : item.getType().toString().replace("_"," ").toLowerCase();
+    }
 
     public Inventory create(String name, int rows) {
         return Bukkit.createInventory(null,Math.min(Math.max(1,rows),6)*9,name);

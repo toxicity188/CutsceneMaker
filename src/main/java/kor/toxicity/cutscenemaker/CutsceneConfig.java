@@ -5,6 +5,7 @@ import lombok.Getter;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,9 +19,16 @@ public class CutsceneConfig {
     private boolean changeGameMode;
     @Getter
     private int autoSaveTime;
-
     @Getter
     private Material dialogReader;
+    @Getter
+    private String defaultTypingSound;
+    @Getter
+    private int defaultDialogRows;
+    @Getter
+    private int defaultDialogCenter;
+    @Getter
+    private ItemStack defaultQuestIcon;
 
     void load(CutsceneMaker pl) {
         try {
@@ -39,6 +47,16 @@ public class CutsceneConfig {
             });
             changeGameMode = load.getBoolean("change-game-mode",true);
             autoSaveTime = load.getInt("auto-save-time",300);
+            defaultTypingSound = load.getString("default-typing-sound","block.stone_button.click_on 0.2 0.7");
+            defaultDialogRows = load.getInt("default-dialog-rows",5);
+            defaultDialogCenter = load.getInt("default-dialog-center", 22);
+
+            String questMaterial = load.getString("default-quest-icon", "BOOK");
+            safeSet(() -> defaultQuestIcon = new ItemStack(Material.valueOf(questMaterial.toUpperCase())),() -> {
+                CutsceneMaker.warn("unable to find the material named \"" + questMaterial + "\"");
+                defaultQuestIcon = new ItemStack(Material.BOOK);
+            });
+            defaultQuestIcon.setDurability((short) load.getInt("default-quest-durability",0));
         } catch (IOException | InvalidConfigurationException e) {
             throw new RuntimeException(e);
         }

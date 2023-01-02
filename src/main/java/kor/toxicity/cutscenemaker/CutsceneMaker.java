@@ -2,11 +2,9 @@ package kor.toxicity.cutscenemaker;
 
 import kor.toxicity.cutscenemaker.data.*;
 import kor.toxicity.cutscenemaker.entities.EntityManager;
-import kor.toxicity.cutscenemaker.events.ActionReloadEndEvent;
-import kor.toxicity.cutscenemaker.events.ActionReloadStartEvent;
-import kor.toxicity.cutscenemaker.quests.DialogData;
+import kor.toxicity.cutscenemaker.quests.QuestData;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
-import kor.toxicity.cutscenemaker.util.EvtUtil;
+import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -17,6 +15,7 @@ import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public final class CutsceneMaker extends JavaPlugin {
@@ -34,12 +33,13 @@ public final class CutsceneMaker extends JavaPlugin {
         CutsceneCommand command = new CutsceneCommand(this);
         manager = new CutsceneManager(this);
         reload.add(command::unregister);
+        reload.add(new GuiRegister(this));
         reload.add(() -> CutsceneConfig.getInstance().load(this));
         reload.add(new EventData(this));
         reload.add(new ItemData(this));
         reload.add(new LocationData(this));
         reload.add(new ActionData(this));
-        reload.add(new DialogData(this));
+        reload.add(new QuestData(this));
         getCommand("cutscene").setExecutor(command);
 
         EntityManager.getInstance().setExecutor(this);

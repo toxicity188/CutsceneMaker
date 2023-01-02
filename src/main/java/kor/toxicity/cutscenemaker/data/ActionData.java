@@ -9,6 +9,7 @@ import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.actions.mechanics.*;
 import kor.toxicity.cutscenemaker.exceptions.NoActionFoundException;
 import kor.toxicity.cutscenemaker.exceptions.NoValueFoundException;
+import kor.toxicity.cutscenemaker.handlers.ActionHandler;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
 import kor.toxicity.cutscenemaker.util.reflect.DataObject;
@@ -110,13 +111,7 @@ public final class ActionData extends CutsceneData {
                 container.setConditions(cond);
             }
             if (events != null) {
-                events.forEach(e -> {
-                    Matcher matcher = ACTION_PATTERN.matcher(e);
-                    if (matcher.find()) {
-                        String arg = matcher.group("argument");
-                        EventData.addListener(container, matcher.group("name"), (arg != null) ? PARSER.parse(arg).getAsJsonObject() : new JsonObject());
-                    } else CutsceneMaker.warn("Unable to load statement \"" + e + "\".");
-                });
+                events.forEach(e -> addHandler(e,container));
             }
             container.confirm();
             if (config.isSet(s + ".Cooldown")) container.setCoolDown(config.getInt(s + ".Cooldown", -1));
@@ -128,6 +123,13 @@ public final class ActionData extends CutsceneData {
             }
         });
         CutsceneMaker.send(ChatColor.GREEN + Integer.toString(actionContainer.size()) + " actions successfully loaded.");
+    }
+    public static void addHandler(String parameter, ActionContainer container) {
+        Matcher matcher = ACTION_PATTERN.matcher(parameter);
+        if (matcher.find()) {
+            String arg = matcher.group("argument");
+            EventData.addListener(container, matcher.group("name"), (arg != null) ? PARSER.parse(arg).getAsJsonObject() : new JsonObject());
+        } else CutsceneMaker.warn("Unable to load statement \"" + parameter + "\".");
     }
     private ActionPredicate<LivingEntity> getCond(ActionPredicate<LivingEntity> cond, String[] get) {
         if (cond != null && get.length > 4) switch (get[3]) {

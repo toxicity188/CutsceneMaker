@@ -1,5 +1,6 @@
 package kor.toxicity.cutscenemaker.util;
 
+import kor.toxicity.cutscenemaker.CutsceneMaker;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
@@ -15,116 +16,96 @@ import java.util.WeakHashMap;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ItemUtil {
 
+	private static Method getTag, setTag, hasTag, hasKey, getString, setString, asNMSCopy, asCraftMirror;
 
-	public static ItemStack setInternalTag(ItemStack item, String key) {
-		return setInternalTag(item,"internalTag",key);
-	}
-	public static ItemStack setInternalTag(ItemStack item, String internal, String key) {
+	static {
 		try {
-			
-			Method setstring = getNBTTagCompound().getDeclaredMethod("setString", String.class, String.class);
-			
-			Object o1 = asNMSCopy(item);
-			Object o2 = getTag(o1);
-			setstring.invoke(o2, internal, key);
-			setTag(o1, o2);
-			return asCraftMirror(o1);
-			
+			Class<?> nmsItemStack = getNMSClass("net.minecraft.server","ItemStack");
+			Class<?> nbtTagCompound = getNMSClass("net.minecraft.server","NBTTagCompound");
+			Class<?> craftItemStack = getNMSClass("org.bukkit.craftbukkit","inventory.CraftItemStack");
+
+			assert nmsItemStack != null;
+			getTag = nmsItemStack.getDeclaredMethod("getTag");
+			setTag = nmsItemStack.getDeclaredMethod("setTag",nbtTagCompound);
+			hasTag = nmsItemStack.getDeclaredMethod("hasTag");
+
+			assert nbtTagCompound != null;
+			hasKey = nbtTagCompound.getDeclaredMethod("hasKey", String.class);
+			getString = nbtTagCompound.getDeclaredMethod("getString", String.class);
+			setString = nbtTagCompound.getDeclaredMethod("setString", String.class, String.class);
+
+			assert craftItemStack != null;
+			asNMSCopy = craftItemStack.getDeclaredMethod("asNMSCopy", ItemStack.class);
+			asCraftMirror = craftItemStack.getDeclaredMethod("asCraftMirror", nmsItemStack);
 		} catch (Exception e) {
+			CutsceneMaker.warn("Unable to load the NBT Class.");
+		}
+	}
+	private static Class<?> getNMSClass(String pack, String name) {
+		try {
+			return Class.forName(pack + "." + getVersion() + "." + name);
+		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 			return null;
+		}
+	}
+	private static String getVersion() {
+		return Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
+	}
+
+	public static ItemStack setInternalTag(ItemStack item, String internal, String key) {
+		try {
+			Object o1 = asNMSCopy.invoke(null,item);
+			Object o2 = getTag.invoke(o1);
+			setString.invoke(o2, internal, key);
+			setTag.invoke(o1, o2);
+			return (ItemStack) asCraftMirror.invoke(null,o1);
+		} catch (Exception e) {
+			return item;
 		}
 	}
 	public static ItemStack setInternalTag(ItemStack item, Map<String,String> key) {
 		try {
-
-			Method setstring = getNBTTagCompound().getDeclaredMethod("setString", String.class, String.class);
-
-			Object o1 = asNMSCopy(item);
-			Object o2 = getTag(o1);
+			Object o1 = asNMSCopy.invoke(null,item);
+			Object o2 = getTag.invoke(o1);
 			key.forEach((a, b) -> {
 				try {
-					setstring.invoke(o2, a, b);
+					setString.invoke(o2, a, b);
 				} catch (Exception ignored) {}
 			});
-			setTag(o1, o2);
-			return asCraftMirror(o1);
-
+			setTag.invoke(o1, o2);
+			return (ItemStack) asCraftMirror.invoke(null,o1);
 		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
+			return item;
 		}
 	}
-	public static ItemStack setShiny(ItemStack item) {
-		if (item == null) return null;
-		ItemMeta meta = item.getItemMeta();
-		meta.addEnchant(Enchantment.DURABILITY,1,true);
-		item.setItemMeta(meta);
-		return item;
-	}
-
-	public static String readInternalTag(ItemStack item) {
-		return readInternalTag(item,"internalTag");
-	}
 	public static String readInternalTag(ItemStack item, String key) {
-		if (!hasTag(asNMSCopy(item))) return "";
-		Object t = getTag(asNMSCopy(item));
-		if (!hasKey(t,key)) return "";
-		return getString(t,key);
+		try {
+			Object nmsItemStack = asNMSCopy.invoke(null, item);
+			if (!(boolean) hasTag.invoke(nmsItemStack)) return "";
+			Object t = getTag.invoke(nmsItemStack);
+			if (!(boolean) hasKey.invoke(t, key)) return "";
+			return (String) getString.invoke(t, key);
+		} catch (Exception e) {
+			return "";
+		}
 		
 	}
 	public static Map<String,String> readInternalTag(ItemStack item, List<String> key) {
-		if (!hasTag(asNMSCopy(item))) return null;
-		Map<String,String> ret = new WeakHashMap<>();
-		Object t = getTag(asNMSCopy(item));
-		key.forEach(s -> {
-			if (hasKey(t,s)) ret.put(s,getString(t,s));
-		});
-		return ret;
+		try {
+			Object nmsItemStack = asNMSCopy.invoke(null, item);
+			if (!(boolean) hasTag.invoke(nmsItemStack)) return null;
+			Map<String, String> ret = new WeakHashMap<>();
+			Object t = getTag.invoke(nmsItemStack);
+			for (String s : key) {
+				if ((boolean) hasKey.invoke(t, s)) ret.put(s, (String) getString.invoke(t, s));
+			}
+			return ret;
+		} catch (Exception e) {
+			return null;
+		}
 
 	}
 
-	//NMS NBTTagCompound
-	private static Class<?> getNBTTagCompound() {return getNMSClass("net.minecraft.server","NBTTagCompound");}
-	private static boolean hasKey(Object item,String key) {
-		try {return (boolean) getNBTTagCompound().getDeclaredMethod("hasKey", String.class).invoke(item, key);} catch (Exception e) {return false;}
-	}
-	private static String getString(Object item,String key) {
-		try {return (String) getNBTTagCompound().getDeclaredMethod("getString", String.class).invoke(item, key);} catch (Exception e) {return null;}
-	}
-	
-	//NMS ItemStack
-	private static Class<?> getNMSItemStack() {return getNMSClass("net.minecraft.server","ItemStack");}
-	private static Object getTag(Object item) {
-		try {return getNMSItemStack().getDeclaredMethod("getTag").invoke(item);} catch (Exception e) {return null;}
-	}
-	private static Object setTag(Object item, Object compound) {
-		try {return getNMSItemStack().getDeclaredMethod("setTag",getNBTTagCompound()).invoke(item, compound);} catch (Exception e) {return null;}
-	}
-	private static boolean hasTag(Object item) {
-		try {return (boolean) getNMSItemStack().getDeclaredMethod("hasTag").invoke(item);} catch (Exception e) {return false;}
-	}
-	
-	//NMS CraftItemStack
-	private static Class<?> getCraftItemStack() {return getNMSClass("org.bukkit.craftbukkit","inventory.CraftItemStack");}
-	private static Object asNMSCopy(ItemStack item) {
-		try {return getCraftItemStack().getDeclaredMethod("asNMSCopy", ItemStack.class).invoke(null, item);} catch (Exception e) {return null;}
-	}
-	private static ItemStack asCraftMirror(Object item) {
-		try {return (ItemStack) getCraftItemStack().getDeclaredMethod("asCraftMirror", getNMSItemStack()).invoke(null, item);} catch (Exception e) {return null;}
-	}
 
-
-	private static Class<?> getNMSClass(String pack, String name) {
-        try {
-            return Class.forName(pack + "." + getVersion() + "." + name);
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-	private static String getVersion() {
-        return Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
-        
-    }
 }

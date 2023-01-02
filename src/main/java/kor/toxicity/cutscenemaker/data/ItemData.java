@@ -34,6 +34,9 @@ public final class ItemData extends CutsceneData{
         CutsceneMaker.send(ChatColor.GREEN + Integer.toString(items.size()) + " items successfully loaded.");
     }
 
+    public static ItemBuilder getItem(String name) {
+        return instance.items.get(name);
+    }
     public static ItemStack getItem(Player player, String name) {
         return Optional.ofNullable(instance.items.get(name)).map(i -> i.get(player)).orElse(null);
     }
