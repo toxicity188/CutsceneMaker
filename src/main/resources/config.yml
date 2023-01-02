@@ -4,6 +4,7 @@ auto-save-time: 300 #유저가 접속한 이후로 변수 데이터를 세이브
 
 default-dialog-reader: BOOK
 default-typing-sound: block.stone_button.click_on 0.2 0.7
+quest-complete-sound: ui.toast.challenge_complete 1 1
 default-dialog-rows: 5
 default-dialog-center: 22
 

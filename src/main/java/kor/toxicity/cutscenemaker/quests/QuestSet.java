@@ -5,6 +5,7 @@ import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.actions.mechanics.ActAddVariable;
 import kor.toxicity.cutscenemaker.data.ActionData;
 import kor.toxicity.cutscenemaker.data.ItemData;
+import kor.toxicity.cutscenemaker.events.QuestCompleteEvent;
 import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
@@ -18,6 +19,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -31,13 +33,17 @@ public final class QuestSet {
 
     private final CutsceneMaker plugin;
     private final FunctionPrinter title;
-    private final String name, completeAction;
+    @Getter
+    private final String name;
+    private final String completeAction;
     private List<QuestListener> listeners;
 
     private final List<FunctionPrinter> lore, recommend;
 
     private final ItemBuilder[] giveItem, takeItem;
+    @Getter
     private final double money;
+    @Getter
     private final double exp;
     @Getter
     private final boolean cancellable;
@@ -88,17 +94,19 @@ public final class QuestSet {
 
         final List<String> rewardsArray;
 
+        String expString = TextUtil.getInstance().applyComma(exp);
+        String moneyString = TextUtil.getInstance().applyComma(money);
         if (giveItem != null) {
             rewardsArray = new ArrayList<>(giveItem.length + 2);
             for (ItemBuilder builder : giveItem) {
                 rewardsArray.add(InvUtil.getInstance().getItemName(builder.get(player)));
             }
-            rewardsArray.add("Exp: " + exp);
-            rewardsArray.add("Gold: " + money);
+            rewardsArray.add("Exp: " + expString);
+            rewardsArray.add("Gold: " + moneyString);
         } else {
             rewardsArray = Arrays.asList(
-                    "Exp: " + exp,
-                    "Gold: " + money
+                    "Exp: " + expString,
+                    "Gold: " + moneyString
             );
         }
         addLore(list, ChatColor.GREEN.toString() + ChatColor.BOLD + "[!] Rewards:", rewardsArray);
@@ -159,6 +167,16 @@ public final class QuestSet {
         return plugin.getManager().getVars(player).get("quest." +name).getAsBool();
     }
     public void complete(Player player) {
+        QuestCompleteEvent event = new QuestCompleteEvent(player,this);
+        EvtUtil.call(event);
+
+        double exp = event.getExp();
+        double money = event.getMoney();
+        Consumer<Player> consumer = CutsceneConfig.getInstance().getQuestCompleteSound();
+        if (consumer != null) {
+            player.sendTitle(title.print(player),"Quest Complete! - Gold: " + TextUtil.getInstance().applyComma(money) + ", Exp:  " + TextUtil.getInstance().applyComma(exp),10,60,10);
+            consumer.accept(player);
+        }
         if (takeItem != null) for (ItemBuilder builder : takeItem) {
             player.getInventory().remove(builder.get(player));
         }
@@ -178,6 +196,7 @@ public final class QuestSet {
     public boolean isCompleted(Player player) {
         return listeners.stream().allMatch(e -> e.isCompleted(player));
     }
+
     private class QuestListener {
         private Predicate<LivingEntity> condition;
         private final FunctionPrinter lore;
@@ -190,9 +209,11 @@ public final class QuestSet {
             }
             if (stringSet(section,"Variable")) {
                 if (stringSet(section,"Event")) {
+                    String vars = section.getString("Variable");
+
                     ActionContainer container = new ActionContainer(plugin);
                     ActAddVariable variable = new ActAddVariable(plugin.getManager());
-                    variable.name = section.getString("Variable");
+                    variable.name = vars;
                     variable.value = 1;
                     variable.initialize();
                     container.add(variable);

@@ -4,7 +4,6 @@ import kor.toxicity.cutscenemaker.CutsceneConfig;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.data.ActionData;
-import kor.toxicity.cutscenemaker.data.ItemData;
 import kor.toxicity.cutscenemaker.events.DialogEndEvent;
 import kor.toxicity.cutscenemaker.events.DialogStartEvent;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
@@ -14,7 +13,6 @@ import kor.toxicity.cutscenemaker.util.TextUtil;
 import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
-import kor.toxicity.cutscenemaker.util.vars.Vars;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.ChatColor;
@@ -37,18 +35,22 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public final class Dialog {
+
 
     public static final ConfigMapReader<String> READER_STRING = new ConfigMapReader<>(ConfigurationSection::getString);
     public static final ConfigMapReader<ConfigurationSection> READER_CONFIGURATION = new ConfigMapReader<>((c, k) -> (c.isConfigurationSection(k)) ? c.getConfigurationSection(k) : null);
 
     private static final Map<Player,DialogRun> CURRENT_TASK = new HashMap<>();
     static final List<Runnable> LATE_CHECK = new ArrayList<>();
-    private static Consumer<Player> defaultSound;
     static void stopAll() {
-        CURRENT_TASK.forEach((p,d) -> d.cancel());
+        new WeakHashMap<>(CURRENT_TASK).forEach((p,d) -> {
+            d.cancel();
+            p.closeInventory();
+        });
         CURRENT_TASK.clear();
     }
 
@@ -60,8 +62,8 @@ public final class Dialog {
                 int i = Integer.parseInt(s);
                 CutsceneConfig config = CutsceneConfig.getInstance();
                 if (i != config.getDefaultDialogCenter() && i < config.getDefaultDialogRows() * 9) {
-                    if (c.isItemStack(s)) d.stacks.put(i,new ItemBuilder(c.getItemStack(s)));
-                    else if (c.isString(s)) d.stacks.put(i, ItemData.getItem(c.getString(s)));
+                    ItemBuilder builder = QuestUtil.getInstance().getBuilder(c,s);
+                    if (builder != null) d.stacks.put(i, builder);
                 }
             } catch (Exception ignored) {
                 CutsceneMaker.warn("fail to load item data: " + s);
@@ -89,13 +91,18 @@ public final class Dialog {
 
             if (section.isSet("TypingSound") && section.isConfigurationSection("TypingSound")) {
                 ConfigurationSection typing = section.getConfigurationSection("TypingSound");
-                typingSounds = typing.getKeys(false).stream().collect(Collectors.toMap(s -> s, s -> QuestUtil.getInstance().getSoundPlay(s)));
+                typingSounds = typing.getKeys(false).stream().collect(Collectors.toMap(s -> s.replace("_"," "), s -> QuestUtil.getInstance().getSoundPlay(s)));
             }
 
             getOptionalList(section,"Conditions").ifPresent(t -> t.stream().map(s -> {
                 String[] cond = TextUtil.getInstance().split(s," ");
                 return (cond.length >= 3) ? ConditionBuilder.LIVING_ENTITY.find(cond) : null;
             }).filter(Objects::nonNull).forEach(p -> addPredicate(d -> p.test(d.player))));
+            getOptionalList(section,"CheckQuest").ifPresent(t -> t.forEach(s -> {
+                String[] args = TextUtil.getInstance().split(s," ");
+                Predicate<Player> predicate = getQuestChecker(args[0],(args.length > 1) ? args[1] : "has");
+                if (predicate != null) addPredicate(d -> predicate.test(d.player));
+            }));
             getOptionalList(section,"LinkedDialog").ifPresent(t -> LATE_CHECK.add(() -> {
                 Dialog[] dialogs = QuestUtil.getInstance().getDialog(t);
                 if (dialogs.length > 0) endDialog = dialogs;
@@ -111,52 +118,22 @@ public final class Dialog {
             }).filter(Objects::nonNull).forEach(c -> setQuest = setQuest.andThen(c)));
             getOptionalList(section,"SetVars").ifPresent(t -> t.stream().map(s -> {
                 String[] a = TextUtil.getInstance().split(s," ");
-                return (a.length > 1) ? getVarsConsumer(a[0],a[1],(a.length > 2) ? a[2] : "add") : null;
+                return (a.length > 1) ? QuestUtil.getInstance().getVarsConsumer(a[0],a[1],(a.length > 2) ? a[2] : "add") : null;
             }).filter(Objects::nonNull).forEach(c -> setQuest = setQuest.andThen(c)));
 
         } else throw new IllegalStateException("Invalid statement.");
-        if (defaultSound == null) defaultSound = QuestUtil.getInstance().getSoundPlay(CutsceneConfig.getInstance().getDefaultTypingSound());
     }
-    private Consumer<Player> getVarsConsumer(String key, String value, String change) {
-        if (change.equals("set") || change.equals("=")) return p -> manager.getVars(p).get(key).setVar(value);
-        else {
-            try {
-                double d = Double.parseDouble(value);
-                switch (change) {
-                    default:
-                    case "+":
-                    case "add":
-                        return p -> {
-                            Vars vars = manager.getVars(p).get(key);
-                            vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() + d));
-                        };
-                    case "-":
-                    case "sub":
-                    case "subtract":
-                        return p -> {
-                            Vars vars = manager.getVars(p).get(key);
-                            vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() - d));
-                        };
-                    case "*":
-                    case "mul":
-                    case "multiply":
-                        return p -> {
-                            Vars vars = manager.getVars(p).get(key);
-                            vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() * d));
-                        };
-                    case "/":
-                    case "div":
-                    case "divide":
-                        return p -> {
-                            Vars vars = manager.getVars(p).get(key);
-                            vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() / d));
-                        };
-                }
-            } catch (Exception e) {
-                CutsceneMaker.warn("The value \"" + value + "\" is not a number!");
-                return null;
+    private Predicate<Player> getQuestChecker(String name, String action) {
+        QuestSet questSet = getQuestSet(name);
+        if (questSet != null) {
+            switch (action) {
+                default:
+                case "has":
+                    return questSet::has;
+                case "complete":
+                    return questSet::isCompleted;
             }
-        }
+        } else return null;
     }
     private Consumer<Player> getQuestConsumer(String key, String action) {
         QuestSet set = getQuestSet(key);
@@ -180,21 +157,21 @@ public final class Dialog {
     }
 
     public void run(@NotNull Player player, @NotNull String talker, @Nullable Consumer<Player> typingSound) {
-        Map<String,Consumer<Player>> targetMap;
+        Map<String,Consumer<Player>> soundMap;
         if (typingSounds != null) {
-            targetMap = new WeakHashMap<>(typingSounds);
-            if (typingSound != null) targetMap.put(talker, typingSound);
+            soundMap = new WeakHashMap<>(typingSounds);
+            if (typingSound != null) soundMap.put(talker, typingSound);
         } else if (typingSound != null) {
-            targetMap = Collections.singletonMap(talker,typingSound);
+            soundMap = Collections.singletonMap(talker,typingSound);
         }
         else {
-            targetMap = null;
+            soundMap = null;
         }
         run(
                 player,
                 talker,
                 InvUtil.getInstance().create(talker + "'s dialog",CutsceneConfig.getInstance().getDefaultDialogRows()),
-                targetMap
+                soundMap
         );
     }
     public void run(Player player, String talker, Inventory inv, Map<String,Consumer<Player>> typingSound) {
@@ -306,6 +283,7 @@ public final class Dialog {
 
         private int count;
         private final int center = CutsceneConfig.getInstance().getDefaultDialogCenter();
+        private final ItemMeta meta;
 
         private DialogReader(DialogRun run, DialogCurrent current, DialogRecord record, long time) {
             this.run = run;
@@ -314,14 +292,15 @@ public final class Dialog {
             this.inventory = current.inventory;
             start(time);
 
-            Consumer<Player> sound = (current.typingSound != null && record.talker != null) ? current.typingSound.get(record.talker.print(current.player)) : null;
-            soundPlay = (sound != null) ? sound : defaultSound;
+            String talker = (record.talker != null) ? record.talker.print(current.player) : current.talker;
+            Consumer<Player> sound = (current.typingSound != null) ? current.typingSound.get(talker) : null;
+            soundPlay = (sound != null) ? sound : CutsceneConfig.getInstance().getDefaultTypingSound();
 
             inventory.clear();
             record.stacks.forEach((k,v) -> inventory.setItem(k,v.get(player)));
             ItemStack item = new ItemStack(CutsceneConfig.getInstance().getDialogReader());
-            ItemMeta meta = item.getItemMeta();
-            meta.setDisplayName(ChatColor.WHITE + ((record.talker != null) ? record.talker.print(current.player) : current.talker) + ":");
+            meta = item.getItemMeta();
+            meta.setDisplayName(ChatColor.WHITE + talker + ":");
             item.setItemMeta(meta);
             inventory.setItem(center,item);
         }
@@ -343,7 +322,6 @@ public final class Dialog {
                 String sub = sub(message);
                 if (!last(sub,1).equals("*")) {
                     ItemStack item = inventory.getItem(center);
-                    ItemMeta meta = item.getItemMeta();
                     meta.setLore(Collections.singletonList(ChatColor.WHITE + TextUtil.getInstance().colored(sub.replace("*",""))));
                     item.setItemMeta(meta);
                     if (soundPlay != null) soundPlay.accept(player);

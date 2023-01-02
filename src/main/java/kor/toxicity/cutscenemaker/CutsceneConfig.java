@@ -1,14 +1,18 @@
 package kor.toxicity.cutscenemaker;
 
+import kor.toxicity.cutscenemaker.quests.QuestSet;
+import kor.toxicity.cutscenemaker.quests.QuestUtil;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
 import lombok.Getter;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.function.Consumer;
 
 public class CutsceneConfig {
     @Getter
@@ -22,7 +26,7 @@ public class CutsceneConfig {
     @Getter
     private Material dialogReader;
     @Getter
-    private String defaultTypingSound;
+    private Consumer<Player> defaultTypingSound, questCompleteSound;
     @Getter
     private int defaultDialogRows;
     @Getter
@@ -47,7 +51,10 @@ public class CutsceneConfig {
             });
             changeGameMode = load.getBoolean("change-game-mode",true);
             autoSaveTime = load.getInt("auto-save-time",300);
-            defaultTypingSound = load.getString("default-typing-sound","block.stone_button.click_on 0.2 0.7");
+
+            defaultTypingSound = QuestUtil.getInstance().getSoundPlay(load.getString("default-typing-sound","block.stone_button.click_on 0.2 0.7"));
+            questCompleteSound = QuestUtil.getInstance().getSoundPlay(load.getString("quest-complete-sound","ui.toast.challenge_complete 1 1"));
+
             defaultDialogRows = load.getInt("default-dialog-rows",5);
             defaultDialogCenter = load.getInt("default-dialog-center", 22);
 

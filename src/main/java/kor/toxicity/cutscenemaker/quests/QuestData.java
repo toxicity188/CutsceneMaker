@@ -1,6 +1,5 @@
 package kor.toxicity.cutscenemaker.quests;
 
-import kor.toxicity.cutscenemaker.CutsceneCommand;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.data.CutsceneData;
@@ -12,7 +11,6 @@ import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
 import kor.toxicity.cutscenemaker.util.gui.MouseButton;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -51,7 +49,7 @@ public final class QuestData extends CutsceneData {
                     String name = TextUtil.getInstance().getEntityName(e.getRightClicked());
                     NPCData data = NPC_MAP.get(name);
                     if (data != null) {
-                        int vars = (data.followVars != null) ? manager.getVars(player).get(data.followVars).getAsNum(0).intValue() : 0;
+                        int vars = (data.followVars != null) ? (int) manager.getVars(player).get(data.followVars).getAsNum(0).doubleValue() : 0;
                         data.dialogs[Math.min(data.dialogs.length - 1, vars)].run(player, name, data.soundPlay);
                         delay.put(player,manager.runTaskLaterAsynchronously(() -> delay.remove(player), 4));
                     }
@@ -111,12 +109,12 @@ public final class QuestData extends CutsceneData {
         ConfigLoad npc = getPlugin().read("NPC");
         npc.getAllFiles().forEach(s -> {
             ConfigurationSection section = npc.getConfigurationSection(s);
-            if (section != null && section.isSet("dialogs")) {
+            if (section != null && section.isSet("Dialog")) {
                Consumer<Player> typingSound = null;
-               if (section.isSet("typing-sound") && section.isSet("typing-sound")) typingSound = QuestUtil.getInstance().getSoundPlay(section.getString("typing-sound"));
-               NPC_MAP.put(section.getString("name",s),new NPCData(
-                        section.getString("follow-vars",null),
-                        QuestUtil.getInstance().getDialog(section.getStringList("dialogs")),
+               if (section.isSet("TypingSound") && section.isString("TypingSound")) typingSound = QuestUtil.getInstance().getSoundPlay(section.getString("TypingSound"));
+               NPC_MAP.put(section.getString("Name",s),new NPCData(
+                        section.getString("Vars",null),
+                        QuestUtil.getInstance().getDialog(section.getStringList("Dialog")),
                         typingSound
                 ));
             }
