@@ -64,7 +64,7 @@ public final class Dialog {
                     ItemBuilder builder = QuestUtil.getInstance().getBuilder(c,s);
                     if (builder != null) d.stacks.put(i, builder);
                 }
-            } catch (Exception ignored) {
+            } catch (Exception e) {
                 CutsceneMaker.warn("fail to load item data: " + s);
             }
         }));
@@ -248,7 +248,6 @@ public final class Dialog {
                 cancel();
             }
         }
-        private boolean isStopped = false;
         private int time = 2;
         private BukkitTask delay;
         @EventHandler
