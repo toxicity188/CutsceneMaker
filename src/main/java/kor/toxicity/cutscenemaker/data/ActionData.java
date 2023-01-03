@@ -58,6 +58,7 @@ public final class ActionData extends CutsceneData {
         actions.put("if", ActIf.class);
         actions.put("warp", ActWarp.class);
         actions.put("leap", ActLeap.class);
+        actions.put("dialog", ActDialog.class);
 
         if (Bukkit.getPluginManager().isPluginEnabled("Skript")) {
             actions.put("skript", ActSetSkriptVar.class);
@@ -65,9 +66,6 @@ public final class ActionData extends CutsceneData {
         if (Bukkit.getPluginManager().isPluginEnabled("Vault")) {
             actions.put("addmoney", ActAddMoney.class);
             actions.put("removemoney", ActRemoveMoney.class);
-        }
-        if (Bukkit.getPluginManager().isPluginEnabled("Quest")) {
-            actions.put("dialog", ActDialog.class);
         }
     }
     public ActionData(CutsceneMaker pl) {

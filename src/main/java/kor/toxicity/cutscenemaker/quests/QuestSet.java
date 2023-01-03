@@ -198,7 +198,7 @@ public final class QuestSet {
     }
 
     private class QuestListener {
-        private Predicate<LivingEntity> condition;
+        private Predicate<LivingEntity> condition = e -> false;
         private final FunctionPrinter lore;
 
         private QuestListener(ConfigurationSection section) {
@@ -207,8 +207,8 @@ public final class QuestSet {
                 String[] t = TextUtil.getInstance().split(section.getString("Condition")," ");
                 if (t.length >= 3) condition = ConditionBuilder.LIVING_ENTITY.find(t);
             }
-            if (stringSet(section,"Variable")) {
-                if (stringSet(section,"Event")) {
+            if (stringSet(section,"Event")) {
+                if (stringSet(section,"Variable")) {
                     String vars = section.getString("Variable");
 
                     ActionContainer container = new ActionContainer(plugin);
@@ -225,8 +225,8 @@ public final class QuestSet {
                     container.confirm();
 
                     ActionData.addHandler(section.getString("Event"), container);
-                }
-            } else throw new RuntimeException("variable value not found.");
+                } else throw new RuntimeException("variable value not found.");
+            }
 
         }
         private boolean stringSet(ConfigurationSection section, String s) {

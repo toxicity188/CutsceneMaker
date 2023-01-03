@@ -262,19 +262,8 @@ public final class Dialog {
                 if (current.inventory.equals(e.getClickedInventory()) && e.getSlot() == CutsceneConfig.getInstance().getDefaultDialogCenter() && delay == null && reader != null) {
                     delay = manager.runTaskLaterAsynchronously(() -> delay = null,4);
                     if (e.isLeftClick()) {
-                        if (e.isShiftClick()) {
-                            if (isStopped) {
-                                isStopped = false;
-                                reader.start(time);
-                            }
-                            else {
-                                isStopped = true;
-                                reader.stop();
-                            }
-                        } else {
-                            time = Math.max(time - 1, 1);
-                            reader.restart(time);
-                        }
+                        time = Math.max(time - 1, 1);
+                        reader.restart(time);
                     }
                     if (e.isRightClick()) {
                         time = Math.min(time + 1, 4);
@@ -316,16 +305,14 @@ public final class Dialog {
             inventory.setItem(center,item);
         }
         private void restart(long time) {
-            stop();
-            start(time);
+            if (count < message.length()) {
+                cancel();
+                start(time);
+            }
         }
         private void start(long time) {
-            if (count < message.length()) task = manager.runTaskTimer(this,0,time);
+            task = manager.runTaskTimer(this,0,time);
         }
-        private void stop() {
-            if (count < message.length()) cancel();
-        }
-
         @Override
         public void run() {
             if (count < message.length()) {
