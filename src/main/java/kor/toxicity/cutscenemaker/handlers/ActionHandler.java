@@ -32,6 +32,7 @@ public abstract class ActionHandler implements Listener {
         handlers.put("walk",HandlerWalk.class);
         handlers.put("join", HandlerJoin.class);
         handlers.put("respawn", HandlerRespawn.class);
+        handlers.put("custom", HandlerCustom.class);
         if (Bukkit.getPluginManager().isPluginEnabled("Quest")) {
             handlers.put("dialogcomplete", HandlerDialogComplete.class);
         }

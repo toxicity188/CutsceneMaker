@@ -25,12 +25,12 @@ import java.util.regex.Pattern;
 public final class QuestUtil {
     @Getter
     private static final QuestUtil instance = new QuestUtil();
-    private static final Pattern SIMPLE_ITEM_PATTERN = Pattern.compile("\\?(?<type>(\\w|_)+) (?<name>(\\w|\\W)+)", Pattern.UNICODE_CHARACTER_CLASS);
+    private static final Pattern SIMPLE_ITEM_PATTERN = Pattern.compile("\\?(?<type>(\\w|_)+) (?<data>[0-9]+) (?<name>(\\w|\\W)+)", Pattern.UNICODE_CHARACTER_CLASS);
 
     Dialog[] getDialog(List<String> list) {
         return list.stream().map(l -> {
             Dialog d = QuestData.DIALOG_MAP.get(l);
-            if (d == null) CutsceneMaker.warn("the dialog named \"" + l + "\" doesn't exists!");
+            if (d == null) CutsceneMaker.warn("the Dialog named \"" + l + "\" doesn't exists!");
             return d;
         }).filter(Objects::nonNull).toArray(Dialog[]::new);
     }
@@ -61,6 +61,7 @@ public final class QuestUtil {
                     material = Material.APPLE;
                 }
                 ItemStack itemStack = new ItemStack(material);
+                itemStack.setDurability(Short.parseShort(matcher.group("data")));
                 ItemMeta meta = itemStack.getItemMeta();
                 meta.setDisplayName(ChatColor.WHITE + TextUtil.getInstance().colored(matcher.group("name")));
                 itemStack.setItemMeta(meta);

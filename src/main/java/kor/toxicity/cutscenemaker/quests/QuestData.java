@@ -29,6 +29,7 @@ public final class QuestData extends CutsceneData {
 
     static final Map<String,Dialog> DIALOG_MAP = new HashMap<>();
     static final Map<String,QuestSet> QUEST_SET_MAP = new HashMap<>();
+    static final Map<String,QnA> QNA_MAP = new HashMap<>();
     private static final Map<String,NPCData> NPC_MAP = new HashMap<>();
     public static void run(String name, Player player, String talker) {
         Dialog dialog = DIALOG_MAP.get(name);
@@ -87,6 +88,7 @@ public final class QuestData extends CutsceneData {
         Dialog.stopAll();
         DIALOG_MAP.clear();
         NPC_MAP.clear();
+        QNA_MAP.clear();
         QUEST_SET_MAP.clear();
         ConfigLoad quest = getPlugin().read("QuestSet");
         quest.getAllFiles().forEach(s -> {
@@ -104,6 +106,14 @@ public final class QuestData extends CutsceneData {
                 CutsceneMaker.warn("Error: " + e.getMessage() + " (Dialog " + s + ")");
             }
         });
+        ConfigLoad qna = getPlugin().read("QnA");
+        qna.getAllFiles().forEach(s -> {
+            try {
+                QNA_MAP.put(s,new QnA(qna.getConfigurationSection(s)));
+            } catch (Exception e) {
+                CutsceneMaker.warn("Error: " + e.getMessage() + " (QnA " + s + ")");
+            }
+        });
         Dialog.LATE_CHECK.forEach(Runnable::run);
         Dialog.LATE_CHECK.clear();
         ConfigLoad npc = getPlugin().read("NPC");
@@ -119,12 +129,14 @@ public final class QuestData extends CutsceneData {
                 ));
             }
         });
-        CutsceneMaker.send(ChatColor.GREEN + Integer.toString(QUEST_SET_MAP.size()) + " QuestSets successfully loaded.");
-        CutsceneMaker.send(ChatColor.GREEN + Integer.toString(DIALOG_MAP.size()) + " Dialogs successfully loaded.");
-        CutsceneMaker.send(ChatColor.GREEN + Integer.toString(NPC_MAP.size()) + " NPCs successfully loaded.");
-
+        send(QUEST_SET_MAP.size(),"QuestSets");
+        send(DIALOG_MAP.size(),"Dialogs");
+        send(QNA_MAP.size(),"QnAs");
+        send(NPC_MAP.size(),"NPCs");
     }
-
+    private void send(int i, String s) {
+        CutsceneMaker.send(ChatColor.GREEN + Integer.toString(i) + " "+ s + " successfully loaded.");
+    }
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     private static class NPCData {
         private final String followVars;

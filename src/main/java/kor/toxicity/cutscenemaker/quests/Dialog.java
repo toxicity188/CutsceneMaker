@@ -35,7 +35,6 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public final class Dialog {
@@ -75,6 +74,7 @@ public final class Dialog {
     private Dialog[] subDialog;
     private Dialog[] endDialog;
     private String[] actions;
+    private QnA[] endQnA;
 
     private Consumer<Player> setQuest = p -> {};
     private Predicate<DialogCurrent> conditions;
@@ -120,7 +120,14 @@ public final class Dialog {
                 String[] a = TextUtil.getInstance().split(s," ");
                 return (a.length > 1) ? QuestUtil.getInstance().getVarsConsumer(a[0],a[1],(a.length > 2) ? a[2] : "add") : null;
             }).filter(Objects::nonNull).forEach(c -> setQuest = setQuest.andThen(c)));
-
+            getOptionalList(section,"LinkedQnA").ifPresent(t -> LATE_CHECK.add(() -> {
+                QnA[] qna = t.stream().map(s -> {
+                    QnA q = QuestData.QNA_MAP.get(s);
+                    if (q == null) CutsceneMaker.warn("the QnA named \"" + s + "\" doesn't exists!");
+                    return q;
+                }).filter(Objects::nonNull).toArray(QnA[]::new);
+                if (qna.length > 0) endQnA = qna;
+            }));
         } else throw new IllegalStateException("Invalid statement.");
     }
     private Predicate<Player> getQuestChecker(String name, String action) {
@@ -182,7 +189,7 @@ public final class Dialog {
             run(new DialogCurrent(player, talker, inv, typingSound));
         }
     }
-    private boolean run(DialogCurrent current) {
+    boolean run(DialogCurrent current) {
         if (CURRENT_TASK.containsKey(current.player)) return false;
         if (conditions == null || conditions.test(current)) {
             CURRENT_TASK.put(current.player, new DialogRun(current));
@@ -213,10 +220,14 @@ public final class Dialog {
         private void cancel() {
             stop();
             if (endDialog == null || !random(endDialog).run(current)) {
+                if (setQuest != null) setQuest.accept(current.player);
+                if (endQnA != null) {
+                    random(endQnA).run(current);
+                    return;
+                }
                 current.player.closeInventory();
                 EvtUtil.call(new DialogEndEvent(current.player,Dialog.this));
                 if (actions != null) ActionData.start(random(actions), current.player);
-                if (setQuest != null) setQuest.accept(current.player);
             }
         }
         private void stop() {
@@ -253,12 +264,12 @@ public final class Dialog {
                     if (e.isLeftClick()) {
                         if (e.isShiftClick()) {
                             if (isStopped) {
-                                reader.start(time);
                                 isStopped = false;
+                                reader.start(time);
                             }
                             else {
-                                reader.stop();
                                 isStopped = true;
+                                reader.stop();
                             }
                         } else {
                             time = Math.max(time - 1, 1);
@@ -377,11 +388,11 @@ public final class Dialog {
         }
     }
     @RequiredArgsConstructor
-    private static class DialogCurrent {
-        private final Player player;
-        private final String talker;
-        private final Inventory inventory;
-        private final Map<String ,Consumer<Player>> typingSound;
+    static final class DialogCurrent {
+        final Player player;
+        final String talker;
+        final Inventory inventory;
+        final Map<String ,Consumer<Player>> typingSound;
     }
 
     public static final class DialogRecord {
