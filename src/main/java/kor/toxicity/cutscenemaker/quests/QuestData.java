@@ -130,6 +130,7 @@ public final class QuestData extends CutsceneData {
                if (data.dialogs != null) NPC_MAP.put(section.getString("Name",s),data);
             }
         });
+        QuestSet.clear();
         send(QUEST_SET_MAP.size(),"QuestSets");
         send(DIALOG_MAP.size(),"Dialogs");
         send(QNA_MAP.size(),"QnAs");

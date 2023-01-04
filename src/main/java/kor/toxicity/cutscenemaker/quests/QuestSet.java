@@ -9,7 +9,9 @@ import kor.toxicity.cutscenemaker.events.QuestCompleteEvent;
 import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
@@ -197,6 +199,26 @@ public final class QuestSet {
         return listeners != null && listeners.stream().allMatch(e -> e.isCompleted(player));
     }
 
+    private static final Map<String,QuestEvent> EVENT_MAP = new HashMap<>();
+    static void clear() {
+        EVENT_MAP.clear();
+    }
+    private static final class QuestEvent {
+        private Predicate<LivingEntity> predicate;
+        private final ActionContainer container;
+        private final String parameter;
+
+        private QuestEvent(Predicate<LivingEntity> predicate, ActionContainer container, String parameter) {
+            this.predicate = predicate;
+            this.container = container;
+            this.parameter = parameter;
+            container.setConditions(predicate);
+        }
+        private void or(Predicate<LivingEntity> or) {
+            predicate = predicate.or(or);
+            container.setConditions(predicate);
+        }
+    }
     private class QuestListener {
         private Predicate<LivingEntity> condition = e -> false;
         private final FunctionPrinter lore;
@@ -210,21 +232,28 @@ public final class QuestSet {
             if (stringSet(section,"Event")) {
                 if (stringSet(section,"Variable")) {
                     String vars = section.getString("Variable");
-
-                    ActionContainer container = new ActionContainer(plugin);
-                    ActAddVariable variable = new ActAddVariable(plugin.getManager());
-                    variable.name = vars;
-                    variable.value = 1;
-                    variable.initialize();
-                    container.add(variable);
-                    container.setConditions(e -> {
+                    String parameter = section.getString("Event");
+                    Predicate<LivingEntity> predicate = (condition != null) ? e -> {
                         Player p = (Player) e;
-                        return has(p) && !isCompleted(p);
-                    });
+                        return has(p) && condition.test(p);
+                    } : e -> has((Player) e);
+                    if (!EVENT_MAP.containsKey(vars)) {
+                        ActionContainer container = new ActionContainer(plugin);
+                        ActAddVariable variable = new ActAddVariable(plugin.getManager());
+                        variable.name = vars;
+                        variable.value = 1;
+                        variable.initialize();
+                        container.add(variable);
 
-                    container.confirm();
+                        container.confirm();
+                        if (ActionData.addHandler(parameter, container))
+                            EVENT_MAP.put(vars,new QuestEvent(predicate,container,parameter));
+                    } else {
+                        QuestEvent event = EVENT_MAP.get(vars);
+                        event.or(predicate);
+                        if (!event.parameter.equals(parameter)) ActionData.addHandler(parameter, event.container);
+                    }
 
-                    ActionData.addHandler(section.getString("Event"), container);
                 } else throw new RuntimeException("variable value not found.");
             }
 

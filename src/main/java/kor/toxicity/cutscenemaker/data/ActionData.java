@@ -122,12 +122,14 @@ public final class ActionData extends CutsceneData {
         });
         CutsceneMaker.send(ChatColor.GREEN + Integer.toString(actionContainer.size()) + " actions successfully loaded.");
     }
-    public static void addHandler(String parameter, ActionContainer container) {
+    public static boolean addHandler(String parameter, ActionContainer container) {
         Matcher matcher = ACTION_PATTERN.matcher(parameter);
-        if (matcher.find()) {
+        boolean result = matcher.find();
+        if (result) {
             String arg = matcher.group("argument");
             EventData.addListener(container, matcher.group("name"), (arg != null) ? PARSER.parse(arg).getAsJsonObject() : new JsonObject());
         } else CutsceneMaker.warn("Unable to load statement \"" + parameter + "\".");
+        return result;
     }
     private ActionPredicate<LivingEntity> getCond(ActionPredicate<LivingEntity> cond, String[] get) {
         if (cond != null && get.length > 4) switch (get[3]) {
