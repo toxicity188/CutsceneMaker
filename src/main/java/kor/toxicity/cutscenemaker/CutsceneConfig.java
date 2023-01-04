@@ -33,6 +33,8 @@ public class CutsceneConfig {
     @Getter
     private int defaultDialogCenter;
     @Getter
+    private int defaultTypingDelay;
+    @Getter
     private ItemStack defaultQuestIcon;
 
     void load(CutsceneMaker pl) {
@@ -54,14 +56,18 @@ public class CutsceneConfig {
             defaultTypingSound = QuestUtil.getInstance().getSoundPlay(load.getString("default-typing-sound","block.stone_button.click_on 0.2 0.7"));
             questCompleteSound = QuestUtil.getInstance().getSoundPlay(load.getString("quest-complete-sound","ui.toast.challenge_complete 1 1"));
 
-            defaultDialogRows = load.getInt("default-dialog-rows",5);
-            defaultDialogCenter = load.getInt("default-dialog-center", 22);
+            defaultTypingDelay = getValue(load.getInt("default-typing-delay",2),1,4);
+            defaultDialogRows = getValue(load.getInt("default-dialog-rows",5),1,6);
+            defaultDialogCenter = getValue(load.getInt("default-dialog-center", 22),0,defaultDialogRows*9-1);
 
             defaultQuestIcon = getItemStack(load.getString("default-quest-icon", "BOOK"),(short) load.getInt("default-quest-durability",0));
 
         } catch (IOException | InvalidConfigurationException e) {
             throw new RuntimeException(e);
         }
+    }
+    private int getValue(int target, int min, int max){
+        return Math.max(Math.min(target,max),min);
     }
     private ItemStack getItemStack(String material, short durability) {
         ItemStack item = new ItemStack(getMaterial(material));

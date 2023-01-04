@@ -257,7 +257,7 @@ public final class Dialog {
                 cancel();
             }
         }
-        private int time = 2;
+        private int time = CutsceneConfig.getInstance().getDefaultTypingDelay();
         private BukkitTask delay;
         @EventHandler
         public void onInvClose(InventoryCloseEvent e) {
