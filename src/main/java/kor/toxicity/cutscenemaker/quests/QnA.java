@@ -43,8 +43,7 @@ public final class QnA {
             @Override
             public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
                 Button button1 = buttonMap.get(slot);
-                if (button1 != null) {
-                    current.player.openInventory(current.inventory);
+                if (button1 != null && button1.dialogs != null) {
                     if (!random(button1.dialogs).run(current)) current.player.closeInventory();
                 }
             }

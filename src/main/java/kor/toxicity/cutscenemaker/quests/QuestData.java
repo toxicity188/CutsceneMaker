@@ -63,7 +63,7 @@ public final class QuestData extends CutsceneData {
                 Inventory inventory = InvUtil.getInstance().create("진행중인 퀘스트 목록",3);
                 int i = 9;
                 for (String s : getPlugin().getManager().getVars(p).getVars().keySet()) {
-                    if (s.startsWith("quest.")) {
+                    if (i < 18 && s.startsWith("quest.")) {
                         String name = s.substring("quest.".length());
                         QuestSet questSet = QUEST_SET_MAP.get(name);
                         if (questSet != null) {
@@ -122,11 +122,12 @@ public final class QuestData extends CutsceneData {
             if (section != null && section.isSet("Dialog")) {
                Consumer<Player> typingSound = null;
                if (section.isSet("TypingSound") && section.isString("TypingSound")) typingSound = QuestUtil.getInstance().getSoundPlay(section.getString("TypingSound"));
-               NPC_MAP.put(section.getString("Name",s),new NPCData(
-                        section.getString("Vars",null),
-                        QuestUtil.getInstance().getDialog(section.getStringList("Dialog")),
-                        typingSound
-                ));
+               NPCData data = new NPCData(
+                       section.getString("Vars",null),
+                       QuestUtil.getInstance().getDialog(section.getStringList("Dialog")),
+                       typingSound
+               );
+               if (data.dialogs != null) NPC_MAP.put(section.getString("Name",s),data);
             }
         });
         send(QUEST_SET_MAP.size(),"QuestSets");

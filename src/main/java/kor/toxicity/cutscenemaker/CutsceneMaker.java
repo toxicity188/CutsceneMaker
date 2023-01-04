@@ -80,6 +80,9 @@ public final class CutsceneMaker extends JavaPlugin {
     public ConfigLoad read(String dict) {
         return new ConfigLoad(new File(this.getDataFolder().getAbsolutePath() + "\\" + dict),"");
     }
+    public static void removeVars(Player player, String key) {
+        manager.getVars(player).remove(key);
+    }
     public static Vars getVars(Player player, String key) {
         return manager.getVars(player,key);
     }

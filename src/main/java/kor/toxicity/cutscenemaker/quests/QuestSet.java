@@ -12,6 +12,7 @@ import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import lombok.Getter;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -112,6 +113,7 @@ public final class QuestSet {
         addLore(list, ChatColor.GREEN.toString() + ChatColor.BOLD + "[!] Rewards:", rewardsArray);
 
         meta.setLore(list);
+        if (isCompleted(player)) meta.addEnchant(Enchantment.DURABILITY,0,true);
         stack.setItemMeta(meta);
         return stack;
     }
@@ -150,7 +152,7 @@ public final class QuestSet {
     private ItemBuilder[] toItemBuilder(List<String> list) {
         return list.stream().map(i -> {
             ItemBuilder builder = ItemData.getItem(i);
-            if (builder == null) CutsceneMaker.warn("The item named \"" + i + "\"doesn't exists!");
+            if (builder == null) CutsceneMaker.warn("The item named \"" + i + "\"doesn't exist!");
             return builder;
         }).filter(Objects::nonNull).toArray(ItemBuilder[]::new);
     }
@@ -164,7 +166,7 @@ public final class QuestSet {
         plugin.getManager().getVars(player).get("quest." +name).setVar("true");
     }
     public boolean has(Player player) {
-        return plugin.getManager().getVars(player).get("quest." +name).getAsBool();
+        return plugin.getManager().getVars(player).contains("quest." +name);
     }
     public void complete(Player player) {
         QuestCompleteEvent event = new QuestCompleteEvent(player,this);
@@ -177,9 +179,7 @@ public final class QuestSet {
             player.sendTitle(title.print(player),"Quest Complete! - Gold: " + TextUtil.getInstance().applyComma(money) + ", Exp:  " + TextUtil.getInstance().applyComma(exp),10,60,10);
             consumer.accept(player);
         }
-        if (takeItem != null) for (ItemBuilder builder : takeItem) {
-            player.getInventory().remove(builder.get(player));
-        }
+        if (takeItem != null) InvUtil.getInstance().take(player, Arrays.stream(takeItem).map(i -> i.get(player)).toArray(ItemStack[]::new));
         if (giveItem != null) for (ItemBuilder builder : giveItem) {
             player.getInventory().addItem(builder.get(player));
         }
@@ -194,7 +194,7 @@ public final class QuestSet {
         return (section.isSet(key) && section.isConfigurationSection(key)) ? section.getConfigurationSection(key) : null;
     }
     public boolean isCompleted(Player player) {
-        return listeners.stream().allMatch(e -> e.isCompleted(player));
+        return listeners != null && listeners.stream().allMatch(e -> e.isCompleted(player));
     }
 
     private class QuestListener {

@@ -12,7 +12,10 @@ import kor.toxicity.cutscenemaker.util.EvtUtil;
 import kor.toxicity.cutscenemaker.util.ItemBuilder;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import kor.toxicity.cutscenemaker.util.vars.VarsContainer;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.command.*;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.LivingEntity;
@@ -112,7 +115,7 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
                 if (!r) send(pkg.getSender(), "run failed.");
                 else send(pkg.getSender(),"run success!");
             }
-            @CommandHandler(aliases = {"아이템","i"}, length = 3,description = "get or set item in file data.",usage = "/cutscene item <get/set> <file> <key>",sender = {SenderType.PLAYER})
+            @CommandHandler(aliases = {"아이템","i"}, length = 3,description = "get or set the item in the file data.",usage = "/cutscene item <get/set> <file> <key>",sender = {SenderType.PLAYER})
             public void item(CommandPacket pkg) {
                 String[] args = pkg.getArgs();
                 Player player = (Player) pkg.getSender();
@@ -165,7 +168,7 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
                 if (loc != null) ((LivingEntity) pkg.getSender()).teleport(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
                 else send(pkg.getSender(), "location \"" + name + "\" not found.");
             }
-            @CommandHandler(aliases = {"var","v"}, length = 3, description = "access to specific player's variables.", usage = "/cutscene variables <player> <name> <value>", sender = {SenderType.CONSOLE, SenderType.PLAYER})
+            @CommandHandler(aliases = {"var","v","변수"}, length = 3, description = "access to specific player's variables.", usage = "/cutscene variables <player> <name> <value>", sender = {SenderType.CONSOLE, SenderType.PLAYER})
             public void variables(CommandPacket pkg) {
                 String[] args = pkg.getArgs();
                 Player player = Bukkit.getPlayer(args[1]);
@@ -178,6 +181,15 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
                         send(pkg.getSender(), "successfully changed. (" + vars.getVar() + " to " + args[3] + ")");
                         vars.setVar(args[3]);
                     }
+                }
+            }
+            @CommandHandler(aliases = "m", length = 0, description = "get the material of item in sender's main hand", usage = "/cutscene material",sender = SenderType.PLAYER)
+            public void material(CommandPacket pkg) {
+                ItemStack item = ((Player) pkg.getSender()).getInventory().getItemInMainHand();
+                if (item == null || item.getType() == null) {
+                    send(pkg.getSender(),"hold the item you want to get the material from.");
+                } else {
+                    send(pkg.getSender(), "this item's material is: " + item.getType());
                 }
             }
         });

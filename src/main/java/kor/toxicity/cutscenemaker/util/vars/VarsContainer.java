@@ -14,7 +14,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 public class VarsContainer {
@@ -58,12 +57,27 @@ public class VarsContainer {
     }
 
     public Vars get(String key) {
-        if (key.startsWith("*")) {
-            if (!global.containsKey(key)) global.put(key, new Vars("<none>"));
-            return global.get(key);
+        Vars v;
+        if (key.charAt(0) == '*') {
+            v = global.get(key);
+            if (v == null) {
+                v = new Vars("<none>");
+                global.put(key, v);
+            }
         } else {
-            if (!vars.containsKey(key)) vars.put(key, new Vars("<none>"));
-            return vars.get(key);
+            v = vars.get(key);
+            if (v == null) {
+                v = new Vars("<none>");
+                vars.put(key, v);
+            }
+        }
+        return v;
+    }
+    public boolean contains(String key) {
+        if (key.charAt(0) == '*') {
+            return global.containsKey(key);
+        } else {
+            return vars.containsKey(key);
         }
     }
 

@@ -26,8 +26,7 @@ public final class GuiRegister extends CutsceneData {
 
     @Override
     public void reload() {
-        PLAYER_LIST.forEach(Player::closeInventory);
-        PLAYER_LIST.clear();
+        new ArrayList<>(PLAYER_LIST).forEach(Player::closeInventory);
     }
 
     public static void registerNewGui(GuiExecutor executor) {

@@ -28,11 +28,12 @@ public final class QuestUtil {
     private static final Pattern SIMPLE_ITEM_PATTERN = Pattern.compile("\\?(?<type>(\\w|_)+) (?<data>[0-9]+) (?<name>(\\w|\\W)+)", Pattern.UNICODE_CHARACTER_CLASS);
 
     Dialog[] getDialog(List<String> list) {
-        return list.stream().map(l -> {
+        Dialog[] dialog = list.stream().map(l -> {
             Dialog d = QuestData.DIALOG_MAP.get(l);
-            if (d == null) CutsceneMaker.warn("the Dialog named \"" + l + "\" doesn't exists!");
+            if (d == null) CutsceneMaker.warn("the Dialog named \"" + l + "\" doesn't exist!");
             return d;
         }).filter(Objects::nonNull).toArray(Dialog[]::new);
+        return (dialog.length > 0) ? dialog : null;
     }
     public Consumer<Player> getSoundPlay(String s) {
         String[] sounds = TextUtil.getInstance().split(s," ");
@@ -68,50 +69,57 @@ public final class QuestUtil {
                 return new ItemBuilder(itemStack);
             } else {
                 ItemBuilder builder = ItemData.getItem(c.getString(s));
-                if (builder == null) CutsceneMaker.warn("The item \"" + c.getString(s) + "\" doesn't exists!");
+                if (builder == null) CutsceneMaker.warn("The item \"" + c.getString(s) + "\" doesn't exist!");
                 return builder;
             }
         } else return null;
     }
     Consumer<Player> getVarsConsumer(String key, String value, String change) {
-        if (change.equals("set") || change.equals("=")) return p -> CutsceneMaker.getVars(p,key).setVar(value);
-        else {
-            try {
-                double d = Double.parseDouble(value);
-                switch (change) {
-                    default:
-                    case "+":
-                    case "add":
-                        return p -> {
-                            Vars vars = CutsceneMaker.getVars(p,key);
-                            vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() + d));
-                        };
-                    case "-":
-                    case "sub":
-                    case "subtract":
-                        return p -> {
-                            Vars vars = CutsceneMaker.getVars(p,key);
-                            vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() - d));
-                        };
-                    case "*":
-                    case "mul":
-                    case "multiply":
-                        return p -> {
-                            Vars vars = CutsceneMaker.getVars(p,key);
-                            vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() * d));
-                        };
-                    case "/":
-                    case "div":
-                    case "divide":
-                        return p -> {
-                            Vars vars = CutsceneMaker.getVars(p,key);
-                            vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() / d));
-                        };
+        switch (change) {
+            case "set":
+            case "=":
+                return p -> CutsceneMaker.getVars(p,key).setVar(value);
+            case "remove":
+            case "delete":
+            case "del":
+                return p -> CutsceneMaker.removeVars(p,key);
+            default:
+                try {
+                    double d = Double.parseDouble(value);
+                    switch (change) {
+                        default:
+                        case "+":
+                        case "add":
+                            return p -> {
+                                Vars vars = CutsceneMaker.getVars(p,key);
+                                vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() + d));
+                            };
+                        case "-":
+                        case "sub":
+                        case "subtract":
+                            return p -> {
+                                Vars vars = CutsceneMaker.getVars(p,key);
+                                vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() - d));
+                            };
+                        case "*":
+                        case "mul":
+                        case "multiply":
+                            return p -> {
+                                Vars vars = CutsceneMaker.getVars(p,key);
+                                vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() * d));
+                            };
+                        case "/":
+                        case "div":
+                        case "divide":
+                            return p -> {
+                                Vars vars = CutsceneMaker.getVars(p,key);
+                                vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() / d));
+                            };
+                    }
+                } catch (Exception e) {
+                    CutsceneMaker.warn("The value \"" + value + "\" is not a number!");
+                    return null;
                 }
-            } catch (Exception e) {
-                CutsceneMaker.warn("The value \"" + value + "\" is not a number!");
-                return null;
-            }
         }
     }
 }

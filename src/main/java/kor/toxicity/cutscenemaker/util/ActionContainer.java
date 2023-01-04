@@ -50,7 +50,7 @@ public class ActionContainer {
             ActEntry action = (ActEntry) act;
             addCheckTask(m -> {
                 if (!m.containsKey(action.callback)) {
-                    CutsceneMaker.warn("the action \"" + action.callback + "\"does not exists!");
+                    CutsceneMaker.warn("the Action \"" + action.callback + "\" doesn't exist!");
                     actions.remove(act);
                 } else {
                     record += Math.max(action.wait,1)*20;

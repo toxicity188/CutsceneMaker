@@ -1,6 +1,5 @@
 package kor.toxicity.cutscenemaker;
 
-import kor.toxicity.cutscenemaker.quests.QuestSet;
 import kor.toxicity.cutscenemaker.quests.QuestUtil;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
 import lombok.Getter;
@@ -8,7 +7,9 @@ import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,11 +45,9 @@ public class CutsceneConfig {
                 CutsceneMaker.warn("unable to find the game mode named \"" + mode + "\"");
                 defaultGameMode = GameMode.SURVIVAL;
             });
-            String material = load.getString("default-dialog-reader","BOOK");
-            safeSet(() -> dialogReader = Material.valueOf(material.toUpperCase()),() -> {
-                CutsceneMaker.warn("unable to find the material named \"" + material + "\"");
-                dialogReader = Material.BOOK;
-            });
+
+            dialogReader = getMaterial(load.getString("default-dialog-reader","BOOK"));
+
             changeGameMode = load.getBoolean("change-game-mode",true);
             autoSaveTime = load.getInt("auto-save-time",300);
 
@@ -58,17 +57,29 @@ public class CutsceneConfig {
             defaultDialogRows = load.getInt("default-dialog-rows",5);
             defaultDialogCenter = load.getInt("default-dialog-center", 22);
 
-            String questMaterial = load.getString("default-quest-icon", "BOOK");
-            safeSet(() -> defaultQuestIcon = new ItemStack(Material.valueOf(questMaterial.toUpperCase())),() -> {
-                CutsceneMaker.warn("unable to find the material named \"" + questMaterial + "\"");
-                defaultQuestIcon = new ItemStack(Material.BOOK);
-            });
-            defaultQuestIcon.setDurability((short) load.getInt("default-quest-durability",0));
+            defaultQuestIcon = getItemStack(load.getString("default-quest-icon", "BOOK"),(short) load.getInt("default-quest-durability",0));
+
         } catch (IOException | InvalidConfigurationException e) {
             throw new RuntimeException(e);
         }
     }
-
+    private ItemStack getItemStack(String material, short durability) {
+        ItemStack item = new ItemStack(getMaterial(material));
+        item.setDurability(durability);
+        ItemMeta meta = item.getItemMeta();
+        meta.setUnbreakable(true);
+        meta.addItemFlags(ItemFlag.values());
+        item.setItemMeta(meta);
+        return item;
+    }
+    private Material getMaterial(String material) {
+        try {
+            return Material.valueOf(material.toUpperCase());
+        } catch (Exception e) {
+            CutsceneMaker.warn("unable to find the material named \"" + material + "\"");
+            return Material.BOOK;
+        }
+    }
     private void safeSet(Runnable tries, Runnable ifFailed) {
         try {
             tries.run();

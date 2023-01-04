@@ -35,10 +35,13 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public final class Dialog {
 
+    private static final Pattern TALK_PATTERN = Pattern.compile("(((?<talker>(\\w|\\W)+):)?)(\\s?)(?<content>(\\w|\\W)+)",Pattern.UNICODE_CHARACTER_CLASS);
 
     public static final ConfigMapReader<String> READER_STRING = new ConfigMapReader<>(ConfigurationSection::getString);
     public static final ConfigMapReader<ConfigurationSection> READER_CONFIGURATION = new ConfigMapReader<>((c, k) -> (c.isConfigurationSection(k)) ? c.getConfigurationSection(k) : null);
@@ -84,17 +87,24 @@ public final class Dialog {
         this.manager = manager;
         List<String> talk = getStringList(section,"Talk");
         if (talk != null) {
-            records = talk.stream().map(s -> new DialogRecord(new FunctionPrinter(s))).toArray(DialogRecord[]::new);
+            records = talk.stream().map(s -> {
+                try {
+                    return new DialogRecord(s);
+                } catch (Exception e) {
+                    CutsceneMaker.warn("Error: " + e.getMessage());
+                    return null;
+                }
+            }).filter(Objects::nonNull).toArray(DialogRecord[]::new);
 
             READER_STRING.apply(this,section);
             READER_CONFIGURATION.apply(this,section);
 
             if (section.isSet("TypingSound") && section.isConfigurationSection("TypingSound")) {
                 ConfigurationSection typing = section.getConfigurationSection("TypingSound");
-                typingSounds = typing.getKeys(false).stream().collect(Collectors.toMap(s -> s.replace("_"," "), s -> QuestUtil.getInstance().getSoundPlay(s)));
+                typingSounds = typing.getKeys(false).stream().collect(Collectors.toMap(s -> s.replace("_"," "), s -> QuestUtil.getInstance().getSoundPlay(typing.getString(s))));
             }
 
-            getOptionalList(section,"Conditions").ifPresent(t -> t.stream().map(s -> {
+            getOptionalList(section,"Condition").ifPresent(t -> t.stream().map(s -> {
                 String[] cond = TextUtil.getInstance().split(s," ");
                 return (cond.length >= 3) ? ConditionBuilder.LIVING_ENTITY.find(cond) : null;
             }).filter(Objects::nonNull).forEach(p -> addPredicate(d -> p.test(d.player))));
@@ -103,14 +113,8 @@ public final class Dialog {
                 Predicate<Player> predicate = getQuestChecker(args[0],(args.length > 1) ? args[1] : "has");
                 if (predicate != null) addPredicate(d -> predicate.test(d.player));
             }));
-            getOptionalList(section,"LinkedDialog").ifPresent(t -> LATE_CHECK.add(() -> {
-                Dialog[] dialogs = QuestUtil.getInstance().getDialog(t);
-                if (dialogs.length > 0) endDialog = dialogs;
-            }));
-            getOptionalList(section,"LinkedSubDialog").ifPresent(t -> LATE_CHECK.add(() -> {
-                Dialog[] dialogs = QuestUtil.getInstance().getDialog(t);
-                if (dialogs.length > 0) subDialog = dialogs;
-            }));
+            getOptionalList(section,"LinkedDialog").ifPresent(t -> LATE_CHECK.add(() -> endDialog = QuestUtil.getInstance().getDialog(t)));
+            getOptionalList(section,"LinkedSubDialog").ifPresent(t -> LATE_CHECK.add(() -> subDialog = QuestUtil.getInstance().getDialog(t)));
             getOptionalList(section,"LinkedAction").ifPresent(t -> actions = t.toArray(new String[0]));
             getOptionalList(section,"SetQuest").ifPresent(t -> t.stream().map(s -> {
                 String[] a = TextUtil.getInstance().split(s," ");
@@ -123,7 +127,7 @@ public final class Dialog {
             getOptionalList(section,"LinkedQnA").ifPresent(t -> LATE_CHECK.add(() -> {
                 QnA[] qna = t.stream().map(s -> {
                     QnA q = QuestData.QNA_MAP.get(s);
-                    if (q == null) CutsceneMaker.warn("the QnA named \"" + s + "\" doesn't exists!");
+                    if (q == null) CutsceneMaker.warn("the QnA named \"" + s + "\" doesn't exist!");
                     return q;
                 }).filter(Objects::nonNull).toArray(QnA[]::new);
                 if (qna.length > 0) endQnA = qna;
@@ -156,7 +160,7 @@ public final class Dialog {
     }
     private QuestSet getQuestSet(String key) {
         QuestSet questSet = QuestData.QUEST_SET_MAP.get(key);
-        if (questSet == null) CutsceneMaker.warn("The QuestSet named \"" + key + "\"doesn't exists!");
+        if (questSet == null) CutsceneMaker.warn("The QuestSet named \"" + key + "\" doesn't exist!");
         return questSet;
     }
     private <T> T random(T[] dialogs) {
@@ -185,7 +189,6 @@ public final class Dialog {
         DialogStartEvent event = new DialogStartEvent(player,this);
         EvtUtil.call(event);
         if (!event.isCancelled()) {
-            player.openInventory(inv);
             run(new DialogCurrent(player, talker, inv, typingSound));
         }
     }
@@ -208,18 +211,24 @@ public final class Dialog {
     }
     private class DialogRun implements Listener {
         private final DialogCurrent current;
-        private final ListenerManager listener = manager.register(this);
+        private final ListenerManager listener;
         private DialogReader reader;
 
         private int count;
 
         private DialogRun(DialogCurrent current) {
             this.current = current;
+            if (!current.isOpened) {
+                current.isOpened = true;
+                current.player.openInventory(current.inventory);
+            }
+            listener = manager.register(this);
             load();
         }
         private void cancel() {
             stop();
             if (endDialog == null || !random(endDialog).run(current)) {
+                current.isOpened = false;
                 if (setQuest != null) setQuest.accept(current.player);
                 if (endQnA != null) {
                     random(endQnA).run(current);
@@ -379,6 +388,7 @@ public final class Dialog {
         final String talker;
         final Inventory inventory;
         final Map<String ,Consumer<Player>> typingSound;
+        boolean isOpened = false;
     }
 
     public static final class DialogRecord {
@@ -387,8 +397,13 @@ public final class Dialog {
         private FunctionPrinter talker;
         private final Map<Integer, ItemBuilder> stacks = new HashMap<>();
 
-        private DialogRecord(FunctionPrinter printer) {
-            this.printer = printer;
+        private DialogRecord(String printer) {
+            Matcher matcher = TALK_PATTERN.matcher(printer);
+            if (matcher.find()) {
+                String t = matcher.group("talker");
+                if (t != null) talker = new FunctionPrinter(t);
+                this.printer = new FunctionPrinter(matcher.group("content"));
+            } else throw new RuntimeException("unable to read talk statement:" + printer);
         }
         public void addConsumer(Consumer<Player> playerConsumer) {
             if (consumer == null) consumer = playerConsumer;

@@ -30,6 +30,25 @@ public final class InvUtil {
         return Bukkit.createInventory(null,Math.min(Math.max(1,rows),6)*9,name);
     }
 
+    public void give(Player player, ItemStack... itemStack) {
+        player.getInventory().addItem(itemStack);
+    }
+    public void take(Player player, ItemStack... itemStacks) {
+        ItemStack[] contents = player.getInventory().getContents();
+        for (ItemStack itemStack : itemStacks) {
+            int amount = itemStack.getAmount();
+            for (ItemStack target : contents) {
+                if (amount <= 0) break;
+                if (target != null && itemStack.isSimilar(target)) {
+                    int get = target.getAmount();
+                    int minus = Math.min(amount, get);
+                    target.setAmount(get - minus);
+                    amount -= minus;
+                }
+            }
+        }
+    }
+
     public boolean has(Player player, ItemStack target) {
         return Arrays.stream(player.getInventory().getContents()).anyMatch(i -> i != null && i.isSimilar(target) && i.getAmount() >= target.getAmount());
     }
