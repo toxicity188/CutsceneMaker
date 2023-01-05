@@ -59,6 +59,8 @@ public final class ActionData extends CutsceneData {
         actions.put("warp", ActWarp.class);
         actions.put("leap", ActLeap.class);
         actions.put("dialog", ActDialog.class);
+        actions.put("quest", ActQuest.class);
+        actions.put("open", ActOpen.class);
 
         if (Bukkit.getPluginManager().isPluginEnabled("Skript")) {
             actions.put("skript", ActSetSkriptVar.class);
@@ -120,7 +122,7 @@ public final class ActionData extends CutsceneData {
                 b.lateCheck = null;
             }
         });
-        CutsceneMaker.send(ChatColor.GREEN + Integer.toString(actionContainer.size()) + " actions successfully loaded.");
+        CutsceneMaker.send(ChatColor.GREEN + Integer.toString(actionContainer.size()) + " Actions successfully loaded.");
     }
     public static boolean addHandler(String parameter, ActionContainer container) {
         Matcher matcher = ACTION_PATTERN.matcher(parameter);

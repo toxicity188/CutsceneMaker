@@ -3,8 +3,11 @@ package kor.toxicity.cutscenemaker.quests;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.data.CutsceneData;
+import kor.toxicity.cutscenemaker.data.ItemData;
+import kor.toxicity.cutscenemaker.quests.enums.QuestSetTask;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
 import kor.toxicity.cutscenemaker.util.InvUtil;
+import kor.toxicity.cutscenemaker.util.gui.InventorySupplier;
 import kor.toxicity.cutscenemaker.util.TextUtil;
 import kor.toxicity.cutscenemaker.util.gui.GuiAdapter;
 import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
@@ -51,7 +54,12 @@ public final class QuestData extends CutsceneData {
                     NPCData data = NPC_MAP.get(name);
                     if (data != null) {
                         int vars = (data.followVars != null) ? (int) manager.getVars(player).get(data.followVars).getAsNum(0).doubleValue() : 0;
-                        data.dialogs[Math.min(data.dialogs.length - 1, vars)].run(player, name, data.soundPlay);
+                        data.dialogs[Math.min(data.dialogs.length - 1, vars)].run(
+                                player,
+                                name,
+                                (data.supplier != null) ? data.supplier.getInventory(player) : null,
+                                data.soundPlay
+                        );
                         delay.put(player,manager.runTaskLaterAsynchronously(() -> delay.remove(player), 4));
                     }
                 }
@@ -125,7 +133,8 @@ public final class QuestData extends CutsceneData {
                NPCData data = new NPCData(
                        section.getString("Vars",null),
                        QuestUtil.getInstance().getDialog(section.getStringList("Dialog")),
-                       typingSound
+                       typingSound,
+                       (section.isSet("Inventory")) ? (section.isConfigurationSection("Inventory") ? new InventorySupplier(section.getConfigurationSection("Inventory")) : ItemData.getGui(section.getString("Inventory"))) : null
                );
                if (data.dialogs != null) NPC_MAP.put(section.getString("Name",s),data);
             }
@@ -144,6 +153,14 @@ public final class QuestData extends CutsceneData {
         private final String followVars;
         private final Dialog[] dialogs;
         private final Consumer<Player> soundPlay;
+        private final InventorySupplier supplier;
 
+    }
+
+    public static boolean applyQuest(Player player, String name, QuestSetTask task) {
+        QuestSet questSet = QUEST_SET_MAP.get(name);
+        if (questSet == null) return false;
+        task.getTask().accept(questSet,player);
+        return true;
     }
 }

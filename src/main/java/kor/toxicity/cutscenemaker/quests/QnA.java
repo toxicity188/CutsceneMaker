@@ -15,17 +15,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
-public final class QnA {
+final class QnA {
     private final Map<Integer,Button> buttonMap = new HashMap<>();
 
-    public QnA(ConfigurationSection section) {
+    QnA(ConfigurationSection section) {
         if (section.isSet("Button") && section.isConfigurationSection("Button")) {
             ConfigurationSection button = section.getConfigurationSection("Button");
             button.getKeys(false).forEach(s -> {
                 try {
                     ConfigurationSection detail = button.getConfigurationSection(s);
                     buttonMap.put(Integer.parseInt(s),new Button(
-                            QuestUtil.getInstance().getBuilder(detail,"Item"),
+                            InvUtil.getInstance().fromConfig(detail,"Item"),
                             QuestUtil.getInstance().getDialog(detail.getStringList("Dialog"))
                     ));
                 } catch (Exception ignored) {

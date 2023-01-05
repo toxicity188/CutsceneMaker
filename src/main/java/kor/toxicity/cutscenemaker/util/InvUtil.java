@@ -1,10 +1,14 @@
 package kor.toxicity.cutscenemaker.util;
 
+import kor.toxicity.cutscenemaker.CutsceneMaker;
+import kor.toxicity.cutscenemaker.data.ItemData;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -14,12 +18,15 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class InvUtil {
     @Getter
     private static final InvUtil instance = new InvUtil();
+    private static final Pattern SIMPLE_ITEM_PATTERN = Pattern.compile("\\?(?<type>(\\w|_)+) (?<data>[0-9]+) (?<name>(\\w|\\W)+)", Pattern.UNICODE_CHARACTER_CLASS);
 
     public String getItemName(ItemStack item) {
         ItemMeta meta = item.getItemMeta();
@@ -48,12 +55,39 @@ public final class InvUtil {
             }
         }
     }
+    public ItemBuilder fromConfig(ConfigurationSection c, String s) {
+        if (c.isItemStack(s)) return new ItemBuilder(c.getItemStack(s));
+        else if (c.isString(s)) {
+            Matcher matcher = SIMPLE_ITEM_PATTERN.matcher(c.getString(s));
+            if (matcher.find()) {
+                Material material;
+                try {
+                    material = Material.valueOf(matcher.group("type").toUpperCase());
+                } catch (Exception e) {
+                    material = Material.APPLE;
+                }
+                ItemStack itemStack = new ItemStack(material);
+                itemStack.setDurability(Short.parseShort(matcher.group("data")));
+                ItemMeta meta = itemStack.getItemMeta();
+                meta.setDisplayName(ChatColor.WHITE + TextUtil.getInstance().colored(matcher.group("name")));
+                itemStack.setItemMeta(meta);
+                return new ItemBuilder(itemStack);
+            } else {
+                ItemBuilder builder = ItemData.getItem(c.getString(s));
+                if (builder == null) CutsceneMaker.warn("The item \"" + c.getString(s) + "\" doesn't exist!");
+                return builder;
+            }
+        } else return null;
+    }
 
     public boolean has(Player player, ItemStack target) {
         return Arrays.stream(player.getInventory().getContents()).anyMatch(i -> i != null && i.isSimilar(target) && i.getAmount() >= target.getAmount());
     }
     public Optional<ItemStack> getSimilarItem(Player player, ItemStack target) {
         return Arrays.stream(player.getInventory().getContents()).filter(i -> i != null && i.isSimilar(target) && i.getAmount() >= target.getAmount()).findFirst();
+    }
+    public int getTotalAmount(Player player, ItemStack stack) {
+        return Arrays.stream(player.getInventory().getContents()).filter(i -> i != null && i.isSimilar(stack)).mapToInt(ItemStack::getAmount).sum();
     }
     public int emptySpace(Player player) {
         Inventory inv = player.getInventory();

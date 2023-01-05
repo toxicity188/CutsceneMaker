@@ -65,6 +65,9 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
         if (commandMap == null) return;
         try {
             PluginCommand command = createCommand.apply(name.toLowerCase());
+            command.setDescription("generated command.");
+            command.setLabel(name);
+            command.setUsage("/" + name);
             command.setExecutor(executor);
             commandMap.register(FALLBACK_PREFIX,command);
             registeredCommand.add(command);

@@ -14,14 +14,17 @@ import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -41,34 +44,89 @@ import java.util.stream.Collectors;
 
 public final class Dialog {
 
-    private static final Pattern TALK_PATTERN = Pattern.compile("(((?<talker>(\\w|\\W)+):)?)(\\s?)(?<content>(\\w|\\W)+)",Pattern.UNICODE_CHARACTER_CLASS);
+    private static final TypingManager DEFAULT_TYPING_EXECUTOR = current -> {
+        if (current.inventory == null) current.inventory = InvUtil.getInstance().create(current.talker + "'s dialog",CutsceneConfig.getInstance().getDefaultDialogRows());
+        if (!current.isOpened) {
+            current.isOpened = true;
+            current.player.openInventory(current.inventory);
+        }
+        final ItemStack item = new ItemStack(CutsceneConfig.getInstance().getDialogReader());
+        final ItemMeta meta = item.getItemMeta();
+        return new TypingExecutor() {
+            private final int center = CutsceneConfig.getInstance().getDefaultDialogCenter();
+            @Override
+            public void initialize(DialogRecord record, String currentTalker) {
+                current.inventory.clear();
+                record.stacks.forEach((k,v) -> current.inventory.setItem(k,v.get(current.player)));
+                meta.setDisplayName(ChatColor.WHITE + currentTalker + ":");
+                item.setItemMeta(meta);
+                current.inventory.setItem(center,item);
+            }
+            @Override
+            public void apply(String message, Consumer<Player> soundPlay) {
 
+                ItemStack item = current.inventory.getItem(center);
+                meta.setLore(Collections.singletonList(message));
+                item.setItemMeta(meta);
+                if (soundPlay != null) soundPlay.accept(current.player);
+                current.player.updateInventory();
+            }
+        };
+    };
+
+    private static final Pattern TALK_PATTERN = Pattern.compile("(((?<talker>(\\w|\\W)+):)?)(\\s?)(?<content>(\\w|\\W)+)",Pattern.UNICODE_CHARACTER_CLASS);
     public static final ConfigMapReader<String> READER_STRING = new ConfigMapReader<>(ConfigurationSection::getString);
     public static final ConfigMapReader<ConfigurationSection> READER_CONFIGURATION = new ConfigMapReader<>((c, k) -> (c.isConfigurationSection(k)) ? c.getConfigurationSection(k) : null);
 
+    private static final Map<String,TypingManager> TYPING_MANAGER_MAP = new HashMap<>();
     private static final Map<Player,DialogRun> CURRENT_TASK = new HashMap<>();
     static final List<Runnable> LATE_CHECK = new ArrayList<>();
     static void stopAll() {
         new WeakHashMap<>(CURRENT_TASK).forEach((p,d) -> {
             d.cancel();
-            p.closeInventory();
+            if (d.current.isOpened) p.closeInventory();
         });
         CURRENT_TASK.clear();
     }
 
     static {
+        TYPING_MANAGER_MAP.put("default", DEFAULT_TYPING_EXECUTOR);
+        TYPING_MANAGER_MAP.put("title",current -> {
+            if (current.isOpened) {
+                current.isOpened = false;
+                current.player.closeInventory();
+            }
+            return new TypingExecutor() {
+                private String talker;
+                @Override
+                public void initialize(DialogRecord record, String currentTalker) {
+                    talker = ChatColor.YELLOW + ChatColor.BOLD.toString() + currentTalker;
+                }
+
+                @Override
+                public void apply(String message, Consumer<Player> soundPlay) {
+                    if (soundPlay != null) soundPlay.accept(current.player);
+                    current.player.sendTitle(talker,message,0,60,20);
+                }
+            };
+        });
+
         READER_STRING.add("Talker",(d,s) -> d.talker = new FunctionPrinter(s));
+        READER_STRING.add("Interface",(d,s) -> {
+            d.typingManager = TYPING_MANAGER_MAP.get(s);
+            if (d.typingManager == null) CutsceneMaker.warn("The Interface named \"" + s + "\" doesn't exist!");
+        });
         READER_STRING.add("Sound",(d,s) -> d.addConsumer(QuestUtil.getInstance().getSoundPlay(s)));
         READER_CONFIGURATION.add("Item",(d,c) -> c.getKeys(false).forEach(s -> {
             try {
                 int i = Integer.parseInt(s);
                 CutsceneConfig config = CutsceneConfig.getInstance();
                 if (i != config.getDefaultDialogCenter() && i < config.getDefaultDialogRows() * 9) {
-                    ItemBuilder builder = QuestUtil.getInstance().getBuilder(c,s);
+                    ItemBuilder builder = InvUtil.getInstance().fromConfig(c,s);
                     if (builder != null) d.stacks.put(i, builder);
                 }
             } catch (Exception e) {
-                CutsceneMaker.warn("fail to load item data: " + s);
+                CutsceneMaker.warn("fail to load the item data: " + s);
             }
         }));
     }
@@ -83,7 +141,7 @@ public final class Dialog {
     private Predicate<DialogCurrent> conditions;
     private Map<String,Consumer<Player>> typingSounds;
 
-    public Dialog(CutsceneManager manager, ConfigurationSection section) {
+    Dialog(CutsceneManager manager, ConfigurationSection section) {
         this.manager = manager;
         List<String> talk = getStringList(section,"Talk");
         if (talk != null) {
@@ -141,8 +199,12 @@ public final class Dialog {
                 default:
                 case "has":
                     return questSet::has;
+                case "hasnot":
+                    return p -> !questSet.has(p);
                 case "complete":
                     return questSet::isCompleted;
+                case "completenot":
+                    return p -> !questSet.isCompleted(p);
             }
         } else return null;
     }
@@ -155,6 +217,8 @@ public final class Dialog {
                     return set::give;
                 case "complete":
                     return set::complete;
+                case "remove":
+                    return set::remove;
             }
         } else return null;
     }
@@ -168,6 +232,9 @@ public final class Dialog {
     }
 
     public void run(@NotNull Player player, @NotNull String talker, @Nullable Consumer<Player> typingSound) {
+        run(player,talker,null,typingSound);
+    }
+    public void run(@NotNull Player player, @NotNull String talker, @Nullable Inventory inv, @Nullable Consumer<Player> typingSound) {
         Map<String,Consumer<Player>> soundMap;
         if (typingSounds != null) {
             soundMap = new WeakHashMap<>(typingSounds);
@@ -181,7 +248,7 @@ public final class Dialog {
         run(
                 player,
                 talker,
-                InvUtil.getInstance().create(talker + "'s dialog",CutsceneConfig.getInstance().getDefaultDialogRows()),
+                inv,
                 soundMap
         );
     }
@@ -189,7 +256,7 @@ public final class Dialog {
         DialogStartEvent event = new DialogStartEvent(player,this);
         EvtUtil.call(event);
         if (!event.isCancelled()) {
-            run(new DialogCurrent(player, talker, inv, typingSound));
+            run(new DialogCurrent(player, talker, inv, typingSound, false));
         }
     }
     boolean run(DialogCurrent current) {
@@ -212,29 +279,30 @@ public final class Dialog {
     private class DialogRun implements Listener {
         private final DialogCurrent current;
         private final ListenerManager listener;
-        private DialogReader reader;
+        private final DialogReader reader = new DialogReader();
+        private TypingExecutor executor;
 
         private int count;
 
         private DialogRun(DialogCurrent current) {
             this.current = current;
-            if (!current.isOpened) {
-                current.isOpened = true;
-                current.player.openInventory(current.inventory);
-            }
+            this.executor = DEFAULT_TYPING_EXECUTOR.initialize(current);
             listener = manager.register(this);
             load();
         }
         private void cancel() {
             stop();
             if (endDialog == null || !random(endDialog).run(current)) {
-                current.isOpened = false;
                 if (setQuest != null) setQuest.accept(current.player);
                 if (endQnA != null) {
                     random(endQnA).run(current);
+                    current.isOpened = false;
                     return;
                 }
-                current.player.closeInventory();
+                if (current.isOpened) {
+                    current.player.closeInventory();
+                    current.isOpened = false;
+                }
                 EvtUtil.call(new DialogEndEvent(current.player,Dialog.this));
                 if (actions != null) ActionData.start(random(actions), current.player);
             }
@@ -242,13 +310,15 @@ public final class Dialog {
         private void stop() {
             listener.unregister();
             CURRENT_TASK.remove(current.player);
-            if (reader != null) reader.cancel();
+            reader.cancel();
         }
         private void load() {
             if (count < records.length) {
                 DialogRecord record = records[count];
                 if (!record.printer.print(current.player).equals("skip")) {
-                    reader = new DialogReader(this, current, record, time);
+                    if (record.typingManager != null) executor = record.typingManager.initialize(current);
+                    reader.initialize(record);
+
                     count++;
                 } else {
                     load();
@@ -261,13 +331,22 @@ public final class Dialog {
         private BukkitTask delay;
         @EventHandler
         public void onInvClose(InventoryCloseEvent e) {
+            if (current.isOpened && e.getPlayer().equals(current.player)) stop();
+        }
+        @EventHandler
+        public void onDeath(PlayerDeathEvent e) {
+            if (e.getEntity().equals(current.player)) stop();
+        }
+        @EventHandler
+        public void onQuit(PlayerQuitEvent e) {
             if (e.getPlayer().equals(current.player)) stop();
         }
         @EventHandler
         public void onInvClick(InventoryClickEvent e) {
             if (e.getWhoClicked().equals(current.player)) {
                 e.setCancelled(true);
-                if (current.inventory.equals(e.getClickedInventory()) && e.getSlot() == CutsceneConfig.getInstance().getDefaultDialogCenter() && delay == null && reader != null) {
+                Inventory clickedInventory = e.getClickedInventory();
+                if (clickedInventory != null && clickedInventory.equals(current.inventory) && e.getSlot() == CutsceneConfig.getInstance().getDefaultDialogCenter() && delay == null) {
                     delay = manager.runTaskLaterAsynchronously(() -> delay = null,4);
                     if (e.isLeftClick()) {
                         time = Math.max(time - 1, 1);
@@ -280,80 +359,76 @@ public final class Dialog {
                 }
             }
         }
-    }
-    private class DialogReader implements Runnable {
-        private final DialogRun run;
-        private final String message;
-        private final Player player;
-        private final Inventory inventory;
-        private BukkitTask task;
-        private final Consumer<Player> soundPlay;
+        private class DialogReader implements Runnable {
+            private String message;
+            private String output;
+            private BukkitTask task;
+            private Consumer<Player> soundActual;
 
-        private int count;
-        private final int center = CutsceneConfig.getInstance().getDefaultDialogCenter();
-        private final ItemMeta meta;
+            private int length;
+            private int outputLength;
+            private void initialize(DialogRecord record) {
+                length = 0;
+                outputLength = 0;
+                this.message = record.invoke(current.player);
+                char[] array = message.toCharArray();
+                int size = 0;
+                for (char c : array) {
+                    if (c != '*') size ++;
+                }
+                char[] newArray = new char[size];
+                int i = 0;
+                for (char c : array) {
+                    if (c != '*') {
+                        newArray[i] = c;
+                        i++;
+                    }
+                }
+                output = new String(newArray);
 
-        private DialogReader(DialogRun run, DialogCurrent current, DialogRecord record, long time) {
-            this.run = run;
-            this.message = record.invoke(current.player);
-            this.player = current.player;
-            this.inventory = current.inventory;
-            start(time);
+                String talker = (record.talker != null) ? record.talker.print(current.player) : current.talker;
+                Consumer<Player> sound = (current.typingSound != null) ? current.typingSound.get(talker) : null;
+                soundActual = (sound != null) ? sound : CutsceneConfig.getInstance().getDefaultTypingSound();
 
-            String talker = (record.talker != null) ? record.talker.print(current.player) : current.talker;
-            Consumer<Player> sound = (current.typingSound != null) ? current.typingSound.get(talker) : null;
-            soundPlay = (sound != null) ? sound : CutsceneConfig.getInstance().getDefaultTypingSound();
-
-            inventory.clear();
-            record.stacks.forEach((k,v) -> inventory.setItem(k,v.get(player)));
-            ItemStack item = new ItemStack(CutsceneConfig.getInstance().getDialogReader());
-            meta = item.getItemMeta();
-            meta.setDisplayName(ChatColor.WHITE + talker + ":");
-            item.setItemMeta(meta);
-            inventory.setItem(center,item);
-        }
-        private void restart(long time) {
-            if (count < message.length()) {
-                cancel();
+                executor.initialize(record,talker);
                 start(time);
             }
-        }
-        private void start(long time) {
-            task = manager.runTaskTimer(this,0,time);
-        }
-        @Override
-        public void run() {
-            if (count < message.length()) {
-                count ++;
-                String sub = sub(message);
-                if (!last(sub,1).equals("*")) {
-                    ItemStack item = inventory.getItem(center);
-                    meta.setLore(Collections.singletonList(ChatColor.WHITE + TextUtil.getInstance().colored(sub.replace("*",""))));
-                    item.setItemMeta(meta);
-                    if (soundPlay != null) soundPlay.accept(player);
-                    player.updateInventory();
-                }
-            } else {
-                cancel();
-                task = manager.runTaskLater(run::load,20);
-            }
-        }
-        private void cancel() {
-            if (task != null) task.cancel();
-        }
 
-        private String sub(String full) {
-            String substring = full.substring(0, count);
-            while (((substring.length() >= 2) ? last(substring,2) : substring).contains("§")) {
-                count = Math.min(count + 2,full.length());
-                substring = full.substring(0,count);
+            private void restart(long time) {
+                if (length < message.length()) {
+                    cancel();
+                    start(time);
+                }
             }
-            return substring;
-        }
-        private String last(String text, int key) {
-            return text.substring(Math.max(text.length() - key,1));
+            private void start(long time) {
+                task = manager.runTaskTimer(this,0,time);
+            }
+            @Override
+            public void run() {
+                if (length < message.length()) {
+                    length++;
+                    if (message.charAt(length -1) != '*') {
+                        outputLength++;
+                        char t = '§';
+                        int i = 0;
+                        while (message.charAt(length - 1) == t || (length >= 2 && message.charAt(length - 2) == t)) {
+                            length = Math.min(length + 2,message.length());
+                            i += 2;
+                        }
+                        outputLength = Math.min(outputLength + i,output.length());
+                        executor.apply(ChatColor.WHITE + output.substring(0, outputLength), soundActual);
+                    }
+                } else {
+                    cancel();
+                    task = manager.runTaskLater(DialogRun.this::load,20);
+                }
+            }
+            private void cancel() {
+                if (task != null) task.cancel();
+            }
         }
     }
+
 
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class ConfigMapReader<T> {
@@ -382,13 +457,13 @@ public final class Dialog {
             }
         }
     }
-    @RequiredArgsConstructor
+    @AllArgsConstructor
     static final class DialogCurrent {
         final Player player;
         final String talker;
-        final Inventory inventory;
+        Inventory inventory;
         final Map<String ,Consumer<Player>> typingSound;
-        boolean isOpened = false;
+        boolean isOpened;
     }
 
     public static final class DialogRecord {
@@ -396,6 +471,8 @@ public final class Dialog {
         private final FunctionPrinter printer;
         private FunctionPrinter talker;
         private final Map<Integer, ItemBuilder> stacks = new HashMap<>();
+
+        private TypingManager typingManager;
 
         private DialogRecord(String printer) {
             Matcher matcher = TALK_PATTERN.matcher(printer);
@@ -413,5 +490,13 @@ public final class Dialog {
             if (consumer != null) consumer.accept(player);
             return printer.print(player);
         }
+    }
+
+    private interface TypingManager {
+        TypingExecutor initialize(DialogCurrent current);
+    }
+    private interface TypingExecutor {
+        void initialize(DialogRecord record, String currentTalker);
+        void apply(String message, Consumer<Player> soundPlay);
     }
 }

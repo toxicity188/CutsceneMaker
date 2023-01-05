@@ -26,7 +26,12 @@ public abstract class CutsceneAction {
 
     private Consumer<LivingEntity> invoke;
 
+    private final CutsceneManager manager;
     public CutsceneAction(CutsceneManager pl) {
+        manager = pl;
+    }
+    protected void lateCheck(Runnable runnable) {
+        manager.addLateCheck(runnable);
     }
 
     public final void call(LivingEntity entity) {

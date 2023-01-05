@@ -12,15 +12,16 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedHashSet;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.BiConsumer;
+import java.util.*;
 import java.util.function.Consumer;
 
 public final class CutsceneMaker extends JavaPlugin {
 
     public static final String NAME = "[CutsceneMaker]";
+    private final List<Runnable> lateCheck = new ArrayList<>();
+    public void addLateCheck(Runnable runnable) {
+        lateCheck.add(runnable);
+    }
 
     private final Set<Reloadable> reload = new LinkedHashSet<>();
     private static CutsceneManager manager;
@@ -63,6 +64,8 @@ public final class CutsceneMaker extends JavaPlugin {
         Bukkit.getScheduler().runTaskAsynchronously(this,() -> {
             long time = System.currentTimeMillis();
             reload.forEach(Reloadable::reload);
+            lateCheck.forEach(Runnable::run);
+            lateCheck.clear();
             if (callback != null) callback.accept(System.currentTimeMillis() - time);
         });
     }

@@ -34,6 +34,6 @@ public final class LocationData extends CutsceneData {
                 loc.put(f,s,save);
             } else CutsceneMaker.warn("unable to find world \""+ world +"\"");
         }));
-        CutsceneMaker.send(ChatColor.GREEN + Integer.toString(loc.size()) + " locations successfully loaded.");
+        CutsceneMaker.send(ChatColor.GREEN + Integer.toString(loc.size()) + " Locations successfully loaded.");
     }
 }

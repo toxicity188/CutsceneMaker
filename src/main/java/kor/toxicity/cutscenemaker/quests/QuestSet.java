@@ -9,9 +9,7 @@ import kor.toxicity.cutscenemaker.events.QuestCompleteEvent;
 import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
@@ -51,7 +49,7 @@ public final class QuestSet {
     @Getter
     private final boolean cancellable;
 
-    public QuestSet(CutsceneMaker plugin, String node, ConfigurationSection section) {
+    QuestSet(CutsceneMaker plugin, String node, ConfigurationSection section) {
         this.plugin = plugin;
 
         name = TextUtil.getInstance().colored(section.getString("Name",node));
@@ -187,10 +185,12 @@ public final class QuestSet {
         }
         MoneyUtil.getInstance().addMoney(player,money);
         EXP_GETTER.forEach(b -> b.accept(player,exp));
-        plugin.getManager().getVars(player).remove("quest." +name);
+        remove(player);
         if (completeAction != null) ActionData.start(completeAction,player);
     }
-
+    public void remove(Player player) {
+        plugin.getManager().getVars(player).remove("quest." +name);
+    }
 
     private ConfigurationSection getConfigurationSection(ConfigurationSection section, String key) {
         return (section.isSet(key) && section.isConfigurationSection(key)) ? section.getConfigurationSection(key) : null;
@@ -235,7 +235,7 @@ public final class QuestSet {
                     String parameter = section.getString("Event");
                     Predicate<LivingEntity> predicate = (condition != null) ? e -> {
                         Player p = (Player) e;
-                        return has(p) && condition.test(p);
+                        return has(p) && !condition.test(p);
                     } : e -> has((Player) e);
                     if (!EVENT_MAP.containsKey(vars)) {
                         ActionContainer container = new ActionContainer(plugin);

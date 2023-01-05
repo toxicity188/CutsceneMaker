@@ -124,6 +124,19 @@ public final class ConditionBuilder<T> {
             Player p = (Player) e;
             return InvUtil.getInstance().storage(p,(j.size() > 0) ? ItemData.getItem(p,j.get(0).getAsString()) : null);
         });
+        LIVING_ENTITY.NUMBER.addFunction("amount",new CheckableFunction<LivingEntity,Number>() {
+            @Override
+            public Number apply(LivingEntity entity, JsonArray array) {
+                if (!(entity instanceof Player)) return 0;
+                Player p = (Player) entity;
+                return InvUtil.getInstance().getTotalAmount(p,ItemData.getItem(p,array.get(0).getAsString()));
+            }
+
+            @Override
+            public boolean check(JsonArray array) {
+                return array.size() > 0 && ItemData.getItem(array.get(0).getAsString()) != null;
+            }
+        });
 
 
         LIVING_ENTITY.NUMBER.addFunction("emptyspace",(e,j) -> {

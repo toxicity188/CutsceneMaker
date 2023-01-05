@@ -32,7 +32,7 @@ import java.util.function.Function;
 
 public final class CutsceneManager {
 
-    private final JavaPlugin plugin;
+    private final CutsceneMaker plugin;
     private final CutsceneUser user;
     @Getter
     private EffectManager EffectLib;
@@ -45,7 +45,7 @@ public final class CutsceneManager {
     private static final List<Player> delays = new ArrayList<>(1 << 8);
     private static Function<Player,Boolean> applyDelay;
 
-    CutsceneManager(JavaPlugin plugin) {
+    CutsceneManager(CutsceneMaker plugin) {
         this.plugin = plugin;
 
         this.user = new CutsceneUser();
@@ -84,7 +84,9 @@ public final class CutsceneManager {
     public ListenerManager register(Listener... listener) {
         return new ListenerManager(plugin,listener);
     }
-
+    public void addLateCheck(Runnable runnable) {
+        plugin.addLateCheck(runnable);
+    }
     public VarsContainer getVars(Player player) {
         return user.container.get(player);
     }
