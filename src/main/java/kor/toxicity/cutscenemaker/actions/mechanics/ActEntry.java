@@ -91,13 +91,16 @@ public class ActEntry extends CutsceneAction {
                 },t.wait * 20L) : null;
                 listener.register(e -> {
                     if (e.getPlayer().equals(p)) {
-                        try {
-                            block.getBlockData().write(0,WrappedBlockData.createData(loc.getBlock().getType()));
-                            manager.sendServerPacket(p,block);
-                        } catch (Exception ignored) {}
-                        if (task != null) task.cancel();
-                        t.invoke(p,e.getPacket().getStringArrays().read(0)[0]);
-                        listener.unregister();
+                        t.manager.runTaskLater(() -> {
+                            try {
+                                block.getBlockData().write(0, WrappedBlockData.createData(loc.getBlock().getType()));
+                                manager.sendServerPacket(p, block);
+                            } catch (Exception ignored) {
+                            }
+                            if (task != null) task.cancel();
+                            t.invoke(p, e.getPacket().getStringArrays().read(0)[0]);
+                            listener.unregister();
+                        },0);
                     }
                 },PacketType.Play.Client.UPDATE_SIGN);
             } catch (Exception e) {

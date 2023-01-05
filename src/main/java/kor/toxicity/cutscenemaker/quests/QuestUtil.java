@@ -18,12 +18,13 @@ public final class QuestUtil {
     private static final QuestUtil instance = new QuestUtil();
 
     Dialog[] getDialog(List<String> list) {
-        Dialog[] dialog = list.stream().map(l -> {
-            Dialog d = QuestData.DIALOG_MAP.get(l);
-            if (d == null) CutsceneMaker.warn("the Dialog named \"" + l + "\" doesn't exist!");
-            return d;
-        }).filter(Objects::nonNull).toArray(Dialog[]::new);
+        Dialog[] dialog = list.stream().map(this::getDialog).filter(Objects::nonNull).toArray(Dialog[]::new);
         return (dialog.length > 0) ? dialog : null;
+    }
+    Dialog getDialog(String s) {
+        Dialog d = QuestData.DIALOG_MAP.get(s);
+        if (d == null) CutsceneMaker.warn("the Dialog named \"" + s + "\" doesn't exist!");
+        return d;
     }
     public Consumer<Player> getSoundPlay(String s) {
         String[] sounds = TextUtil.getInstance().split(s," ");

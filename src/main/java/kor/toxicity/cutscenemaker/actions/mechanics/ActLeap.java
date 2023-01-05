@@ -48,7 +48,7 @@ public class ActLeap extends CutsceneAction {
 					if (degree < 0) degree += 360;
 					degree -= yaw;
 				}
-				leap(entity,rotation + (float) Math.round(degree/amount) * amount);
+				leap(entity,rotation + Math.round(degree/amount) * amount);
 			}, 1);
 
 		} else leap(entity,rotation);

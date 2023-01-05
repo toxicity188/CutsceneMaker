@@ -10,6 +10,7 @@ import kor.toxicity.cutscenemaker.util.EvtUtil;
 import kor.toxicity.cutscenemaker.util.InvUtil;
 import kor.toxicity.cutscenemaker.util.ItemBuilder;
 import kor.toxicity.cutscenemaker.util.TextUtil;
+import kor.toxicity.cutscenemaker.util.functions.ActionPredicate;
 import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
@@ -18,6 +19,7 @@ import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -50,24 +52,28 @@ public final class Dialog {
             current.isOpened = true;
             current.player.openInventory(current.inventory);
         }
-        final ItemStack item = new ItemStack(CutsceneConfig.getInstance().getDialogReader());
-        final ItemMeta meta = item.getItemMeta();
+        final int center = CutsceneConfig.getInstance().getDefaultDialogCenter();
+        current.inventory.setItem(center,new ItemStack(CutsceneConfig.getInstance().getDialogReader()));
+        final ItemStack target = current.inventory.getItem(center);
+        final ItemMeta meta = target.getItemMeta();
         return new TypingExecutor() {
-            private final int center = CutsceneConfig.getInstance().getDefaultDialogCenter();
+            private Map<Integer,ItemBuilder> before;
             @Override
             public void initialize(DialogRecord record, String currentTalker) {
-                current.inventory.clear();
-                record.stacks.forEach((k,v) -> current.inventory.setItem(k,v.get(current.player)));
+                if (before != null) before.keySet().forEach(i -> {
+                    if (i != center) current.inventory.setItem(0,null);
+                });
+                before = record.stacks;
+                before.forEach((k,v) -> {
+                    if (k != center) current.inventory.setItem(k,v.get(current.player));
+                });
                 meta.setDisplayName(ChatColor.WHITE + currentTalker + ":");
-                item.setItemMeta(meta);
-                current.inventory.setItem(center,item);
+                target.setItemMeta(meta);
             }
             @Override
             public void apply(String message, Consumer<Player> soundPlay) {
-
-                ItemStack item = current.inventory.getItem(center);
                 meta.setLore(Collections.singletonList(message));
-                item.setItemMeta(meta);
+                target.setItemMeta(meta);
                 if (soundPlay != null) soundPlay.accept(current.player);
                 current.player.updateInventory();
             }
@@ -162,10 +168,16 @@ public final class Dialog {
                 typingSounds = typing.getKeys(false).stream().collect(Collectors.toMap(s -> s.replace("_"," "), s -> QuestUtil.getInstance().getSoundPlay(typing.getString(s))));
             }
 
-            getOptionalList(section,"Condition").ifPresent(t -> t.stream().map(s -> {
+            getOptionalList(section,"Condition").ifPresent(t -> LATE_CHECK.add(() -> t.forEach(s -> {
                 String[] cond = TextUtil.getInstance().split(s," ");
-                return (cond.length >= 3) ? ConditionBuilder.LIVING_ENTITY.find(cond) : null;
-            }).filter(Objects::nonNull).forEach(p -> addPredicate(d -> p.test(d.player))));
+                ActionPredicate<LivingEntity> check = (cond.length >= 3) ? ConditionBuilder.LIVING_ENTITY.find(cond) : null;
+                if (check != null) {
+                    if (cond.length > 3) {
+                        Dialog dialog = QuestUtil.getInstance().getDialog(cond[3]);
+                        if (dialog != null) addPredicate(d -> check.castInstead(p -> dialog.run(d)).test(d.player));
+                    } else addPredicate(d -> check.test(d.player));
+                }
+            })));
             getOptionalList(section,"CheckQuest").ifPresent(t -> t.forEach(s -> {
                 String[] args = TextUtil.getInstance().split(s," ");
                 Predicate<Player> predicate = getQuestChecker(args[0],(args.length > 1) ? args[1] : "has");
@@ -286,7 +298,6 @@ public final class Dialog {
 
         private DialogRun(DialogCurrent current) {
             this.current = current;
-            this.executor = DEFAULT_TYPING_EXECUTOR.initialize(current);
             listener = manager.register(this);
             load();
         }
@@ -317,6 +328,7 @@ public final class Dialog {
                 DialogRecord record = records[count];
                 if (!record.printer.print(current.player).equals("skip")) {
                     if (record.typingManager != null) executor = record.typingManager.initialize(current);
+                    else if (executor == null) executor = DEFAULT_TYPING_EXECUTOR.initialize(current);
                     reader.initialize(record);
 
                     count++;
