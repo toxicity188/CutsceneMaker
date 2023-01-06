@@ -94,9 +94,9 @@ public final class ConditionBuilder<T> {
                     case 0:
                         return random.nextInt();
                     case 1:
-                        return random.nextInt(p.get(0).getAsInt());
+                        return random.nextInt(p.get(0).getAsInt() + 1);
                     default:
-                        return random.nextInt(p.get(0).getAsInt(),p.get(1).getAsInt());
+                        return random.nextInt(p.get(0).getAsInt(),p.get(1).getAsInt() + 1);
                 }
             }
         });

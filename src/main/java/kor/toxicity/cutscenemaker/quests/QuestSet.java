@@ -63,8 +63,19 @@ public final class QuestSet {
         money = section.getDouble("Money",0);
         exp = section.getDouble("Exp",0);
 
-        giveItem = getArray(section, "RewardItem", this::toItemBuilder);
-        takeItem = getArray(section, "TakeItem", this::toItemBuilder);
+        Function<List<String>,ItemBuilder[]> function = p -> p.stream().map(s -> {
+            String[] t = TextUtil.getInstance().split(s," ");
+            ItemBuilder builder = InvUtil.getInstance().toName(t[0]);
+            if (builder != null && t.length > 1) {
+                try {
+                    return builder.setAmount(Integer.parseInt(t[1]));
+                } catch (Exception ignored) {
+                }
+            }
+            return builder;
+        }).filter(Objects::nonNull).toArray(ItemBuilder[]::new);
+        giveItem = getArray(section, "RewardItem", function);
+        takeItem = getArray(section, "TakeItem", function);
 
         ConfigurationSection events = getConfigurationSection(section,"Events");
         if (events != null) {
@@ -188,6 +199,7 @@ public final class QuestSet {
         remove(player);
         if (completeAction != null) ActionData.start(completeAction,player);
     }
+
     public void remove(Player player) {
         plugin.getManager().getVars(player).remove("quest." +name);
     }

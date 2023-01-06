@@ -15,10 +15,11 @@ import java.util.stream.Collectors;
 
 public class ItemBuilder {
 
+    private final ItemStack item;
     private final Function<Player,ItemStack> function;
 
     public ItemBuilder(ItemStack item) {
-        Objects.requireNonNull(item);
+        this.item = Objects.requireNonNull(item);
         ItemMeta meta = item.getItemMeta();
 
         List<BiConsumer<Player,ItemMeta>> metaList = new ArrayList<>();
@@ -43,6 +44,11 @@ public class ItemBuilder {
             i.setItemMeta(m);
             return i;
         } : e -> item;
+    }
+    public ItemBuilder setAmount(int i) {
+        ItemStack target = item.clone();
+        target.setAmount(i);
+        return new ItemBuilder(target);
     }
 
     public ItemStack get(Player player) {

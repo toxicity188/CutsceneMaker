@@ -13,7 +13,6 @@ import kor.toxicity.cutscenemaker.util.TextUtil;
 import kor.toxicity.cutscenemaker.util.functions.ActionPredicate;
 import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
-import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -268,7 +267,7 @@ public final class Dialog {
         DialogStartEvent event = new DialogStartEvent(player,this);
         EvtUtil.call(event);
         if (!event.isCancelled()) {
-            run(new DialogCurrent(player, talker, inv, typingSound, false));
+            run(new DialogCurrent(player, talker, inv, typingSound, false, CutsceneConfig.getInstance().getDefaultTypingDelay()));
         }
     }
     boolean run(DialogCurrent current) {
@@ -290,15 +289,13 @@ public final class Dialog {
     }
     private class DialogRun implements Listener {
         private final DialogCurrent current;
-        private final ListenerManager listener;
         private final DialogReader reader = new DialogReader();
         private TypingExecutor executor;
-
         private int count;
 
         private DialogRun(DialogCurrent current) {
             this.current = current;
-            listener = manager.register(this);
+            manager.registerEvent(this);
             load();
         }
         private void cancel() {
@@ -319,9 +316,9 @@ public final class Dialog {
             }
         }
         private void stop() {
-            listener.unregister();
             CURRENT_TASK.remove(current.player);
             reader.cancel();
+            EvtUtil.unregister(this);
         }
         private void load() {
             if (count < records.length) {
@@ -339,7 +336,6 @@ public final class Dialog {
                 cancel();
             }
         }
-        private int time = CutsceneConfig.getInstance().getDefaultTypingDelay();
         private BukkitTask delay;
         @EventHandler
         public void onInvClose(InventoryCloseEvent e) {
@@ -361,12 +357,12 @@ public final class Dialog {
                 if (clickedInventory != null && clickedInventory.equals(current.inventory) && e.getSlot() == CutsceneConfig.getInstance().getDefaultDialogCenter() && delay == null) {
                     delay = manager.runTaskLaterAsynchronously(() -> delay = null,4);
                     if (e.isLeftClick()) {
-                        time = Math.max(time - 1, 1);
-                        reader.restart(time);
+                        current.time = Math.max(current.time - 1, 1);
+                        reader.restart(current.time);
                     }
                     if (e.isRightClick()) {
-                        time = Math.min(time + 1, 4);
-                        reader.restart(time);
+                        current.time = Math.min(current.time + 1, 4);
+                        reader.restart(current.time);
                     }
                 }
             }
@@ -403,7 +399,7 @@ public final class Dialog {
                 soundActual = (sound != null) ? sound : CutsceneConfig.getInstance().getDefaultTypingSound();
 
                 executor.initialize(record,talker);
-                start(time);
+                start(current.time);
             }
 
             private void restart(long time) {
@@ -476,6 +472,7 @@ public final class Dialog {
         Inventory inventory;
         final Map<String ,Consumer<Player>> typingSound;
         boolean isOpened;
+        int time;
     }
 
     public static final class DialogRecord {

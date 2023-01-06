@@ -81,6 +81,9 @@ public final class CutsceneManager {
         return Bukkit.getScheduler().runTaskTimerAsynchronously(plugin,task,delay,time);
     }
 
+    public void registerEvent(Listener listener) {
+        EvtUtil.register(plugin,listener);
+    }
     public ListenerManager register(Listener... listener) {
         return new ListenerManager(plugin,listener);
     }

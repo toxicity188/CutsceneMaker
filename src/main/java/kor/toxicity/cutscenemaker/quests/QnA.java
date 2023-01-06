@@ -1,6 +1,7 @@
 package kor.toxicity.cutscenemaker.quests;
 
 import kor.toxicity.cutscenemaker.CutsceneConfig;
+import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.util.InvUtil;
 import kor.toxicity.cutscenemaker.util.ItemBuilder;
 import kor.toxicity.cutscenemaker.util.gui.GuiAdapter;
@@ -17,8 +18,9 @@ import java.util.concurrent.ThreadLocalRandom;
 
 final class QnA {
     private final Map<Integer,Button> buttonMap = new HashMap<>();
-
-    QnA(ConfigurationSection section) {
+    private final CutsceneManager manager;
+    QnA(CutsceneManager manager, ConfigurationSection section) {
+        this.manager = manager;
         if (section.isSet("Button") && section.isConfigurationSection("Button")) {
             ConfigurationSection button = section.getConfigurationSection("Button");
             button.getKeys(false).forEach(s -> {
@@ -43,8 +45,13 @@ final class QnA {
             @Override
             public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
                 Button button1 = buttonMap.get(slot);
-                if (button1 != null && button1.dialogs != null) {
-                    if (!random(button1.dialogs).run(current)) current.player.closeInventory();
+                if (button1 != null) {
+                    current.player.closeInventory();
+                    manager.runTaskLater(() -> {
+                        if (button1.dialogs != null) {
+                            random(button1.dialogs).run(current);
+                        } else current.player.closeInventory();
+                    },0);
                 }
             }
         });

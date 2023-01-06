@@ -73,11 +73,14 @@ public final class InvUtil {
                 itemStack.setItemMeta(meta);
                 return new ItemBuilder(itemStack);
             } else {
-                ItemBuilder builder = ItemData.getItem(c.getString(s));
-                if (builder == null) CutsceneMaker.warn("The item \"" + c.getString(s) + "\" doesn't exist!");
-                return builder;
+                return toName(c.getString(s));
             }
         } else return null;
+    }
+    public ItemBuilder toName(String s) {
+        ItemBuilder builder = ItemData.getItem(s);
+        if (builder == null) CutsceneMaker.warn("The item \"" + s + "\" doesn't exist!");
+        return builder;
     }
 
     public boolean has(Player player, ItemStack target) {

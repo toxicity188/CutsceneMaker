@@ -117,7 +117,7 @@ public final class QuestData extends CutsceneData {
         ConfigLoad qna = getPlugin().read("QnA");
         qna.getAllFiles().forEach(s -> {
             try {
-                QNA_MAP.put(s,new QnA(qna.getConfigurationSection(s)));
+                QNA_MAP.put(s,new QnA(getPlugin().getManager(),qna.getConfigurationSection(s)));
             } catch (Exception e) {
                 CutsceneMaker.warn("Error: " + e.getMessage() + " (QnA " + s + ")");
             }

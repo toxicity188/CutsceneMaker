@@ -13,9 +13,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ItemUtil {
-
+	private ItemUtil() {
+		throw new RuntimeException();
+	}
 	private static Method getTag, setTag, hasTag, hasKey, getString, setString, asNMSCopy, asCraftMirror;
 
 	static {
@@ -104,8 +105,5 @@ public final class ItemUtil {
 		} catch (Exception e) {
 			return null;
 		}
-
 	}
-
-
 }
