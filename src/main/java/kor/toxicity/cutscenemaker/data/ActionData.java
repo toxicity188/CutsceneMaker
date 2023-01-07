@@ -162,7 +162,7 @@ public final class ActionData extends CutsceneData {
                 Class<? extends CutsceneAction> c = actions.get(clazz);
                 CutsceneAction a = c.getDeclaredConstructor(CutsceneManager.class).newInstance(getPlugin().getManager());
 
-                DataObject<CutsceneAction> obj = new DataObject<>(a);
+                DataObject obj = new DataObject(a,"Action " + clazz);
                 Optional.ofNullable(matcher.group("argument")).ifPresent(arg -> {
                     JsonElement e = PARSER.parse(arg.replaceAll("=", ":"));
                     obj.apply(e.getAsJsonObject());

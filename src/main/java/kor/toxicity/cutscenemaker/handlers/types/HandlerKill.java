@@ -14,7 +14,7 @@ public class HandlerKill extends ActionHandler {
 
     @DataField
     public String type;
-    @DataField
+    @DataField(aliases = "n")
     public String name;
 
     private Predicate<EntityDeathEvent> check = e -> e.getEntity().getKiller() != null;

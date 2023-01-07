@@ -1,6 +1,7 @@
 package kor.toxicity.cutscenemaker.util;
 
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
+import lombok.Getter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -14,9 +15,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ItemBuilder {
-
+    @Getter
     private final ItemStack item;
     private final Function<Player,ItemStack> function;
+    @Getter
+    private final boolean sameItem;
 
     public ItemBuilder(ItemStack item) {
         this.item = Objects.requireNonNull(item);
@@ -36,8 +39,8 @@ public class ItemBuilder {
             FunctionPrinter printer = new FunctionPrinter(d);
             if (printer.ANY_MATCH) metaList.add((p,m) -> m.setLocalizedName(printer.print(p)));
         });
-
-        function = (metaList.size() > 0) ? p -> {
+        sameItem = metaList.size() > 0;
+        function = (sameItem) ? p -> {
             ItemStack i = item.clone();
             ItemMeta m = i.getItemMeta();
             for (BiConsumer<Player, ItemMeta> consumer : metaList) consumer.accept(p,m);

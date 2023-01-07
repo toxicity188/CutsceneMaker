@@ -111,12 +111,18 @@ public final class ConditionBuilder<T> {
             }
             return false;
         });
-        LIVING_ENTITY.BOOL.addFunction("hasitem",(e,j) -> {
-            if (!(e instanceof Player) || j.size() == 0) return false;
-            Player p = (Player) e;
-            ItemStack item = ItemData.getItem(p,j.get(0).getAsString());
-            if (item == null) return false;
-            return InvUtil.getInstance().has(p,item);
+        LIVING_ENTITY.BOOL.addFunction("hasitem",new CheckableFunction<LivingEntity,Boolean>() {
+            @Override
+            public Boolean apply(LivingEntity entity, JsonArray array) {
+                if (!(entity instanceof Player)) return false;
+                Player p = (Player) entity;
+                return InvUtil.getInstance().has(p,ItemData.getItem(p,array.get(0).getAsString()));
+            }
+
+            @Override
+            public boolean check(JsonArray array) {
+                return array.size() > 0 && InvUtil.getInstance().toName(array.get(0).getAsString()) != null;
+            }
         });
 
         LIVING_ENTITY.NUMBER.addFunction("storage",(e,j) -> {
@@ -124,17 +130,30 @@ public final class ConditionBuilder<T> {
             Player p = (Player) e;
             return InvUtil.getInstance().storage(p,(j.size() > 0) ? ItemData.getItem(p,j.get(0).getAsString()) : null);
         });
-        LIVING_ENTITY.NUMBER.addFunction("amount",new CheckableFunction<LivingEntity,Number>() {
+        LIVING_ENTITY.NUMBER.addFunction("amount", new CompileFunction<LivingEntity, Number>() {
             @Override
-            public Number apply(LivingEntity entity, JsonArray array) {
-                if (!(entity instanceof Player)) return 0;
-                Player p = (Player) entity;
-                return InvUtil.getInstance().getTotalAmount(p,ItemData.getItem(p,array.get(0).getAsString()));
+            public FunctionCompiler<LivingEntity, Number> initialize() {
+                return new FunctionCompiler<LivingEntity, Number>() {
+                    private ItemBuilder builder;
+                    @Override
+                    public void initialize(JsonArray array) {
+                        builder = ItemData.getItem(array.get(0).getAsString());
+                    }
+
+                    @Override
+                    public Function<LivingEntity, Number> compile() {
+                        return e -> {
+                            if (!(e instanceof Player)) return 0;
+                            Player p = (Player) e;
+                            return InvUtil.getInstance().getTotalAmount(p,builder.get(p));
+                        };
+                    }
+                };
             }
 
             @Override
             public boolean check(JsonArray array) {
-                return array.size() > 0 && ItemData.getItem(array.get(0).getAsString()) != null;
+                return array.size() > 0 && InvUtil.getInstance().toName(array.get(0).getAsString()) != null;
             }
         });
 

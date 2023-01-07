@@ -14,7 +14,6 @@ import kor.toxicity.cutscenemaker.util.functions.ActionPredicate;
 import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
@@ -146,6 +145,54 @@ public final class Dialog {
     private Predicate<DialogCurrent> conditions;
     private Map<String,Consumer<Player>> typingSounds;
 
+    static void setExecutor(CutsceneMaker plugin) {
+        EvtUtil.register(plugin, new Listener() {
+            private DialogRun getDialogRun(Player player) {
+                return CURRENT_TASK.get(player);
+            }
+            @EventHandler
+            public void onInvClose(InventoryCloseEvent e) {
+                if (e.getPlayer() instanceof Player) {
+                    DialogRun run = getDialogRun((Player) e.getPlayer());
+                    if (run != null && run.current.isOpened) run.stop();
+                }
+            }
+            @EventHandler
+            public void onDeath(PlayerDeathEvent e) {
+                DialogRun run = getDialogRun(e.getEntity());
+                if (run != null) run.stop();
+            }
+            @EventHandler
+            public void onQuit(PlayerQuitEvent e) {
+                DialogRun run = getDialogRun(e.getPlayer());
+                if (run != null) run.stop();
+            }
+            private final Map<Player,BukkitTask> delay = new HashMap<>();
+            @EventHandler
+            public void onInvClick(InventoryClickEvent e) {
+                if (e.getWhoClicked() instanceof Player) {
+                    Player p = (Player) e.getWhoClicked();
+                    DialogRun run = getDialogRun(p);
+                    if (run != null) {
+                        e.setCancelled(true);
+                        Inventory clickedInventory = e.getClickedInventory();
+                        if (clickedInventory != null && clickedInventory.equals(run.current.inventory) && e.getSlot() == CutsceneConfig.getInstance().getDefaultDialogCenter() && !delay.containsKey(p)) {
+                            delay.put(p,plugin.getManager().runTaskLaterAsynchronously(() -> delay.remove(p), 4));
+                            if (e.isLeftClick()) {
+                                run.current.time = Math.max(run.current.time - 1, 1);
+                                run.reader.restart(run.current.time);
+                            }
+                            if (e.isRightClick()) {
+                                run.current.time = Math.min(run.current.time + 1, 4);
+                                run.reader.restart(run.current.time);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     Dialog(CutsceneManager manager, ConfigurationSection section) {
         this.manager = manager;
         List<String> talk = getStringList(section,"Talk");
@@ -267,7 +314,7 @@ public final class Dialog {
         DialogStartEvent event = new DialogStartEvent(player,this);
         EvtUtil.call(event);
         if (!event.isCancelled()) {
-            run(new DialogCurrent(player, talker, inv, typingSound, false, CutsceneConfig.getInstance().getDefaultTypingDelay()));
+            run(new DialogCurrent(player, talker, inv, typingSound));
         }
     }
     boolean run(DialogCurrent current) {
@@ -287,7 +334,7 @@ public final class Dialog {
     private Optional<List<String>> getOptionalList(ConfigurationSection section, String key) {
         return Optional.ofNullable(getStringList(section,key));
     }
-    private class DialogRun implements Listener {
+    private class DialogRun {
         private final DialogCurrent current;
         private final DialogReader reader = new DialogReader();
         private TypingExecutor executor;
@@ -295,7 +342,6 @@ public final class Dialog {
 
         private DialogRun(DialogCurrent current) {
             this.current = current;
-            manager.registerEvent(this);
             load();
         }
         private void cancel() {
@@ -318,7 +364,6 @@ public final class Dialog {
         private void stop() {
             CURRENT_TASK.remove(current.player);
             reader.cancel();
-            EvtUtil.unregister(this);
         }
         private void load() {
             if (count < records.length) {
@@ -334,37 +379,6 @@ public final class Dialog {
                 }
             } else {
                 cancel();
-            }
-        }
-        private BukkitTask delay;
-        @EventHandler
-        public void onInvClose(InventoryCloseEvent e) {
-            if (current.isOpened && e.getPlayer().equals(current.player)) stop();
-        }
-        @EventHandler
-        public void onDeath(PlayerDeathEvent e) {
-            if (e.getEntity().equals(current.player)) stop();
-        }
-        @EventHandler
-        public void onQuit(PlayerQuitEvent e) {
-            if (e.getPlayer().equals(current.player)) stop();
-        }
-        @EventHandler
-        public void onInvClick(InventoryClickEvent e) {
-            if (e.getWhoClicked().equals(current.player)) {
-                e.setCancelled(true);
-                Inventory clickedInventory = e.getClickedInventory();
-                if (clickedInventory != null && clickedInventory.equals(current.inventory) && e.getSlot() == CutsceneConfig.getInstance().getDefaultDialogCenter() && delay == null) {
-                    delay = manager.runTaskLaterAsynchronously(() -> delay = null,4);
-                    if (e.isLeftClick()) {
-                        current.time = Math.max(current.time - 1, 1);
-                        reader.restart(current.time);
-                    }
-                    if (e.isRightClick()) {
-                        current.time = Math.min(current.time + 1, 4);
-                        reader.restart(current.time);
-                    }
-                }
             }
         }
         private class DialogReader implements Runnable {
@@ -465,14 +479,19 @@ public final class Dialog {
             }
         }
     }
-    @AllArgsConstructor
     static final class DialogCurrent {
         final Player player;
         final String talker;
         Inventory inventory;
         final Map<String ,Consumer<Player>> typingSound;
-        boolean isOpened;
-        int time;
+        boolean isOpened = false;
+        int time = CutsceneConfig.getInstance().getDefaultTypingDelay();
+        private DialogCurrent(Player player, String talker, Inventory inventory, Map<String,Consumer<Player>> typingSound) {
+            this.player = player;
+            this.talker = talker;
+            this.inventory = inventory;
+            this.typingSound = typingSound;
+        }
     }
 
     public static final class DialogRecord {

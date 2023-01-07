@@ -28,12 +28,15 @@ import java.util.stream.Collectors;
 public final class QuestSet {
 
     private static final List<BiConsumer<Player,Double>> EXP_GETTER = new ArrayList<>();
+    static List<String> TYPE_LIST = new ArrayList<>();
     public static void addExpGetter(BiConsumer<Player,Double> consumer) {
         EXP_GETTER.add(consumer);
     }
 
     private final CutsceneMaker plugin;
     private final FunctionPrinter title;
+    @Getter
+    private final String type;
     @Getter
     private final String name;
     private final String completeAction;
@@ -53,6 +56,8 @@ public final class QuestSet {
         this.plugin = plugin;
 
         name = TextUtil.getInstance().colored(section.getString("Name",node));
+        type = section.getString("Type",null);
+        if (type != null) TYPE_LIST.add(type);
         title = getFunctionPrinter(section);
         completeAction = getString(section);
         cancellable = section.getBoolean("Cancellable",false);
@@ -213,6 +218,7 @@ public final class QuestSet {
 
     private static final Map<String,QuestEvent> EVENT_MAP = new HashMap<>();
     static void clear() {
+        TYPE_LIST.clear();
         EVENT_MAP.clear();
     }
     private static final class QuestEvent {

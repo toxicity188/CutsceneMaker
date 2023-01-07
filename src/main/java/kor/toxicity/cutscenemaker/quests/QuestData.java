@@ -4,9 +4,12 @@ import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.data.CutsceneData;
 import kor.toxicity.cutscenemaker.data.ItemData;
+import kor.toxicity.cutscenemaker.quests.enums.QuestGuiButton;
 import kor.toxicity.cutscenemaker.quests.enums.QuestSetTask;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
 import kor.toxicity.cutscenemaker.util.InvUtil;
+import kor.toxicity.cutscenemaker.util.ItemBuilder;
+import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import kor.toxicity.cutscenemaker.util.gui.InventorySupplier;
 import kor.toxicity.cutscenemaker.util.TextUtil;
 import kor.toxicity.cutscenemaker.util.gui.GuiAdapter;
@@ -24,9 +27,9 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public final class QuestData extends CutsceneData {
 
@@ -65,13 +68,19 @@ public final class QuestData extends CutsceneData {
                 }
             }
         });
+        Dialog.setExecutor(pl);
         getPlugin().getCommand("quest").setExecutor((sender, command, label, args) -> {
             if (sender instanceof Player) {
                 Player p = (Player) sender;
-                Inventory inventory = InvUtil.getInstance().create("진행중인 퀘스트 목록",3);
-                int i = 9;
+                Inventory inventory = supplier.getInventory(p);
+                final int first = 9;
+
+                int i = first;
+                List<QuestSet> questList = getPlugin().getManager().getVars(p).getVars().keySet().stream().map(
+                        s -> (s.startsWith("quest.")) ? QUEST_SET_MAP.get(s.substring("quest.".length())) : null
+                ).filter(Objects::nonNull).collect(Collectors.toList());
                 for (String s : getPlugin().getManager().getVars(p).getVars().keySet()) {
-                    if (i < 18 && s.startsWith("quest.")) {
+                    if (i < first + 9 && s.startsWith("quest.")) {
                         String name = s.substring("quest.".length());
                         QuestSet questSet = QUEST_SET_MAP.get(name);
                         if (questSet != null) {
@@ -80,10 +89,52 @@ public final class QuestData extends CutsceneData {
                         }
                     }
                 }
+
+                final int totalSize = (int) Math.ceil((double) questList.size() / 9D);
+
+                int loop = first;
+                for (QuestSet questSet : questList.subList(0, Math.min(questList.size(),8))) {
+                    inventory.setItem(loop,questSet.getIcon(p));
+                    loop ++;
+                }
                 GuiRegister.registerNewGui(new GuiAdapter(p,inventory) {
+                    private int page = 1;
+                    private String type;
+                    private List<QuestSet> sorted;
                     @Override
                     public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
 
+                    }
+                    private void addPage(int i) {
+                        page = Math.min(Math.max(page + i,1),totalSize);
+                        clear();
+                        setup();
+                    }
+                    private QuestSet getQuest(int i) {
+                        List<QuestSet> questSets = getQuestList();
+                        return (questSets.size() > i) ? questSets.get(i - 1) : null;
+                    }
+                    private List<QuestSet> getQuestList() {
+                        return (sorted != null) ? sorted : questList;
+                    }
+                    private List<QuestSet> init(String key) {
+                        if (type == null || !type.equals(key)) sorted = questList.stream().filter(q -> q.getType().equals(key)).collect(Collectors.toList());
+                        type = key;
+                        return sorted;
+                    }
+                    private void clear() {
+                        for (int i = 9; i < 18; i++) {
+                            inventory.setItem(i,null);
+                        }
+                    }
+                    private void setup() {
+                        int k = (page - 1) * 9;
+                        int i = first;
+                        List<QuestSet> questSets = getQuestList();
+                        for (QuestSet questSet : questSets.subList(k, Math.min(k + 8,questSets.size()))) {
+                            inventory.setItem(i,questSet.getIcon(p));
+                            i ++;
+                        }
                     }
                 });
             }
@@ -91,13 +142,40 @@ public final class QuestData extends CutsceneData {
         });
     }
 
+    private static final InventorySupplier DEFAULT_GUI_SUPPLIER = new InventorySupplier(new FunctionPrinter("Quest Gui"),3,null);
+    private static final List<GuiButton> QUEST_GUI_BUTTON = new ArrayList<>();
+    private static class GuiButton {
+        private final QuestGuiButton button;
+        private final int slot;
+        private final ItemBuilder builder;
+        private GuiButton(QuestGuiButton button, ConfigurationSection section) {
+            this.button = button;
+            slot = section.getInt("Slot", button.getDefaultSlot());
+            builder = (section.isSet("Item")) ? InvUtil.getInstance().fromConfig(section,"Item") : QuestGuiButton.DEFAULT_ITEM_BUILDER;
+        }
+    }
+    private InventorySupplier supplier;
     @Override
     public void reload() {
         Dialog.stopAll();
         DIALOG_MAP.clear();
         NPC_MAP.clear();
         QNA_MAP.clear();
+        QUEST_GUI_BUTTON.clear();
         QUEST_SET_MAP.clear();
+        ConfigLoad def = getPlugin().readSingleFile("quest");
+        ConfigurationSection gui = def.getConfigurationSection("Gui");
+        supplier = (gui != null) ? new InventorySupplier(gui) : DEFAULT_GUI_SUPPLIER;
+        ConfigurationSection button = def.getConfigurationSection("Button");
+        if (button != null) {
+            for (String key : button.getKeys(false)) {
+                try {
+                    QuestGuiButton button1 = QuestGuiButton.valueOf(key.toUpperCase());
+                    QUEST_GUI_BUTTON.add(new GuiButton(button1, button.getConfigurationSection(key)));
+                } catch (Exception ignored) {}
+            }
+        }
+
         ConfigLoad quest = getPlugin().read("QuestSet");
         quest.getAllFiles().forEach(s -> {
             try {

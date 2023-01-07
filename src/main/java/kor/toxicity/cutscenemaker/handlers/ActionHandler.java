@@ -61,7 +61,7 @@ public abstract class ActionHandler implements Listener {
         if (handlers.containsKey(nameCase)) {
             try {
                 ActionHandler handler = handlers.get(nameCase).getDeclaredConstructor(ActionContainer.class).newInstance(container);
-                DataObject<ActionHandler> data = new DataObject<>(handler);
+                DataObject data = new DataObject(handler,"Event " + nameCase);
                 data.apply(obj);
                 if (data.isLoaded()) {
                     handler.initialize();

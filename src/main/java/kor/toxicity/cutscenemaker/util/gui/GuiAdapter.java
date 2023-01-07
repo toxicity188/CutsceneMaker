@@ -8,13 +8,14 @@ import org.bukkit.inventory.Inventory;
 public abstract class GuiAdapter implements GuiExecutor {
     private final Player player;
     private final Inventory inventory;
-    private long delay = 4;
+    private final long delay;
+
     public GuiAdapter(Player player, Inventory inventory) {
-        this.player = player;
-        this.inventory = inventory;
+        this(player,inventory,4);
     }
     public GuiAdapter(Player player, Inventory inventory, long delay) {
-        this(player,inventory);
+        this.player = player;
+        this.inventory = inventory;
         this.delay = delay;
     }
     @Override

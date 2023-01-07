@@ -46,7 +46,6 @@ final class QnA {
             public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
                 Button button1 = buttonMap.get(slot);
                 if (button1 != null) {
-                    current.player.closeInventory();
                     manager.runTaskLater(() -> {
                         if (button1.dialogs != null) {
                             random(button1.dialogs).run(current);
