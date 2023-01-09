@@ -59,7 +59,7 @@ public final class Dialog {
             @Override
             public void initialize(DialogRecord record, String currentTalker) {
                 if (before != null) before.keySet().forEach(i -> {
-                    if (i != center) current.inventory.setItem(0,null);
+                    if (i != center) current.inventory.setItem(i,null);
                 });
                 before = record.stacks;
                 before.forEach((k,v) -> {
@@ -346,8 +346,8 @@ public final class Dialog {
         }
         private void cancel() {
             stop();
+            if (setQuest != null) setQuest.accept(current.player);
             if (endDialog == null || !random(endDialog).run(current)) {
-                if (setQuest != null) setQuest.accept(current.player);
                 if (endQnA != null) {
                     random(endQnA).run(current);
                     current.isOpened = false;

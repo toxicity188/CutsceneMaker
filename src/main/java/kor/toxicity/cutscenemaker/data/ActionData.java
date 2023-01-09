@@ -70,6 +70,9 @@ public final class ActionData extends CutsceneData {
             actions.put("addmoney", ActAddMoney.class);
             actions.put("removemoney", ActRemoveMoney.class);
         }
+        if (Bukkit.getPluginManager().isPluginEnabled("MagicSpells")) {
+            actions.put("cast", ActCast.class);
+        }
     }
     public ActionData(CutsceneMaker pl) {
         super(pl);

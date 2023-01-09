@@ -18,7 +18,7 @@ public class ActSpawn extends CutsceneAction {
     public String key;
     @DataField(aliases = "b")
     public boolean bound = true;
-    @DataField
+    @DataField(throwable = true)
     public String type;
     @DataField(aliases = "loc", throwable = true)
     public String location;

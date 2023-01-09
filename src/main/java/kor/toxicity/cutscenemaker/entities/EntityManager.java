@@ -1,6 +1,7 @@
 package kor.toxicity.cutscenemaker.entities;
 
 import io.lumine.xikage.mythicmobs.MythicMobs;
+import io.lumine.xikage.mythicmobs.mobs.ActiveMob;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
@@ -95,7 +96,12 @@ public class EntityManager implements Listener {
 
     private CutsceneEntity b(String key, Location location) {
         try (MythicMobs instance = MythicMobs.inst()) {
-            return new CutsceneEntity((LivingEntity) instance.getMobManager().spawnMob(key, location).getEntity().getBukkitEntity());
+            ActiveMob mob = instance.getMobManager().spawnMob(key, location);
+            if (mob == null) {
+                CutsceneMaker.warn("The Mob named \"" + key + "\" doesn't exist!");
+                return null;
+            }
+            return new CutsceneEntity((LivingEntity) mob.getEntity().getBukkitEntity());
         } catch (Exception e) {
             CutsceneMaker.warn("unable to find MythicMobs plugin.");
             return null;
