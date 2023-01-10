@@ -12,17 +12,17 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class VarsContainer {
 
     private final Player player;
     private BukkitTask task;
-    private static final Map<String, Vars> global = new HashMap<>();
+    private static final Map<String, Vars> global = new ConcurrentHashMap<>();
     @Getter
-    private final Map<String,Vars> vars = new HashMap<>();
+    private final Map<String,Vars> vars = new ConcurrentHashMap<>();
 
     public VarsContainer(Player player) {
         this.player = player;

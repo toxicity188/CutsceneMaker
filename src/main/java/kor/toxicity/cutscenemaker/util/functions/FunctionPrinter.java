@@ -15,7 +15,7 @@ public class FunctionPrinter {
 
     public FunctionPrinter(String s) {
         String[] split = TextUtil.getInstance().split(s,PERCENT);
-        if (split.length == 1) {
+        if (split.length < 2 || s.chars().filter(c -> c == '%').sum() % 2 == 1) {
             ANY_MATCH = false;
             String colored = TextUtil.getInstance().colored(split[0]);
             apply = t -> colored;
@@ -25,7 +25,7 @@ public class FunctionPrinter {
             for (String t : split) {
                 String colored = TextUtil.getInstance().colored(t);
                 loop ++;
-                if (Math.floorMod(loop,2) == 0) {
+                if (loop % 2 == 0) {
                     Function<LivingEntity,String> function = get(colored);
                     if (function != null) print.add(function);
                 } else print.add(q -> colored);

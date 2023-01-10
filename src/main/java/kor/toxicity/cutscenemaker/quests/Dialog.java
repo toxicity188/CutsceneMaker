@@ -372,9 +372,9 @@ public final class Dialog {
                     if (record.typingManager != null) executor = record.typingManager.initialize(current);
                     else if (executor == null) executor = DEFAULT_TYPING_EXECUTOR.initialize(current);
                     reader.initialize(record);
-
                     count++;
                 } else {
+                    count++;
                     load();
                 }
             } else {
