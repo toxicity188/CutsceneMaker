@@ -12,6 +12,8 @@ public class HandlerChat extends ActionHandler {
 
     @DataField(aliases = {"msg","m"})
     public String message;
+    @DataField(aliases = "c")
+    public boolean cancel = false;
 
     private Predicate<AsyncPlayerChatEvent> check;
 
@@ -27,6 +29,9 @@ public class HandlerChat extends ActionHandler {
 
     @EventHandler
     public void chat(AsyncPlayerChatEvent e) {
-        if (check == null || check.test(e)) apply(e.getPlayer());
+        if (check == null || check.test(e)) {
+            apply(e.getPlayer());
+            e.setCancelled(cancel);
+        }
     }
 }

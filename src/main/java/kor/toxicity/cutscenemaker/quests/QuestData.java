@@ -17,6 +17,7 @@ import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
 import kor.toxicity.cutscenemaker.util.gui.MouseButton;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -70,74 +71,84 @@ public final class QuestData extends CutsceneData {
         });
         Dialog.setExecutor(pl);
         getPlugin().getCommand("quest").setExecutor((sender, command, label, args) -> {
-            if (sender instanceof Player) {
-                Player p = (Player) sender;
-                Inventory inventory = supplier.getInventory(p);
-                final int first = 9;
+            Bukkit.getScheduler().runTask(getPlugin(),() -> {
+                if (sender instanceof Player) {
+                    Player p = (Player) sender;
+                    Inventory inventory = supplier.getInventory(p);
+                    final int first = 9;
 
-                int i = first;
-                List<QuestSet> questList = getPlugin().getManager().getVars(p).getVars().keySet().stream().map(
-                        s -> (s.startsWith("quest.")) ? QUEST_SET_MAP.get(s.substring("quest.".length())) : null
-                ).filter(Objects::nonNull).collect(Collectors.toList());
-                for (String s : getPlugin().getManager().getVars(p).getVars().keySet()) {
-                    if (i < first + 9 && s.startsWith("quest.")) {
-                        String name = s.substring("quest.".length());
-                        QuestSet questSet = QUEST_SET_MAP.get(name);
-                        if (questSet != null) {
-                            inventory.setItem(i,questSet.getIcon(p));
-                            i++;
+                    int i = first;
+                    List<QuestSet> questList = getPlugin().getManager().getVars(p).getVars().keySet().stream().map(
+                            s -> (s.startsWith("quest.")) ? QUEST_SET_MAP.get(s.substring("quest.".length())) : null
+                    ).filter(Objects::nonNull).collect(Collectors.toList());
+                    for (String s : getPlugin().getManager().getVars(p).getVars().keySet()) {
+                        if (i < first + 9 && s.startsWith("quest.")) {
+                            String name = s.substring("quest.".length());
+                            QuestSet questSet = QUEST_SET_MAP.get(name);
+                            if (questSet != null) {
+                                inventory.setItem(i, questSet.getIcon(p));
+                                i++;
+                            }
                         }
                     }
+
+                    final int totalSize = (int) Math.ceil((double) questList.size() / 9D);
+
+                    int loop = first;
+                    for (QuestSet questSet : questList.subList(0, Math.min(questList.size(), 8))) {
+                        inventory.setItem(loop, questSet.getIcon(p));
+                        loop++;
+                    }
+                    GuiRegister.registerNewGui(new GuiAdapter(p, inventory) {
+                        private int page = 1;
+                        private String type;
+                        private List<QuestSet> sorted;
+
+                        @Override
+                        public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
+
+                        }
+
+                        private void addPage(int i) {
+                            page = Math.min(Math.max(page + i, 1), totalSize);
+                            clear();
+                            setup();
+                        }
+
+                        private QuestSet getQuest(int i) {
+                            List<QuestSet> questSets = getQuestList();
+                            return (questSets.size() > i) ? questSets.get(i - 1) : null;
+                        }
+
+                        private List<QuestSet> getQuestList() {
+                            return (sorted != null) ? sorted : questList;
+                        }
+
+                        private List<QuestSet> init(String key) {
+                            if (type == null || !type.equals(key))
+                                sorted = questList.stream().filter(q -> q.getType().equals(key)).collect(Collectors.toList());
+                            type = key;
+                            return sorted;
+                        }
+
+                        private void clear() {
+                            for (int i = 9; i < 18; i++) {
+                                inventory.setItem(i, null);
+                            }
+                        }
+
+                        private void setup() {
+                            int k = (page - 1) * 9;
+                            int i = first;
+                            List<QuestSet> questSets = getQuestList();
+                            for (QuestSet questSet : questSets.subList(k, Math.min(k + 8, questSets.size()))) {
+                                inventory.setItem(i, questSet.getIcon(p));
+                                i++;
+                            }
+                        }
+                    });
                 }
-
-                final int totalSize = (int) Math.ceil((double) questList.size() / 9D);
-
-                int loop = first;
-                for (QuestSet questSet : questList.subList(0, Math.min(questList.size(),8))) {
-                    inventory.setItem(loop,questSet.getIcon(p));
-                    loop ++;
-                }
-                GuiRegister.registerNewGui(new GuiAdapter(p,inventory) {
-                    private int page = 1;
-                    private String type;
-                    private List<QuestSet> sorted;
-                    @Override
-                    public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
-
-                    }
-                    private void addPage(int i) {
-                        page = Math.min(Math.max(page + i,1),totalSize);
-                        clear();
-                        setup();
-                    }
-                    private QuestSet getQuest(int i) {
-                        List<QuestSet> questSets = getQuestList();
-                        return (questSets.size() > i) ? questSets.get(i - 1) : null;
-                    }
-                    private List<QuestSet> getQuestList() {
-                        return (sorted != null) ? sorted : questList;
-                    }
-                    private List<QuestSet> init(String key) {
-                        if (type == null || !type.equals(key)) sorted = questList.stream().filter(q -> q.getType().equals(key)).collect(Collectors.toList());
-                        type = key;
-                        return sorted;
-                    }
-                    private void clear() {
-                        for (int i = 9; i < 18; i++) {
-                            inventory.setItem(i,null);
-                        }
-                    }
-                    private void setup() {
-                        int k = (page - 1) * 9;
-                        int i = first;
-                        List<QuestSet> questSets = getQuestList();
-                        for (QuestSet questSet : questSets.subList(k, Math.min(k + 8,questSets.size()))) {
-                            inventory.setItem(i,questSet.getIcon(p));
-                            i ++;
-                        }
-                    }
-                });
-            }
+            });
             return true;
         });
     }

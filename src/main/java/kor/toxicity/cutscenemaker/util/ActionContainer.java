@@ -15,10 +15,8 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -31,7 +29,7 @@ public class ActionContainer {
     @Getter
     private int record;
 
-    private BukkitTask delay;
+    private final Map<LivingEntity,BukkitTask> delay = new ConcurrentHashMap<>();
     private BiConsumer<LivingEntity,Map<String,String>> run;
     public List<Consumer<Map<String,ActionContainer>>> lateCheck;
 
@@ -96,9 +94,9 @@ public class ActionContainer {
     public boolean run(LivingEntity entity) {
         return run(entity,null);
     }
-    public boolean run(LivingEntity entity, Map<String,String> localVariables) {
-        if ((conditions != null && !conditions.test(entity)) || delay != null) return false;
-        delay = Bukkit.getScheduler().runTaskLater(pl,() -> delay = null, record);
+    public synchronized boolean run(LivingEntity entity, Map<String,String> localVariables) {
+        if ((conditions != null && !conditions.test(entity)) || delay.containsKey(entity)) return false;
+        delay.put(entity,Bukkit.getScheduler().runTaskLater(pl,() -> delay.remove(entity), record));
         run.accept(entity,localVariables);
         return true;
     }
@@ -146,7 +144,7 @@ public class ActionContainer {
             tasks.remove(player);
             if (localVars != null) localVars.forEach((k,v) -> pl.getManager().getVars((Player) player).remove(k));
         }
-        private void load() {
+        private synchronized void load() {
             if (loop < actions.size()) {
                 CutsceneAction action = actions.get(loop);
                 action.call(player);

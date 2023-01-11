@@ -317,7 +317,7 @@ public final class Dialog {
             run(new DialogCurrent(player, talker, inv, typingSound));
         }
     }
-    boolean run(DialogCurrent current) {
+    synchronized boolean run(DialogCurrent current) {
         if (CURRENT_TASK.containsKey(current.player)) return false;
         if (conditions == null || conditions.test(current)) {
             CURRENT_TASK.put(current.player, new DialogRun(current));
@@ -344,7 +344,7 @@ public final class Dialog {
             this.current = current;
             load();
         }
-        private void cancel() {
+        private synchronized void cancel() {
             stop();
             if (setQuest != null) setQuest.accept(current.player);
             if (endDialog == null || !random(endDialog).run(current)) {
@@ -365,7 +365,7 @@ public final class Dialog {
             CURRENT_TASK.remove(current.player);
             reader.cancel();
         }
-        private void load() {
+        private synchronized void load() {
             if (count < records.length) {
                 DialogRecord record = records[count];
                 if (!record.printer.print(current.player).equals("skip")) {

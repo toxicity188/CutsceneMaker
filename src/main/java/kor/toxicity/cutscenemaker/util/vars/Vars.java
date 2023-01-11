@@ -4,17 +4,23 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
-@Setter
 @AllArgsConstructor
 public class Vars {
 
     private String var;
 
-    public Number getAsNum() {
+    public synchronized void setVar(String var) {
+        this.var = var;
+    }
+
+    public synchronized String getVar() {
+        return var;
+    }
+
+    public synchronized Number getAsNum() {
         return getAsNum(0D);
     }
-    public Number getAsNum(Number def) {
+    public synchronized Number getAsNum(Number def) {
         try {
             return Double.parseDouble(var);
         } catch (Exception e) {
@@ -22,10 +28,10 @@ public class Vars {
         }
     }
 
-    public boolean getAsBool() {
+    public synchronized boolean getAsBool() {
         return getAsBool(false);
     }
-    public boolean getAsBool(boolean def) {
+    public synchronized boolean getAsBool(boolean def) {
         try {
             return Boolean.parseBoolean(var);
         } catch (Exception e) {

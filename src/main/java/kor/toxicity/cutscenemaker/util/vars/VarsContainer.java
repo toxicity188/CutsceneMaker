@@ -56,7 +56,7 @@ public class VarsContainer {
         reader.close();
     }
 
-    public Vars get(String key) {
+    public synchronized Vars get(String key) {
         Vars v;
         if (key.charAt(0) == '*') {
             v = global.get(key);
@@ -73,7 +73,7 @@ public class VarsContainer {
         }
         return v;
     }
-    public boolean contains(String key) {
+    public synchronized boolean contains(String key) {
         if (key.charAt(0) == '*') {
             return global.containsKey(key);
         } else {
