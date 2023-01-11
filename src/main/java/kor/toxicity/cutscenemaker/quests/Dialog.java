@@ -224,21 +224,31 @@ public final class Dialog {
                     } else addPredicate(d -> check.test(d.player));
                 }
             })));
-            getOptionalList(section,"CheckQuest").ifPresent(t -> t.forEach(s -> {
+            getOptionalList(section,"CheckQuest").ifPresent(t -> LATE_CHECK.add(() -> t.forEach(s -> {
                 String[] args = TextUtil.getInstance().split(s," ");
-                Predicate<Player> predicate = getQuestChecker(args[0],(args.length > 1) ? args[1] : "has");
-                if (predicate != null) addPredicate(d -> predicate.test(d.player));
-            }));
+                ActionPredicate<Player> predicate = getQuestChecker(args[0],(args.length > 1) ? args[1].toLowerCase() : "complete");
+                if (predicate != null) {
+                    if (args.length > 2) {
+                        Dialog dialog = QuestUtil.getInstance().getDialog(args[2]);
+                        if (dialog != null) addPredicate(d -> predicate.castInstead(p -> dialog.run(d)).test(d.player));
+                    } else addPredicate(d -> predicate.test(d.player));
+                }
+            })));
             getOptionalList(section,"LinkedDialog").ifPresent(t -> LATE_CHECK.add(() -> endDialog = QuestUtil.getInstance().getDialog(t)));
             getOptionalList(section,"LinkedSubDialog").ifPresent(t -> LATE_CHECK.add(() -> subDialog = QuestUtil.getInstance().getDialog(t)));
             getOptionalList(section,"LinkedAction").ifPresent(t -> actions = t.toArray(new String[0]));
             getOptionalList(section,"SetQuest").ifPresent(t -> t.stream().map(s -> {
                 String[] a = TextUtil.getInstance().split(s," ");
-                return getQuestConsumer(a[0],(a.length > 1) ? a[1] : "give");
+                return getQuestConsumer(a[0],(a.length > 1) ? a[1].toLowerCase() : "give");
             }).filter(Objects::nonNull).forEach(c -> setQuest = setQuest.andThen(c)));
             getOptionalList(section,"SetVars").ifPresent(t -> t.stream().map(s -> {
                 String[] a = TextUtil.getInstance().split(s," ");
-                return (a.length > 1) ? QuestUtil.getInstance().getVarsConsumer(a[0],a[1],(a.length > 2) ? a[2] : "add") : null;
+                Consumer<Player> vars;
+                if (a.length > 1) {
+                    vars = QuestUtil.getInstance().getVarsConsumer(a[0],(a.length > 2) ? a[2] : null,a[1]);
+                } else vars = null;
+                if (vars == null) CutsceneMaker.warn("unable to load this variable operation: \"" + s + "\"");
+                return vars;
             }).filter(Objects::nonNull).forEach(c -> setQuest = setQuest.andThen(c)));
             getOptionalList(section,"LinkedQnA").ifPresent(t -> LATE_CHECK.add(() -> {
                 QnA[] qna = t.stream().map(s -> {
@@ -250,19 +260,23 @@ public final class Dialog {
             }));
         } else throw new IllegalStateException("Invalid statement.");
     }
-    private Predicate<Player> getQuestChecker(String name, String action) {
+    private ActionPredicate<Player> getQuestChecker(String name, String action) {
         QuestSet questSet = getQuestSet(name);
         if (questSet != null) {
             switch (action) {
                 default:
-                case "has":
-                    return questSet::has;
-                case "hasnot":
-                    return p -> !questSet.has(p);
                 case "complete":
                     return questSet::isCompleted;
-                case "completenot":
+                case "ready":
+                    return questSet::isReady;
+                case "has":
+                    return questSet::has;
+                case "!complete":
                     return p -> !questSet.isCompleted(p);
+                case "!ready":
+                    return p -> !questSet.isReady(p);
+                case "!has":
+                    return p -> !questSet.has(p);
             }
         } else return null;
     }
@@ -344,7 +358,7 @@ public final class Dialog {
             this.current = current;
             load();
         }
-        private synchronized void cancel() {
+        private void cancel() {
             stop();
             if (setQuest != null) setQuest.accept(current.player);
             if (endDialog == null || !random(endDialog).run(current)) {
@@ -365,7 +379,7 @@ public final class Dialog {
             CURRENT_TASK.remove(current.player);
             reader.cancel();
         }
-        private synchronized void load() {
+        private void load() {
             if (count < records.length) {
                 DialogRecord record = records[count];
                 if (!record.printer.print(current.player).equals("skip")) {

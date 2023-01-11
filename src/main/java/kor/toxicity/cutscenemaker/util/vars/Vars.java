@@ -6,21 +6,14 @@ import lombok.Setter;
 
 @AllArgsConstructor
 public class Vars {
-
+    @Getter
+    @Setter
     private String var;
 
-    public synchronized void setVar(String var) {
-        this.var = var;
-    }
-
-    public synchronized String getVar() {
-        return var;
-    }
-
-    public synchronized Number getAsNum() {
+    public Number getAsNum() {
         return getAsNum(0D);
     }
-    public synchronized Number getAsNum(Number def) {
+    public Number getAsNum(Number def) {
         try {
             return Double.parseDouble(var);
         } catch (Exception e) {
@@ -28,10 +21,10 @@ public class Vars {
         }
     }
 
-    public synchronized boolean getAsBool() {
+    public boolean getAsBool() {
         return getAsBool(false);
     }
-    public synchronized boolean getAsBool(boolean def) {
+    public boolean getAsBool(boolean def) {
         try {
             return Boolean.parseBoolean(var);
         } catch (Exception e) {

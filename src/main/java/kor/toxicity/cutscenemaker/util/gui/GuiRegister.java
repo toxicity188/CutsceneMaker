@@ -58,10 +58,10 @@ public final class GuiRegister extends CutsceneData implements Listener {
                     CLICK_DELAY.put(p,getPlugin().getManager().runTaskLaterAsynchronously(() -> CLICK_DELAY.remove(p), executor.getDelay()));
                     MouseButton button;
                     if (e.isLeftClick()) {
-                        if (e.isShiftClick()) button = MouseButton.LEFT;
+                        if (!e.isShiftClick()) button = MouseButton.LEFT;
                         else button = MouseButton.LEFT_WITH_SHIFT;
                     } else if (e.isRightClick()) {
-                        if (e.isShiftClick()) button = MouseButton.RIGHT;
+                        if (!e.isShiftClick()) button = MouseButton.RIGHT;
                         else button = MouseButton.RIGHT_WITH_SHIFT;
                     } else {
                         button = MouseButton.NUMBER_KEY;

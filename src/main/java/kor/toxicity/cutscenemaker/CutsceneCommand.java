@@ -123,10 +123,6 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
                 String[] args = pkg.getArgs();
                 Player player = (Player) pkg.getSender();
                 ItemStack item = player.getInventory().getItemInMainHand();
-                if (item == null || item.getType() == Material.AIR) {
-                    send(pkg.getSender(), "hold the item you want to save.");
-                    return;
-                }
                 try {
                     YamlConfiguration config = new YamlConfiguration();
                     File dir = new File(pl.getDataFolder().getAbsolutePath() + "\\Items\\" + args[2] + ".yml");
@@ -143,6 +139,10 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
                             } else send(player, "item not found.");
                             break;
                         case "set":
+                            if (item == null || item.getType() == Material.AIR) {
+                                send(pkg.getSender(), "hold the item you want to save.");
+                                return;
+                            }
                             config.set(args[3],item);
                             config.save(dir);
                             send(player, "successfully saved.");

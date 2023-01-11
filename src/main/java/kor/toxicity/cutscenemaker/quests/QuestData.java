@@ -6,12 +6,9 @@ import kor.toxicity.cutscenemaker.data.CutsceneData;
 import kor.toxicity.cutscenemaker.data.ItemData;
 import kor.toxicity.cutscenemaker.quests.enums.QuestGuiButton;
 import kor.toxicity.cutscenemaker.quests.enums.QuestSetTask;
-import kor.toxicity.cutscenemaker.util.ConfigLoad;
-import kor.toxicity.cutscenemaker.util.InvUtil;
-import kor.toxicity.cutscenemaker.util.ItemBuilder;
+import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import kor.toxicity.cutscenemaker.util.gui.InventorySupplier;
-import kor.toxicity.cutscenemaker.util.TextUtil;
 import kor.toxicity.cutscenemaker.util.gui.GuiAdapter;
 import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
 import kor.toxicity.cutscenemaker.util.gui.MouseButton;
@@ -38,6 +35,7 @@ public final class QuestData extends CutsceneData {
     static final Map<String,QuestSet> QUEST_SET_MAP = new HashMap<>();
     static final Map<String,QnA> QNA_MAP = new HashMap<>();
     private static final Map<String,NPCData> NPC_MAP = new HashMap<>();
+    private static final String INTERNAL_NAME_KEY = "cutscene.quest.name";
     public static void run(String name, Player player, String talker) {
         Dialog dialog = DIALOG_MAP.get(name);
         if (dialog != null) dialog.run(player,talker,null);
@@ -96,7 +94,7 @@ public final class QuestData extends CutsceneData {
 
                     int loop = first;
                     for (QuestSet questSet : questList.subList(0, Math.min(questList.size(), 8))) {
-                        inventory.setItem(loop, questSet.getIcon(p));
+                        inventory.setItem(loop, ItemUtil.setInternalTag(questSet.getIcon(p),INTERNAL_NAME_KEY,questSet.getName()));
                         loop++;
                     }
                     GuiRegister.registerNewGui(new GuiAdapter(p, inventory) {
@@ -106,7 +104,20 @@ public final class QuestData extends CutsceneData {
 
                         @Override
                         public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
-
+                            if (!isPlayerInventory) {
+                                if (button != MouseButton.LEFT_WITH_SHIFT) return;
+                                QuestSet get = QUEST_SET_MAP.get(ItemUtil.readInternalTag(item,INTERNAL_NAME_KEY));
+                                if (get == null) return;
+                                if (get.isCancellable()) {
+                                    p.closeInventory();
+                                    questList.remove(get);
+                                    FunctionPrinter printer = QUEST_MESSAGE_MAP.get("quest-cancel-message");
+                                    if (printer != null) p.sendMessage(printer.print(p));
+                                } else {
+                                    FunctionPrinter printer = QUEST_MESSAGE_MAP.get("quest-cancel-fail-message");
+                                    if (printer != null) p.sendMessage(printer.print(p));
+                                }
+                            }
                         }
 
                         private void addPage(int i) {
@@ -154,6 +165,7 @@ public final class QuestData extends CutsceneData {
     }
 
     private static final InventorySupplier DEFAULT_GUI_SUPPLIER = new InventorySupplier(new FunctionPrinter("Quest Gui"),3,null);
+    private static final Map<String,FunctionPrinter> QUEST_MESSAGE_MAP = new HashMap<>();
     private static final List<GuiButton> QUEST_GUI_BUTTON = new ArrayList<>();
     private static class GuiButton {
         private final QuestGuiButton button;
@@ -169,6 +181,7 @@ public final class QuestData extends CutsceneData {
     @Override
     public void reload() {
         Dialog.stopAll();
+        QUEST_MESSAGE_MAP.clear();
         DIALOG_MAP.clear();
         NPC_MAP.clear();
         QNA_MAP.clear();
@@ -186,11 +199,19 @@ public final class QuestData extends CutsceneData {
                 } catch (Exception ignored) {}
             }
         }
+        ConfigurationSection message = def.getConfigurationSection("Message");
+        if (message != null) {
+            message.getKeys(false).forEach(k -> {
+                FunctionPrinter printer = (message.isString(k)) ? new FunctionPrinter(message.getString(k)) : null;
+                if (printer != null) QUEST_MESSAGE_MAP.put(k,printer);
+            });
+        }
 
         ConfigLoad quest = getPlugin().read("QuestSet");
         quest.getAllFiles().forEach(s -> {
             try {
-                QUEST_SET_MAP.put(s,new QuestSet(getPlugin(),s,quest.getConfigurationSection(s)));
+                QuestSet questSet = new QuestSet(getPlugin(),s,quest.getConfigurationSection(s));
+                QUEST_SET_MAP.put(questSet.getName(),questSet);
             } catch (Exception e) {
                 CutsceneMaker.warn("Error: " + e.getMessage() + " (QuestSet " + s + ")");
             }

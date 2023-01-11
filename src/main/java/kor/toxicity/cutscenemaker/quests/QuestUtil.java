@@ -2,15 +2,18 @@ package kor.toxicity.cutscenemaker.quests;
 
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.util.TextUtil;
+import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class QuestUtil {
@@ -42,48 +45,50 @@ public final class QuestUtil {
         }
     }
     Consumer<Player> getVarsConsumer(String key, String value, String change) {
-        switch (change) {
+        String lower = change.toLowerCase();
+        switch (lower) {
             case "set":
             case "=":
-                return p -> CutsceneMaker.getVars(p,key).setVar(value);
+                Function<LivingEntity,?> function = ConditionBuilder.LIVING_ENTITY.getAsFunc(value);
+                return (function != null) ? p -> CutsceneMaker.getVars(p,key).setVar(function.toString()) : null;
             case "remove":
             case "delete":
             case "del":
                 return p -> CutsceneMaker.removeVars(p,key);
             default:
-                try {
-                    double d = Double.parseDouble(value);
-                    switch (change) {
+                Function<LivingEntity,Number> numberFunction = ConditionBuilder.LIVING_ENTITY.NUMBER.getAsFunc(value);
+                if (numberFunction != null) {
+                    switch (lower) {
                         default:
                         case "+":
                         case "add":
                             return p -> {
                                 Vars vars = CutsceneMaker.getVars(p,key);
-                                vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() + d));
+                                vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() + numberFunction.apply(p).doubleValue()));
                             };
                         case "-":
                         case "sub":
                         case "subtract":
                             return p -> {
                                 Vars vars = CutsceneMaker.getVars(p,key);
-                                vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() - d));
+                                vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() - numberFunction.apply(p).doubleValue()));
                             };
                         case "*":
                         case "mul":
                         case "multiply":
                             return p -> {
                                 Vars vars = CutsceneMaker.getVars(p,key);
-                                vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() * d));
+                                vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() * numberFunction.apply(p).doubleValue()));
                             };
                         case "/":
                         case "div":
                         case "divide":
                             return p -> {
                                 Vars vars = CutsceneMaker.getVars(p,key);
-                                vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() / d));
+                                vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() / numberFunction.apply(p).doubleValue()));
                             };
                     }
-                } catch (Exception e) {
+                } else {
                     CutsceneMaker.warn("The value \"" + value + "\" is not a number!");
                     return null;
                 }

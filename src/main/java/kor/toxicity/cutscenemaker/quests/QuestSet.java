@@ -176,6 +176,13 @@ public final class QuestSet {
         if (giveItem == null) return -1;
         return Arrays.stream(giveItem).mapToInt(b -> InvUtil.getInstance().storage(player,b.get(player))).sum();
     }
+    public boolean isReady(Player player) {
+        if (giveItem == null) return true;
+        for (ItemBuilder builder : giveItem) {
+            if (InvUtil.getInstance().storage(player,builder.get(player)) == 0) return false;
+        }
+        return true;
+    }
     public void give(Player player) {
         player.playSound(player.getLocation(),"entity.experience_orb.pickup",1.0F,1.0F);
         player.sendMessage("다음 퀘스트가 발주되었습니다: " + title.print(player));

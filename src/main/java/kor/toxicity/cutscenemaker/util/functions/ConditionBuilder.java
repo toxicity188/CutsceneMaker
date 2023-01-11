@@ -290,6 +290,7 @@ public final class ConditionBuilder<T> {
 
 
         public Function<T,R> getAsFunc(String s) {
+            if (s == null) return null;
             Matcher matcher = FUNCTION_PATTERN.matcher(s);
 
             if (matcher.find()) {
