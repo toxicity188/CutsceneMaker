@@ -4,6 +4,7 @@ import kor.toxicity.cutscenemaker.CutsceneConfig;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.util.InvUtil;
 import kor.toxicity.cutscenemaker.util.ItemBuilder;
+import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import kor.toxicity.cutscenemaker.util.gui.GuiAdapter;
 import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
 import kor.toxicity.cutscenemaker.util.gui.MouseButton;
@@ -17,10 +18,16 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 final class QnA {
+    private final FunctionPrinter name;
+    private final int slot;
+    private final int center;
     private final Map<Integer,Button> buttonMap = new HashMap<>();
     private final CutsceneManager manager;
     QnA(CutsceneManager manager, ConfigurationSection section) {
         this.manager = manager;
+        this.name = (section.isSet("Name") && section.isSet("Name")) ? new FunctionPrinter(section.getString("Name")) : null;
+        this.slot = section.getInt("Slot",3);
+        center = Math.floorDiv(slot+1,2)*9-5;
         if (section.isSet("Button") && section.isConfigurationSection("Button")) {
             ConfigurationSection button = section.getConfigurationSection("Button");
             button.getKeys(false).forEach(s -> {
@@ -37,10 +44,10 @@ final class QnA {
         } else throw new IllegalStateException("Invalid statement.");
     }
     void run(Dialog.DialogCurrent current) {
-        Inventory inventory = InvUtil.getInstance().create(current.talker + "'s question",3);
+        Inventory inventory = InvUtil.getInstance().create((name != null) ? name.print(current.player) : (current.inventory != null ? current.inventory.getTitle() : current.talker + "'s question"),slot);
         ItemStack itemStack = current.inventory.getItem(CutsceneConfig.getInstance().getDefaultDialogCenter());
-        if (itemStack != null) inventory.setItem(13,itemStack);
         buttonMap.forEach((i,b) -> inventory.setItem(i,b.builder.get(current.player)));
+        if (itemStack != null) inventory.setItem(center,itemStack);
         GuiRegister.registerNewGui(new GuiAdapter(current.player, inventory) {
             @Override
             public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {

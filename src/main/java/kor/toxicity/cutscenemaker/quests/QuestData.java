@@ -111,11 +111,11 @@ public final class QuestData extends CutsceneData {
                                 if (get.isCancellable()) {
                                     p.closeInventory();
                                     questList.remove(get);
-                                    FunctionPrinter printer = QUEST_MESSAGE_MAP.get("quest-cancel-message");
-                                    if (printer != null) p.sendMessage(printer.print(p));
+                                    MessageSender printer = QUEST_MESSAGE_MAP.get("quest-cancel-message");
+                                    if (printer != null) printer.send(p);
                                 } else {
-                                    FunctionPrinter printer = QUEST_MESSAGE_MAP.get("quest-cancel-fail-message");
-                                    if (printer != null) p.sendMessage(printer.print(p));
+                                    MessageSender printer = QUEST_MESSAGE_MAP.get("quest-cancel-fail-message");
+                                    if (printer != null) printer.send(p);
                                 }
                             }
                         }
@@ -165,7 +165,7 @@ public final class QuestData extends CutsceneData {
     }
 
     private static final InventorySupplier DEFAULT_GUI_SUPPLIER = new InventorySupplier(new FunctionPrinter("Quest Gui"),3,null);
-    private static final Map<String,FunctionPrinter> QUEST_MESSAGE_MAP = new HashMap<>();
+    static final Map<String,MessageSender> QUEST_MESSAGE_MAP = new HashMap<>();
     private static final List<GuiButton> QUEST_GUI_BUTTON = new ArrayList<>();
     private static class GuiButton {
         private final QuestGuiButton button;
@@ -180,7 +180,7 @@ public final class QuestData extends CutsceneData {
     private InventorySupplier supplier;
     @Override
     public void reload() {
-        Dialog.stopAll();
+        Dialog.stopAll(getPlugin());
         QUEST_MESSAGE_MAP.clear();
         DIALOG_MAP.clear();
         NPC_MAP.clear();
@@ -202,7 +202,7 @@ public final class QuestData extends CutsceneData {
         ConfigurationSection message = def.getConfigurationSection("Message");
         if (message != null) {
             message.getKeys(false).forEach(k -> {
-                FunctionPrinter printer = (message.isString(k)) ? new FunctionPrinter(message.getString(k)) : null;
+                MessageSender printer = MessageSender.toConfig(message,k);
                 if (printer != null) QUEST_MESSAGE_MAP.put(k,printer);
             });
         }

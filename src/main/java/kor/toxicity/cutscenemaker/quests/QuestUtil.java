@@ -50,7 +50,7 @@ public final class QuestUtil {
             case "set":
             case "=":
                 Function<LivingEntity,?> function = ConditionBuilder.LIVING_ENTITY.getAsFunc(value);
-                return (function != null) ? p -> CutsceneMaker.getVars(p,key).setVar(function.toString()) : null;
+                return (function != null) ? p -> CutsceneMaker.getVars(p,key).setVar(function.apply(p).toString()) : null;
             case "remove":
             case "delete":
             case "del":

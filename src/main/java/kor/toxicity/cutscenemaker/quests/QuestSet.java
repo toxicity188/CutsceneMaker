@@ -184,8 +184,8 @@ public final class QuestSet {
         return true;
     }
     public void give(Player player) {
-        player.playSound(player.getLocation(),"entity.experience_orb.pickup",1.0F,1.0F);
-        player.sendMessage("다음 퀘스트가 발주되었습니다: " + title.print(player));
+        MessageSender sender = QuestData.QUEST_MESSAGE_MAP.get("quest-give");
+        if (sender != null) sender.send(player,title.print(player));
         plugin.getManager().getVars(player).get("quest." +name).setVar("true");
     }
     public boolean has(Player player) {

@@ -1,7 +1,8 @@
 package kor.toxicity.cutscenemaker.entities;
 
 import io.lumine.xikage.mythicmobs.MythicMobs;
-import io.lumine.xikage.mythicmobs.mobs.ActiveMob;
+import io.lumine.xikage.mythicmobs.adapters.bukkit.BukkitAdapter;
+import io.lumine.xikage.mythicmobs.mobs.MythicMob;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
@@ -43,7 +44,7 @@ public class EntityManager implements Listener {
         return entityMap.get(key);
     }
     public CutsceneEntity get(Player player, String key) {
-        return Optional.of(boundMobMap.get(player)).map(b -> b.entityMap.get(key)).orElse(null);
+        return Optional.ofNullable(boundMobMap.get(player)).map(b -> b.entityMap.get(key)).orElse(null);
     }
 
     @EventHandler
@@ -95,13 +96,13 @@ public class EntityManager implements Listener {
     }
 
     private CutsceneEntity b(String key, Location location) {
-        try (MythicMobs instance = MythicMobs.inst()) {
-            ActiveMob mob = instance.getMobManager().spawnMob(key, location);
+        try {
+            MythicMob mob = MythicMobs.inst().getMobManager().getMythicMob(key);
             if (mob == null) {
                 CutsceneMaker.warn("The Mob named \"" + key + "\" doesn't exist!");
                 return null;
             }
-            return new CutsceneEntity((LivingEntity) mob.getEntity().getBukkitEntity());
+            return new CutsceneEntity((LivingEntity) mob.spawn(BukkitAdapter.adapt(location),1.0).getEntity().getBukkitEntity());
         } catch (Exception e) {
             CutsceneMaker.warn("unable to find MythicMobs plugin.");
             return null;

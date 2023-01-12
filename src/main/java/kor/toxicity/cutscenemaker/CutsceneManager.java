@@ -68,6 +68,12 @@ public final class CutsceneManager {
         return applyDelay == null || applyDelay.apply(player);
     }
 
+    public BukkitTask runTask(Runnable task) {
+        return Bukkit.getScheduler().runTask(plugin,task);
+    }
+    public BukkitTask runTaskAsynchronously(Runnable task) {
+        return Bukkit.getScheduler().runTaskAsynchronously(plugin,task);
+    }
     public BukkitTask runTaskTimer(Runnable task, long delay, long time) {
         return Bukkit.getScheduler().runTaskTimer(plugin,task,delay,time);
     }

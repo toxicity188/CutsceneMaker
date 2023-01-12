@@ -84,10 +84,10 @@ public final class InvUtil {
     }
 
     public boolean has(Player player, ItemStack target) {
-        return Arrays.stream(player.getInventory().getContents()).anyMatch(i -> target.isSimilar(i) && i.getAmount() >= target.getAmount());
+        return Arrays.stream(player.getInventory().getContents()).anyMatch(i -> i != null && i.isSimilar(target) && i.getAmount() >= target.getAmount());
     }
     public Optional<ItemStack> getSimilarItem(Player player, ItemStack target) {
-        return Arrays.stream(player.getInventory().getContents()).filter(i -> target.isSimilar(i) && i.getAmount() >= target.getAmount()).findFirst();
+        return Arrays.stream(player.getInventory().getContents()).filter(i -> i != null && i.isSimilar(target) && i.getAmount() >= target.getAmount()).findFirst();
     }
     public int getTotalAmount(Player player, ItemStack target) {
         return Arrays.stream(player.getInventory().getContents()).filter(target::isSimilar).mapToInt(ItemStack::getAmount).sum();

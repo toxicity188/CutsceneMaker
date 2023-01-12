@@ -21,6 +21,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -33,6 +34,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -83,14 +85,16 @@ public final class Dialog {
     public static final ConfigMapReader<ConfigurationSection> READER_CONFIGURATION = new ConfigMapReader<>((c, k) -> (c.isConfigurationSection(k)) ? c.getConfigurationSection(k) : null);
 
     private static final Map<String,TypingManager> TYPING_MANAGER_MAP = new HashMap<>();
-    private static final Map<Player,DialogRun> CURRENT_TASK = new HashMap<>();
+    private static final Map<Player,DialogRun> CURRENT_TASK = new ConcurrentHashMap<>();
     static final List<Runnable> LATE_CHECK = new ArrayList<>();
-    static void stopAll() {
-        new WeakHashMap<>(CURRENT_TASK).forEach((p,d) -> {
-            d.cancel();
-            if (d.current.isOpened) p.closeInventory();
-        });
-        CURRENT_TASK.clear();
+    static void stopAll(CutsceneMaker plugin) {
+        plugin.getManager().runTaskLater(() -> {
+            new WeakHashMap<>(CURRENT_TASK).forEach((p, d) -> {
+                d.cancel();
+                if (d.current.isOpened) p.closeInventory();
+            });
+            CURRENT_TASK.clear();
+        },0);
     }
 
     static {
@@ -161,6 +165,13 @@ public final class Dialog {
             public void onDeath(PlayerDeathEvent e) {
                 DialogRun run = getDialogRun(e.getEntity());
                 if (run != null) run.stop();
+            }
+            @EventHandler
+            public void onDamaged(EntityDamageEvent e) {
+                if (e.getEntity() instanceof Player) {
+                    DialogRun run = getDialogRun((Player) e.getEntity());
+                    if (run != null) e.setCancelled(true);
+                }
             }
             @EventHandler
             public void onQuit(PlayerQuitEvent e) {

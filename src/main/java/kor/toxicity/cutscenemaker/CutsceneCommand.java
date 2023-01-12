@@ -1,5 +1,7 @@
 package kor.toxicity.cutscenemaker;
 
+import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
 import kor.toxicity.cutscenemaker.commands.CommandHandler;
 import kor.toxicity.cutscenemaker.commands.CommandListener;
 import kor.toxicity.cutscenemaker.commands.CommandPacket;
@@ -12,10 +14,7 @@ import kor.toxicity.cutscenemaker.util.EvtUtil;
 import kor.toxicity.cutscenemaker.util.ItemBuilder;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import kor.toxicity.cutscenemaker.util.vars.VarsContainer;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.command.*;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.LivingEntity;
@@ -26,6 +25,8 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -181,6 +182,11 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
                     VarsContainer container = pl.getManager().getVars(player);
                     if (container != null) {
                         Vars vars = container.get(args[2]);
+                        if (args[3].equals("null")) {
+                            send(pkg.getSender(), "successfully changed. (" + vars.getVar() + " to <none>)");
+                            container.remove(args[2]);
+                            return;
+                        }
                         send(pkg.getSender(), "successfully changed. (" + vars.getVar() + " to " + args[3] + ")");
                         vars.setVar(args[3]);
                     }
@@ -194,6 +200,50 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
                 } else {
                     send(pkg.getSender(), "this item's material is: " + item.getType());
                 }
+            }
+            @CommandHandler(length = 1, description = "show the variable list of specific player.", usage = "/cutscene log", sender = {SenderType.CONSOLE, SenderType.PLAYER})
+            public void log(CommandPacket pkg) {
+                String name = pkg.getArgs()[1];
+                Player player = Bukkit.getPlayer(name);
+                if (player == null) {
+                    send(pkg.getSender(), "This player is not online!");
+                    OfflinePlayer player1 = Arrays.stream(Bukkit.getOfflinePlayers()).filter(o -> o.getName().equals(name)).findFirst().orElse(null);
+                    if (player1 != null) {
+                        pl.getManager().runTaskAsynchronously(() -> {
+                            Map<String,Vars> varsMap = new WeakHashMap<>();
+                            try {
+                                CSVReader reader = new CSVReader(new FileReader(pl.getDataFolder().getAbsolutePath() + "\\User\\" + player1.getUniqueId() + ".csv"));
+                                reader.forEach(s -> {
+                                    if (s.length > 1) varsMap.put(s[0],new Vars(s[1]));
+                                });
+                                reader.close();
+                            } catch (Exception ignored) {}
+                            send(pkg.getSender(), "This offline-player " + player1.getName() + "'s variable list. " + ChatColor.GRAY + "(" + player1.getUniqueId() + ")");
+                            showVars(pkg.getSender(),varsMap);
+                        });
+                    } else send(pkg.getSender(), "Error: player not found");
+                } else {
+                    send(pkg.getSender(), "Player " + player.getName() + "'s variable list.");
+                    VarsContainer container = pl.getManager().getVars(player);
+                    if (container == null) {
+                        send(pkg.getSender(), "Error: can't get " + player.getName() + "'s variable list.");
+                        return;
+                    }
+                    showVars(pkg.getSender(),container.getVars());
+                }
+            }
+
+            private void showVars(CommandSender sender, Map<String,Vars> varsMap) {
+                List<String> vars = new ArrayList<>();
+                List<String> quests = new ArrayList<>();
+                varsMap.forEach((s,v) -> {
+                    if (s.startsWith("quest.")) quests.add(ChatColor.GOLD + s.substring(6));
+                    else vars.add(ChatColor.YELLOW + s + ChatColor.GRAY + ": " + ChatColor.GREEN + v.getVar());
+                });
+                send(sender,ChatColor.GRAY +"-----< " + ChatColor.BLUE + "Variables" + ChatColor.GRAY +" >-----");
+                vars.forEach(s -> send(sender,s));
+                send(sender,ChatColor.GRAY +"-----< " + ChatColor.BLUE + "Quests" + ChatColor.GRAY +" >-----");
+                quests.forEach(s -> send(sender,s));
             }
         });
     }

@@ -66,11 +66,15 @@ public final class CutsceneMaker extends JavaPlugin {
 
     void load(Consumer<Long> callback) {
         Bukkit.getScheduler().runTaskAsynchronously(this,() -> {
-            long time = System.currentTimeMillis();
-            reload.forEach(Reloadable::reload);
-            LATE_CHECK.forEach(Runnable::run);
-            LATE_CHECK.clear();
-            if (callback != null) callback.accept(System.currentTimeMillis() - time);
+            try {
+                long time = System.currentTimeMillis();
+                reload.forEach(Reloadable::reload);
+                LATE_CHECK.forEach(Runnable::run);
+                LATE_CHECK.clear();
+                if (callback != null) callback.accept(System.currentTimeMillis() - time);
+            } catch (Exception e) {
+                warn("Error has occurred while reloading: " + e.getMessage());
+            }
         });
     }
 
