@@ -7,6 +7,7 @@ import kor.toxicity.cutscenemaker.util.TextUtil;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventHandler;
@@ -57,7 +58,8 @@ public class ActMark extends CutsceneAction {
                         return 0D;
                     }
                 }).toArray();
-                function = world != null && Bukkit.getWorld(world) != null ? e -> new Location(Bukkit.getWorld(world),d[0],d[1],d[2]) : e -> new Location(e.getWorld(),d[0],d[1],d[2]);
+                World wd = (world != null) ? Bukkit.getWorld(world) : null;
+                function = (wd != null) ? e -> new Location(wd,d[0],d[1],d[2]) : e -> new Location(e.getWorld(),d[0],d[1],d[2]);
             }
         }
         location = null;

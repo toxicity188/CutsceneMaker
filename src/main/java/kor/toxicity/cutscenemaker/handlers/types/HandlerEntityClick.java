@@ -17,6 +17,8 @@ public class HandlerEntityClick extends ActionHandler {
     public String type;
     @DataField(aliases = "n")
     public String name;
+    @DataField(aliases = "c")
+    public boolean cancel = false;
 
     private Predicate<PlayerInteractAtEntityEvent> check;
 
@@ -48,6 +50,9 @@ public class HandlerEntityClick extends ActionHandler {
 
     @EventHandler
     public void interact(PlayerInteractAtEntityEvent e) {
-        if (check == null || check.test(e)) apply(e.getPlayer());
+        if (check == null || check.test(e)) {
+            apply(e.getPlayer());
+            e.setCancelled(cancel);
+        }
     }
 }

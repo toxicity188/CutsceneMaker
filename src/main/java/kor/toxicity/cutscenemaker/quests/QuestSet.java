@@ -2,13 +2,15 @@ package kor.toxicity.cutscenemaker.quests;
 
 import kor.toxicity.cutscenemaker.CutsceneConfig;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
-import kor.toxicity.cutscenemaker.actions.mechanics.ActAddVariable;
+import kor.toxicity.cutscenemaker.CutsceneManager;
+import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.data.ActionData;
 import kor.toxicity.cutscenemaker.data.ItemData;
 import kor.toxicity.cutscenemaker.events.QuestCompleteEvent;
 import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
+import kor.toxicity.cutscenemaker.util.vars.Vars;
 import lombok.Getter;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
@@ -245,7 +247,7 @@ public final class QuestSet {
         }
     }
     private class QuestListener {
-        private Predicate<LivingEntity> condition = e -> false;
+        private final Predicate<LivingEntity> condition;
         private final FunctionPrinter lore;
 
         private QuestListener(ConfigurationSection section) {
@@ -253,29 +255,35 @@ public final class QuestSet {
             if (stringSet(section,"Condition")) {
                 String[] t = TextUtil.getInstance().split(section.getString("Condition")," ");
                 if (t.length >= 3) condition = ConditionBuilder.LIVING_ENTITY.find(t);
-            }
+                else condition = null;
+            } else condition = null;
             if (stringSet(section,"Event")) {
                 if (stringSet(section,"Variable")) {
                     String vars = section.getString("Variable");
                     String parameter = section.getString("Event");
-                    Predicate<LivingEntity> predicate = (condition != null) ? e -> {
-                        Player p = (Player) e;
-                        return has(p) && !condition.test(p);
-                    } : e -> has((Player) e);
+
+                    ActionContainer container = new ActionContainer(plugin);
+                    VarsAdder variable = new VarsAdder(plugin.getManager());
+                    Predicate<LivingEntity> check;
+                    if (condition != null) {
+                        check = e -> {
+                            Player p = (Player) e;
+                            return has(p) && !condition.test(p);
+                        };
+                    } else {
+                        check = e -> has((Player) e);
+                    }
                     if (!EVENT_MAP.containsKey(vars)) {
-                        ActionContainer container = new ActionContainer(plugin);
-                        ActAddVariable variable = new ActAddVariable(plugin.getManager());
                         variable.name = vars;
-                        variable.value = 1;
                         variable.initialize();
                         container.add(variable);
 
                         container.confirm();
                         if (ActionData.addHandler(parameter, container))
-                            EVENT_MAP.put(vars,new QuestEvent(predicate,container,parameter));
+                            EVENT_MAP.put(vars,new QuestEvent(check,container,parameter));
                     } else {
                         QuestEvent event = EVENT_MAP.get(vars);
-                        event.or(predicate);
+                        event.or(check);
                         if (!event.parameter.equals(parameter)) ActionData.addHandler(parameter, event.container);
                     }
 
@@ -294,4 +302,17 @@ public final class QuestSet {
             return (isCompleted(player) ? ChatColor.STRIKETHROUGH + TextUtil.getInstance().uncolored(lore.print(player)) + ChatColor.YELLOW + ChatColor.BOLD + " Success!":  lore.print(player));
         }
     }
+    private class VarsAdder extends CutsceneAction {
+        private String name;
+        public VarsAdder(CutsceneManager pl) {
+            super(pl);
+        }
+        @Override
+        protected void apply(LivingEntity entity) {
+            Player p = (Player) entity;
+            Vars vars = plugin.getManager().getVars(p).get(name);
+            vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() + 1));
+        }
+    }
+
 }

@@ -16,7 +16,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
@@ -64,13 +64,11 @@ public class EntityManager implements Listener {
         }
     }
     @EventHandler
-    public void death(EntityDeathEvent e) {
-        if (e.getEntity() instanceof Player) {
-            Player p = (Player) e.getEntity();
-            PlayerBoundMob map = boundMobMap.get(p);
-            if (map != null) {
-                boundMobMap.remove(p);
-            }
+    public void death(PlayerDeathEvent e) {
+        Player p = e.getEntity();
+        PlayerBoundMob map = boundMobMap.get(p);
+        if (map != null) {
+            map.remove();
         }
     }
 

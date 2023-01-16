@@ -25,7 +25,7 @@ import java.util.function.Consumer;
 
 public class ActSlate extends CutsceneAction {
 
-    private static final Set<Player> toggle = new HashSet<>();
+    static final Set<Player> SLATE_TOGGLE = new HashSet<>();
     private static final List<Consumer<Player>> tasksOn = new ArrayList<>();
     private static final List<Consumer<Player>> tasksOff = new ArrayList<>();
     public static void addSlateOnTask(Consumer<Player> task) {
@@ -42,31 +42,31 @@ public class ActSlate extends CutsceneAction {
         if (manager == null) manager = pl.register(new Listener() {
             @EventHandler
             public void move(PlayerMoveEvent e) {
-                if (toggle.contains(e.getPlayer())) e.setCancelled(true);
+                if (SLATE_TOGGLE.contains(e.getPlayer())) e.setCancelled(true);
             }
             @EventHandler
             public void quit(PlayerQuitEvent e) {
-                if (toggle.contains(e.getPlayer())) off(e.getPlayer());
+                if (SLATE_TOGGLE.contains(e.getPlayer())) off(e.getPlayer());
             }
             @EventHandler
             public void start(ActionStartEvent e) {
-                if (e.getEntity() instanceof Player && toggle.contains((Player) e.getEntity())) e.setCancelled(true);
+                if (e.getEntity() instanceof Player && SLATE_TOGGLE.contains((Player) e.getEntity())) e.setCancelled(true);
             }
             @EventHandler(priority = EventPriority.HIGHEST)
             public void interact(PlayerInteractEvent e) {
-                if (toggle.contains(e.getPlayer())) e.setCancelled(true);
+                if (SLATE_TOGGLE.contains(e.getPlayer())) e.setCancelled(true);
             }
             @EventHandler(priority = EventPriority.HIGHEST)
             public void command(PlayerCommandPreprocessEvent e) {
-                if (toggle.contains(e.getPlayer())) e.setCancelled(true);
+                if (SLATE_TOGGLE.contains(e.getPlayer())) e.setCancelled(true);
             }
             @EventHandler
             public void attack(EntityDamageByEntityEvent e) {
-                if (e.getDamager() instanceof Player && toggle.contains((Player) e.getDamager())) e.setCancelled(true);
+                if (e.getDamager() instanceof Player && SLATE_TOGGLE.contains((Player) e.getDamager())) e.setCancelled(true);
             }
             @EventHandler
             public void teleport(PlayerTeleportEvent e) {
-                if (toggle.contains(e.getPlayer())) {
+                if (SLATE_TOGGLE.contains(e.getPlayer())) {
                     switch (e.getCause()) {
                         default:
                             e.setCancelled(true);
@@ -89,12 +89,12 @@ public class ActSlate extends CutsceneAction {
     public void apply(LivingEntity entity) {
         if (entity instanceof Player) {
             Player player = (Player) entity;
-            if (toggle.contains(player)) off(player);
+            if (SLATE_TOGGLE.contains(player)) off(player);
             else on(player,save,change,grounding);
         }
     }
     private static void on(Player player, boolean save, boolean change, boolean grounding) {
-        toggle.add(player);
+        SLATE_TOGGLE.add(player);
         if (change) player.setGameMode(GameMode.SPECTATOR);
         else {
             if (grounding) {
@@ -112,12 +112,12 @@ public class ActSlate extends CutsceneAction {
         if (save && !ActMark.LOCATION.containsKey(player)) ActMark.LOCATION.put(player,player.getLocation());
     }
     private static void off(Player player) {
-        toggle.remove(player);
         player.setGameMode(CutsceneConfig.getInstance().getDefaultGameMode());
         for (Consumer<Player> p : tasksOff) p.accept(player);
 
         Location back = ActMark.LOCATION.get(player);
         if (back != null) player.teleport(back, PlayerTeleportEvent.TeleportCause.PLUGIN);
         ActMark.LOCATION.remove(player);
+        SLATE_TOGGLE.remove(player);
     }
 }

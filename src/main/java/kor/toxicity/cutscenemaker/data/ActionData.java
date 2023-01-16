@@ -62,6 +62,7 @@ public final class ActionData extends CutsceneData {
         actions.put("quest", ActQuest.class);
         actions.put("open", ActOpen.class);
         actions.put("callevent", ActCallEvent.class);
+        actions.put("static", ActStatic.class);
 
         if (Bukkit.getPluginManager().isPluginEnabled("Skript")) {
             actions.put("skript", ActSetSkriptVar.class);

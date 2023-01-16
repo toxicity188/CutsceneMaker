@@ -41,8 +41,6 @@ dependencies {
     implementation group: 'com.opencsv', name: 'opencsv', version: '4.6'
     implementation group: 'org.codemc.worldguardwrapper', name: 'worldguardwrapper', version: '1.2.0-SNAPSHOT'
 
-    compileOnly 'org.xerial:sqlite-jdbc:3.39.3.0'
-
     compileOnly 'com.sk89q.worldguard:worldguard-legacy:6.2'
     compileOnly 'com.sk89q.worldedit:worldedit-core:6.1.4-SNAPSHOT'
     compileOnly 'com.github.Slikey:EffectLib:master'
@@ -68,6 +66,7 @@ tasks.withType(JavaCompile) {
 
 shadowJar {
     setArchivesBaseName("CutsceneMaker")
+    relocate("io.chazza.advancementapi","kor.toxicity.cutscenemaker.shaded.io.chazza.advancementapi")
     relocate("com.opencsv","kor.toxicity.cutscenemaker.shaded.opencsv")
     relocate("org.apache","kor.toxicity.cutscenemaker.shaded.apache")
     relocate("org.codemc","kor.toxicity.cutscenemaker.shaded.codemc")
