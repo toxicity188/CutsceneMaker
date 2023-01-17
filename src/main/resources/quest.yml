@@ -4,7 +4,7 @@ Gui:
 
 Message:
     quest-give:
-        message: "다음 퀘스트가 발주되었습니다: "
-        sound: entity.experience_orb.pickup 1 1
+        message: "다음 퀘스트가 발주되었습니다: " #출력 메세지
+        sound: entity.experience_orb.pickup 1 1 #<사운드 이름> <소리 크기> <소리 높이>
     quest-cancel-message: "퀘스트가 취소되었습니다."
     quest-cancel-fail-message: "취소가 불가능한 퀘스트 입니다."

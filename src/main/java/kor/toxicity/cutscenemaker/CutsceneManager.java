@@ -35,7 +35,7 @@ public final class CutsceneManager {
     private final CutsceneMaker plugin;
     private final CutsceneUser user;
     @Getter
-    private EffectManager EffectLib;
+    private final EffectManager EffectLib;
     @Getter
     private final ProtocolManager ProtocolLib;
 
@@ -61,8 +61,7 @@ public final class CutsceneManager {
         };
 
         ProtocolLib = ProtocolLibrary.getProtocolManager();
-
-        if (Bukkit.getPluginManager().isPluginEnabled("EffectLib")) EffectLib = new EffectManager(plugin);
+        EffectLib = new EffectManager(plugin);
     }
     public static boolean onDelay(Player player) {
         return applyDelay == null || applyDelay.apply(player);

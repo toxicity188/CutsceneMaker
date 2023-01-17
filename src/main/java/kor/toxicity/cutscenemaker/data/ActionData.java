@@ -36,6 +36,7 @@ public final class ActionData extends CutsceneData {
         actions.put("teleport", ActTeleport.class);
         actions.put("dummy", ActDummy.class);
         actions.put("effectlib", ActEffectLib.class);
+        actions.put("particle", ActParticle.class);
         actions.put("message", ActMessage.class);
         actions.put("item", ActItem.class);
         actions.put("sound", ActSound.class);
@@ -73,6 +74,9 @@ public final class ActionData extends CutsceneData {
         }
         if (Bukkit.getPluginManager().isPluginEnabled("MagicSpells")) {
             actions.put("cast", ActCast.class);
+        }
+        if (Bukkit.getPluginManager().isPluginEnabled("LibsDisguises")) {
+            actions.put("disguise", ActDisguise.class);
         }
     }
     public ActionData(CutsceneMaker pl) {

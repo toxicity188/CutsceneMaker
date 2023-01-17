@@ -81,6 +81,8 @@ public class DataObject {
 
     @RequiredArgsConstructor
     private enum DataType {
+        BYTE(Byte.TYPE,"byte",JsonElement::getAsByte),
+        SHORT(Short.TYPE,"short",JsonElement::getAsShort),
         INTEGER(Integer.TYPE,"int",JsonElement::getAsInt),
         DOUBLE(Double.TYPE, "double",JsonElement::getAsDouble),
         FLOAT(Float.TYPE, "float",JsonElement::getAsFloat),
