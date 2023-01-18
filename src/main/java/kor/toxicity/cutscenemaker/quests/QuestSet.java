@@ -70,19 +70,9 @@ public final class QuestSet {
         money = section.getDouble("Money",0);
         exp = section.getDouble("Exp",0);
 
-        Function<List<String>,ItemBuilder[]> function = p -> p.stream().map(s -> {
-            String[] t = TextUtil.getInstance().split(s," ");
-            ItemBuilder builder = InvUtil.getInstance().toName(t[0]);
-            if (builder != null && t.length > 1) {
-                try {
-                    return builder.setAmount(Integer.parseInt(t[1]));
-                } catch (Exception ignored) {
-                }
-            }
-            return builder;
-        }).filter(Objects::nonNull).toArray(ItemBuilder[]::new);
-        giveItem = getArray(section, "RewardItem", function);
-        takeItem = getArray(section, "TakeItem", function);
+
+        giveItem = getArray(section, "RewardItem", l -> QuestUtil.getInstance().getItemBuilders(l));
+        takeItem = getArray(section, "TakeItem", l -> QuestUtil.getInstance().getItemBuilders(l));
 
         ConfigurationSection events = getConfigurationSection(section,"Events");
         if (events != null) {

@@ -1,6 +1,7 @@
 package kor.toxicity.cutscenemaker.util;
 
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -14,11 +15,14 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@EqualsAndHashCode
 public class ItemBuilder {
     @Getter
     private final ItemStack item;
+    @EqualsAndHashCode.Exclude
     private final Function<Player,ItemStack> function;
     @Getter
+    @EqualsAndHashCode.Exclude
     private final boolean sameItem;
 
     public ItemBuilder(ItemStack item) {

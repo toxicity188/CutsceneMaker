@@ -30,7 +30,6 @@ repositories {
 }
 
 dependencies {
-    compileOnly fileTree(dir: 'libs', include: ['*.jar'])
     compileOnly 'org.projectlombok:lombok:1.18.24'
     compileOnly 'com.github.SkriptLang:Skript:dev37c'
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
@@ -43,6 +42,7 @@ dependencies {
     implementation group: "com.github.Chronoken", name: "EffectLib", version: "1be5ee7fd7"
 
     compileOnly 'com.sk89q.worldguard:worldguard-legacy:6.2'
+    compileOnly 'com.sk89q.worldedit:worldedit-bukkit:6.1.4-SNAPSHOT'
     compileOnly 'com.sk89q.worldedit:worldedit-core:6.1.4-SNAPSHOT'
     compileOnly "com.github.MilkBowl:VaultAPI:1.7"
     compileOnly group: "com.comphenix.protocol", name: "ProtocolLib", version: "4.8.0"
@@ -50,6 +50,7 @@ dependencies {
         exclude group: '*', module: '*'
     }
     compileOnly 'org.spigotmc:spigot-api:1.12.2-R0.1-SNAPSHOT'
+    compileOnly fileTree(dir: 'libs', include: ['*.jar'])
 
 }
 java {

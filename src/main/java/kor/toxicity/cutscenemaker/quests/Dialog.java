@@ -22,6 +22,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -87,9 +88,11 @@ public final class Dialog {
     private static final Map<String,TypingManager> TYPING_MANAGER_MAP = new HashMap<>();
     private static final Map<Player,DialogRun> CURRENT_TASK = new ConcurrentHashMap<>();
     static final List<Runnable> LATE_CHECK = new ArrayList<>();
+
+    private static final Map<String,BiConsumer<Dialog,List<String>>> STRING_LIST_PARSER = new HashMap<>();
     static void stopAll(CutsceneMaker plugin) {
         plugin.getManager().runTaskLater(() -> {
-            new WeakHashMap<>(CURRENT_TASK).forEach((p, d) -> {
+            CURRENT_TASK.forEach((p, d) -> {
                 d.cancel();
                 if (d.current.isOpened) p.closeInventory();
             });
@@ -97,8 +100,13 @@ public final class Dialog {
         },0);
     }
 
+    private static <V> void addValue(Map<String,V> target, V value, String... key) {
+        for (String s : key) {
+            target.put(s,value);
+        }
+    }
     static {
-        TYPING_MANAGER_MAP.put("default", DEFAULT_TYPING_EXECUTOR);
+        addValue(TYPING_MANAGER_MAP,DEFAULT_TYPING_EXECUTOR,"default","gui");
         TYPING_MANAGER_MAP.put("title",current -> {
             if (current.isOpened) {
                 current.isOpened = false;
@@ -118,7 +126,6 @@ public final class Dialog {
                 }
             };
         });
-
         READER_STRING.add("Talker",(d,s) -> d.talker = new FunctionPrinter(s));
         READER_STRING.add("Interface",(d,s) -> {
             d.typingManager = TYPING_MANAGER_MAP.get(s);
@@ -137,13 +144,81 @@ public final class Dialog {
                 CutsceneMaker.warn("fail to load the item data: " + s);
             }
         }));
+        STRING_LIST_PARSER.put("Condition",(q,t) -> LATE_CHECK.add(() -> t.forEach(s -> {
+            String[] cond = TextUtil.getInstance().split(s," ");
+            ActionPredicate<LivingEntity> check = (cond.length >= 3) ? ConditionBuilder.LIVING_ENTITY.find(cond) : null;
+            if (check != null) {
+                if (cond.length > 3) {
+                    Dialog dialog = QuestUtil.getInstance().getDialog(cond[3]);
+                    if (dialog != null) q.addPredicate(d -> check.castInstead(p -> dialog.run(d)).test(d.player));
+                } else q.addPredicate(d -> check.test(d.player));
+            }
+        })));
+        STRING_LIST_PARSER.put("CheckQuest",(q,t) -> LATE_CHECK.add(() -> t.forEach(s -> {
+            String[] args = TextUtil.getInstance().split(s," ");
+            ActionPredicate<Player> predicate = getQuestChecker(args[0],(args.length > 1) ? args[1].toLowerCase() : "complete");
+            if (predicate != null) {
+                if (args.length > 2) {
+                    Dialog dialog = QuestUtil.getInstance().getDialog(args[2]);
+                    if (dialog != null) q.addPredicate(d -> predicate.castInstead(p -> dialog.run(d)).test(d.player));
+                } else q.addPredicate(d -> predicate.test(d.player));
+            }
+        })));
+        addValue(
+                STRING_LIST_PARSER,
+                (q,t) -> LATE_CHECK.add(() -> q.endDialog = QuestUtil.getInstance().getDialog(t)),
+                "LinkedDialog","Dialog"
+        );
+        addValue(
+                STRING_LIST_PARSER,
+                (q,t) -> LATE_CHECK.add(() -> q.subDialog = QuestUtil.getInstance().getDialog(t)),
+                "LinkedSubDialog","SubDialog"
+        );
+        addValue(
+                STRING_LIST_PARSER,
+                (q,t) -> q.actions = t.toArray(new String[0]),
+                "LinkedAction","Action"
+        );
+        addValue(
+                STRING_LIST_PARSER,
+                (q,t) -> LATE_CHECK.add(() -> {
+                    QnA[] qna = t.stream().map(s -> {
+                        QnA quest = QuestData.QNA_MAP.get(s);
+                        if (quest == null) CutsceneMaker.warn("the QnA named \"" + s + "\" doesn't exist!");
+                        return quest;
+                    }).filter(Objects::nonNull).toArray(QnA[]::new);
+                    if (qna.length > 0) q.endQnA = qna;
+                }),
+                "LinkedQnA","QnA"
+        );
+        addValue(
+                STRING_LIST_PARSER,
+                (q,t) -> q.takeItem = QuestUtil.getInstance().getItemBuilders(t),
+                "TakeItem","Take"
+        );
+        STRING_LIST_PARSER.put("SetQuest",(q,t) -> t.stream().map(s -> {
+            String[] a = TextUtil.getInstance().split(s," ");
+            return getQuestConsumer(a[0],(a.length > 1) ? a[1].toLowerCase() : "give");
+        }).filter(Objects::nonNull).forEach(c -> q.setQuest = q.setQuest.andThen(c)));
+        STRING_LIST_PARSER.put("SetVars",(q,t) -> t.stream().map(s -> {
+            String[] a = TextUtil.getInstance().split(s," ");
+            Consumer<Player> vars;
+            if (a.length > 1) {
+                vars = QuestUtil.getInstance().getVarsConsumer(a[0],(a.length > 2) ? a[2] : null,a[1]);
+            } else vars = null;
+            if (vars == null) CutsceneMaker.warn("unable to load this variable operation: \"" + s + "\"");
+            return vars;
+        }).filter(Objects::nonNull).forEach(c -> q.setQuest = q.setQuest.andThen(c)));
     }
+    private boolean cancelDamage = true, cancelPickup = true;
     private final CutsceneManager manager;
     private final DialogRecord[] records;
     private Dialog[] subDialog;
     private Dialog[] endDialog;
     private String[] actions;
     private QnA[] endQnA;
+
+    private ItemBuilder[] takeItem;
 
     private Consumer<Player> setQuest = p -> {};
     private Predicate<DialogCurrent> conditions;
@@ -170,7 +245,14 @@ public final class Dialog {
             public void onDamaged(EntityDamageEvent e) {
                 if (e.getEntity() instanceof Player) {
                     DialogRun run = getDialogRun((Player) e.getEntity());
-                    if (run != null) e.setCancelled(true);
+                    if (run != null && run.current.cancelDamage) e.setCancelled(true);
+                }
+            }
+            @EventHandler
+            public void onPickup(EntityPickupItemEvent e) {
+                if (e.getEntity() instanceof Player) {
+                    DialogRun run = getDialogRun((Player) e.getEntity());
+                    if (run != null && run.current.cancelPickup) e.setCancelled(true);
                 }
             }
             @EventHandler
@@ -224,58 +306,32 @@ public final class Dialog {
                 ConfigurationSection typing = section.getConfigurationSection("TypingSound");
                 typingSounds = typing.getKeys(false).stream().collect(Collectors.toMap(s -> s.replace("_"," "), s -> QuestUtil.getInstance().getSoundPlay(typing.getString(s))));
             }
-
-            getOptionalList(section,"Condition").ifPresent(t -> LATE_CHECK.add(() -> t.forEach(s -> {
-                String[] cond = TextUtil.getInstance().split(s," ");
-                ActionPredicate<LivingEntity> check = (cond.length >= 3) ? ConditionBuilder.LIVING_ENTITY.find(cond) : null;
-                if (check != null) {
-                    if (cond.length > 3) {
-                        Dialog dialog = QuestUtil.getInstance().getDialog(cond[3]);
-                        if (dialog != null) addPredicate(d -> check.castInstead(p -> dialog.run(d)).test(d.player));
-                    } else addPredicate(d -> check.test(d.player));
-                }
-            })));
-            getOptionalList(section,"CheckQuest").ifPresent(t -> LATE_CHECK.add(() -> t.forEach(s -> {
-                String[] args = TextUtil.getInstance().split(s," ");
-                ActionPredicate<Player> predicate = getQuestChecker(args[0],(args.length > 1) ? args[1].toLowerCase() : "complete");
-                if (predicate != null) {
-                    if (args.length > 2) {
-                        Dialog dialog = QuestUtil.getInstance().getDialog(args[2]);
-                        if (dialog != null) addPredicate(d -> predicate.castInstead(p -> dialog.run(d)).test(d.player));
-                    } else addPredicate(d -> predicate.test(d.player));
-                }
-            })));
-            getOptionalList(section,"LinkedDialog").ifPresent(t -> LATE_CHECK.add(() -> endDialog = QuestUtil.getInstance().getDialog(t)));
-            getOptionalList(section,"LinkedSubDialog").ifPresent(t -> LATE_CHECK.add(() -> subDialog = QuestUtil.getInstance().getDialog(t)));
-            getOptionalList(section,"LinkedAction").ifPresent(t -> actions = t.toArray(new String[0]));
-            getOptionalList(section,"SetQuest").ifPresent(t -> t.stream().map(s -> {
-                String[] a = TextUtil.getInstance().split(s," ");
-                return getQuestConsumer(a[0],(a.length > 1) ? a[1].toLowerCase() : "give");
-            }).filter(Objects::nonNull).forEach(c -> setQuest = setQuest.andThen(c)));
-            getOptionalList(section,"SetVars").ifPresent(t -> t.stream().map(s -> {
-                String[] a = TextUtil.getInstance().split(s," ");
-                Consumer<Player> vars;
-                if (a.length > 1) {
-                    vars = QuestUtil.getInstance().getVarsConsumer(a[0],(a.length > 2) ? a[2] : null,a[1]);
-                } else vars = null;
-                if (vars == null) CutsceneMaker.warn("unable to load this variable operation: \"" + s + "\"");
-                return vars;
-            }).filter(Objects::nonNull).forEach(c -> setQuest = setQuest.andThen(c)));
-            getOptionalList(section,"LinkedQnA").ifPresent(t -> LATE_CHECK.add(() -> {
-                QnA[] qna = t.stream().map(s -> {
-                    QnA q = QuestData.QNA_MAP.get(s);
-                    if (q == null) CutsceneMaker.warn("the QnA named \"" + s + "\" doesn't exist!");
-                    return q;
-                }).filter(Objects::nonNull).toArray(QnA[]::new);
-                if (qna.length > 0) endQnA = qna;
-            }));
+            if (section.isSet("Option") && section.isConfigurationSection("Option")) {
+                ConfigurationSection option = section.getConfigurationSection("Option");
+                option.getKeys(false).forEach(s -> {
+                    switch (s.toLowerCase()) {
+                        case "damage":
+                            cancelDamage = option.getBoolean(s);
+                            break;
+                        case "pickup":
+                            cancelPickup = option.getBoolean(s);
+                            break;
+                    }
+                });
+            }
+            STRING_LIST_PARSER.forEach((k,d) -> {
+                List<String> list = getStringList(section,k);
+                if (list != null) d.accept(this,list);
+            });
         } else throw new IllegalStateException("Invalid statement.");
     }
-    private ActionPredicate<Player> getQuestChecker(String name, String action) {
+    private static ActionPredicate<Player> getQuestChecker(String name, String action) {
         QuestSet questSet = getQuestSet(name);
         if (questSet != null) {
             switch (action) {
                 default:
+                    CutsceneMaker.warn("The quest checker \"" + name + "\" doesn't exist!");
+                    CutsceneMaker.warn("So it changed to \"complete\" automatically.");
                 case "complete":
                     return questSet::isCompleted;
                 case "ready":
@@ -291,11 +347,13 @@ public final class Dialog {
             }
         } else return null;
     }
-    private Consumer<Player> getQuestConsumer(String key, String action) {
+    private static Consumer<Player> getQuestConsumer(String key, String action) {
         QuestSet set = getQuestSet(key);
         if (set != null) {
             switch (action) {
                 default:
+                    CutsceneMaker.warn("The quest action \"" + action + "\" doesn't exist!");
+                    CutsceneMaker.warn("So it changed to \"give\" automatically.");
                 case "give":
                     return set::give;
                 case "complete":
@@ -305,7 +363,7 @@ public final class Dialog {
             }
         } else return null;
     }
-    private QuestSet getQuestSet(String key) {
+    private static QuestSet getQuestSet(String key) {
         QuestSet questSet = QuestData.QUEST_SET_MAP.get(key);
         if (questSet == null) CutsceneMaker.warn("The QuestSet named \"" + key + "\" doesn't exist!");
         return questSet;
@@ -335,7 +393,7 @@ public final class Dialog {
                 soundMap
         );
     }
-    public void run(Player player, String talker, Inventory inv, Map<String,Consumer<Player>> typingSound) {
+    public void run(@NotNull Player player, @NotNull String talker, @Nullable Inventory inv, @Nullable Map<String,Consumer<Player>> typingSound) {
         DialogStartEvent event = new DialogStartEvent(player,this);
         EvtUtil.call(event);
         if (!event.isCancelled()) {
@@ -345,6 +403,9 @@ public final class Dialog {
     synchronized boolean run(DialogCurrent current) {
         if (CURRENT_TASK.containsKey(current.player)) return false;
         if (conditions == null || conditions.test(current)) {
+            current.cancelPickup = cancelPickup;
+            current.cancelDamage = cancelDamage;
+            if (takeItem != null) current.addTakeItem(takeItem);
             CURRENT_TASK.put(current.player, new DialogRun(current));
         } else if (subDialog != null) return random(subDialog).run(current);
         return true;
@@ -355,9 +416,6 @@ public final class Dialog {
     }
     private List<String> getStringList(ConfigurationSection section, String key) {
         return (section.isSet(key)) ? section.getStringList(key) : null;
-    }
-    private Optional<List<String>> getOptionalList(ConfigurationSection section, String key) {
-        return Optional.ofNullable(getStringList(section,key));
     }
     private class DialogRun {
         private final DialogCurrent current;
@@ -382,6 +440,7 @@ public final class Dialog {
                     current.player.closeInventory();
                     current.isOpened = false;
                 }
+                current.finish();
                 EvtUtil.call(new DialogEndEvent(current.player,Dialog.this));
                 if (actions != null) ActionData.start(random(actions), current.player);
             }
@@ -421,14 +480,13 @@ public final class Dialog {
                 char[] array = message.toCharArray();
                 int size = 0;
                 for (char c : array) {
-                    if (c != '*') size ++;
+                    if (c != '*') size++;
                 }
                 char[] newArray = new char[size];
                 int i = 0;
                 for (char c : array) {
                     if (c != '*') {
-                        newArray[i] = c;
-                        i++;
+                        newArray[i++] = c;
                     }
                 }
                 output = new String(newArray);
@@ -494,10 +552,11 @@ public final class Dialog {
                 for (String s : target.getKeys(false)) {
                     try {
                         int i = Integer.parseInt(s);
-                        Optional.ofNullable((dialog.records.length >= i) ? dialog.records[i - 1] : null).ifPresent(d -> {
+                        DialogRecord record = (dialog.records.length >= i) ? dialog.records[i - 1] : null;
+                        if (record != null) {
                             T get = getter.apply(target,s);
-                            if (get != null) consumer.accept(d,get);
-                        });
+                            if (get != null) consumer.accept(record,get);
+                        }
                     } catch (Exception ignored) {
                     }
                 }
@@ -511,11 +570,28 @@ public final class Dialog {
         final Map<String ,Consumer<Player>> typingSound;
         boolean isOpened = false;
         int time = CutsceneConfig.getInstance().getDefaultTypingDelay();
+
+
+        private boolean cancelDamage;
+        private boolean cancelPickup;
+        private List<ItemBuilder> takeItem;
         private DialogCurrent(Player player, String talker, Inventory inventory, Map<String,Consumer<Player>> typingSound) {
             this.player = player;
             this.talker = talker;
             this.inventory = inventory;
             this.typingSound = typingSound;
+        }
+
+        void addTakeItem(ItemBuilder... items) {
+            if (takeItem == null) takeItem = new ArrayList<>(items.length);
+            takeItem.addAll(Arrays.asList(items));
+        }
+        void finish() {
+            if (takeItem != null) {
+                for (ItemBuilder builder : takeItem) {
+                    InvUtil.getInstance().take(player,builder.get(player));
+                }
+            }
         }
     }
 

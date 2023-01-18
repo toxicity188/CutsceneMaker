@@ -6,6 +6,7 @@ import de.slikey.effectlib.EffectManager;
 import kor.toxicity.cutscenemaker.events.UserDataLoadEvent;
 import kor.toxicity.cutscenemaker.util.DataContainer;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
+import kor.toxicity.cutscenemaker.util.blockanims.BlockAnimation;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import kor.toxicity.cutscenemaker.util.vars.VarsContainer;
@@ -21,7 +22,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
@@ -41,6 +41,8 @@ public final class CutsceneManager {
 
     @Getter
     private final DataContainer<Location> locations = new DataContainer<>();
+    @Getter
+    private final Map<String, BlockAnimation> animationMap = new HashMap<>();
 
     private static final List<Player> delays = new ArrayList<>(1 << 8);
     private static Function<Player,Boolean> applyDelay;

@@ -10,7 +10,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.checkerframework.checker.units.qual.C;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +27,7 @@ public final class CutsceneMaker extends JavaPlugin {
     private final Set<Reloadable> reload = new LinkedHashSet<>();
     private static CutsceneManager manager;
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
     public void onEnable() {
         this.getDataFolder().mkdir();

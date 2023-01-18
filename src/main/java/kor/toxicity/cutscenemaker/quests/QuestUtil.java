@@ -1,6 +1,8 @@
 package kor.toxicity.cutscenemaker.quests;
 
 import kor.toxicity.cutscenemaker.CutsceneMaker;
+import kor.toxicity.cutscenemaker.util.InvUtil;
+import kor.toxicity.cutscenemaker.util.ItemBuilder;
 import kor.toxicity.cutscenemaker.util.TextUtil;
 import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
@@ -9,11 +11,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class QuestUtil {
@@ -44,6 +48,22 @@ public final class QuestUtil {
             return (float) 1;
         }
     }
+    ItemBuilder[] getItemBuilders(List<String> names) {
+        ItemBuilder[] builders = names.stream().map(s -> {
+            String[] t = TextUtil.getInstance().split(s, " ");
+            ItemBuilder builder = InvUtil.getInstance().toName(t[0]);
+            if (builder == null) CutsceneMaker.warn("The item named \"" + t[0] + "\" doesn't exist!");
+            if (builder != null && t.length > 1) {
+                try {
+                    return builder.setAmount(Integer.parseInt(t[1]));
+                } catch (Exception e) {
+                    CutsceneMaker.warn("Invalid number format: " + t[1]);
+                }
+            }
+            return builder;
+        }).filter(Objects::nonNull).toArray(ItemBuilder[]::new);
+        return (builders.length > 0) ? builders : null;
+    }
     Consumer<Player> getVarsConsumer(String key, String value, String change) {
         String lower = change.toLowerCase();
         switch (lower) {
@@ -60,6 +80,8 @@ public final class QuestUtil {
                 if (numberFunction != null) {
                     switch (lower) {
                         default:
+                            CutsceneMaker.warn("The variable operator \"" + lower + "\" doesn't exist!");
+                            CutsceneMaker.warn("So it changed to \"+\" automatically.");
                         case "+":
                         case "add":
                             return p -> {

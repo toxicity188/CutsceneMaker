@@ -89,7 +89,14 @@ public class DataObject {
         BOOLEAN(Boolean.TYPE, "boolean",JsonElement::getAsBoolean),
         STRING(String.class, "string",JsonElement::getAsString),
         JSON_OBJECT(JsonObject.class, "{object}",JsonElement::getAsJsonObject),
-        JSON_ARRAY(JsonArray.class, "[array]",JsonElement::getAsJsonArray),
+        JSON_ARRAY(JsonArray.class, "[array]",j -> {
+            if (j.isJsonArray()) return j.getAsJsonArray();
+            else {
+                JsonArray array = new JsonArray();
+                array.add(j.getAsString());
+                return array;
+            }
+        }),
         FUNCTION_PRINTER(FunctionPrinter.class, "String (Function)",j -> new FunctionPrinter(j.getAsString())),
         ;
         final Class<?> type;

@@ -1,7 +1,6 @@
 package kor.toxicity.cutscenemaker;
 
 import com.opencsv.CSVReader;
-import com.opencsv.CSVWriter;
 import kor.toxicity.cutscenemaker.commands.CommandHandler;
 import kor.toxicity.cutscenemaker.commands.CommandListener;
 import kor.toxicity.cutscenemaker.commands.CommandPacket;
@@ -9,24 +8,29 @@ import kor.toxicity.cutscenemaker.commands.SenderType;
 import kor.toxicity.cutscenemaker.data.ActionData;
 import kor.toxicity.cutscenemaker.events.ActionReloadEndEvent;
 import kor.toxicity.cutscenemaker.events.ActionReloadStartEvent;
-import kor.toxicity.cutscenemaker.util.ConfigWriter;
-import kor.toxicity.cutscenemaker.util.EvtUtil;
-import kor.toxicity.cutscenemaker.util.ItemBuilder;
+import kor.toxicity.cutscenemaker.util.*;
+import kor.toxicity.cutscenemaker.util.blockanims.BlockAnimation;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import kor.toxicity.cutscenemaker.util.vars.VarsContainer;
 import org.bukkit.*;
 import org.bukkit.command.*;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -35,13 +39,23 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public final class CutsceneCommand implements CommandExecutor, TabCompleter {
+public final class CutsceneCommand implements TabExecutor, Listener {
 
     private static final String FALLBACK_PREFIX = "cutscenemaker";
     private static final Map<JavaPlugin, CommandRecord> listeners = new HashMap<>();
     private static final Set<PluginCommand> registeredCommand = new HashSet<>();
     private static SimpleCommandMap commandMap;
     private static Function<String,PluginCommand> createCommand;
+
+    private static final ItemStack WAND = new ItemStack(Material.BOOK);
+    static {
+        ItemMeta meta = WAND.getItemMeta();
+        meta.setDisplayName(ChatColor.YELLOW + "Cutscene Wand");
+        meta.setLore(Collections.singletonList(ChatColor.WHITE + "Left - pos1, Right - pos2"));
+        meta.addEnchant(Enchantment.DURABILITY,0,true);
+        meta.addItemFlags(ItemFlag.values());
+        WAND.setItemMeta(meta);
+    }
 
     @SuppressWarnings("unchecked")
     public void unregister() {
@@ -76,7 +90,38 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
             CutsceneMaker.warn("unable to register command.");
         }
     }
+    private static final Map<Player,AdminData> ADMIN_DATA_MAP = new HashMap<>();
+    @EventHandler
+    public void onJoin(PlayerJoinEvent e) {
+        if (e.getPlayer().isOp()) ADMIN_DATA_MAP.put(e.getPlayer(),new AdminData());
+    }
+    @EventHandler
+    public void onClick(PlayerInteractEvent e) {
+        if (e.hasBlock() && e.hasItem() && WAND.isSimilar(e.getItem())) {
+            e.setCancelled(true);
+            AdminData data = ADMIN_DATA_MAP.get(e.getPlayer());
+            if (data == null) return;
+            Location loc = e.getClickedBlock().getLocation();
+            switch (e.getAction()) {
+                case LEFT_CLICK_AIR:
+                case LEFT_CLICK_BLOCK:
+                    data.pos1 = loc;
+                    send(e.getPlayer(), "pos 1: " + ChatColor.GRAY + "(" + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + ")");
+                    break;
+                case RIGHT_CLICK_AIR:
+                case RIGHT_CLICK_BLOCK:
+                    data.pos2 = loc;
+                    send(e.getPlayer(), "pos 2: " + ChatColor.GRAY + "(" + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + ")");
+                    break;
+            }
+        }
+    }
+    private static class AdminData {
+        private Location pos1;
+        private Location pos2;
+    }
     CutsceneCommand(CutsceneMaker pl) {
+        EvtUtil.register(pl,this);
         try {
             Field map = Arrays.stream(Bukkit.getServer().getClass().getDeclaredFields()).filter(f -> SimpleCommandMap.class.isAssignableFrom(f.getType())).findFirst().orElse(null);
             if (map != null) {
@@ -230,6 +275,47 @@ public final class CutsceneCommand implements CommandExecutor, TabCompleter {
                         return;
                     }
                     showVars(pkg.getSender(),container.getVars());
+                }
+            }
+            @CommandHandler(length = 0, description = "get the wand.", usage = "/cutscene wand",sender = SenderType.PLAYER)
+            public void wand(CommandPacket pkg) {
+                InvUtil.getInstance().give((Player) pkg.getSender(), WAND);
+                send(pkg.getSender(),"successfully got.");
+            }
+            @CommandHandler(length = 2, aliases = {"anim","b"},description = "set your block animation.", usage = "cutscene animation <save/load/air> <file>", sender = SenderType.PLAYER)
+            public void animation(CommandPacket pkg) {
+                String[] args = pkg.getArgs();
+                BlockAnimation animation;
+                switch (args[1]) {
+                    default:
+                        send(pkg.getSender(),"usage: /cutscene animation <save/load> <file>");
+                    case "save":
+                        AdminData data = ADMIN_DATA_MAP.get((Player) pkg.getSender());
+                        if (data == null || data.pos1 == null || data.pos2 == null) {
+                            send(pkg.getSender(),"you must select a region first.");
+                            return;
+                        }
+                        World world = data.pos1.getWorld();
+
+                        animation = BlockAnimation.get(world,data.pos1.toVector(),data.pos2.toVector());
+                        pl.getManager().getAnimationMap().put(args[2],animation);
+                        animation.write(new File(pl.getDataFolder().getAbsolutePath() + "\\Animation\\" + world.getName() + "\\" + args[2] + ".anim"));
+                        send(pkg.getSender(),"successfully saved.");
+                        break;
+                    case "load":
+                        animation = pl.getManager().getAnimationMap().get(args[2]);
+                        if (animation != null) {
+                            animation.set();
+                            send(pkg.getSender(),"successfully loaded.");
+                        } else send(pkg.getSender(),"The block animation \"" + args[2] + "\" doesn't exist!");
+                        break;
+                    case "air":
+                        animation = pl.getManager().getAnimationMap().get(args[2]);
+                        if (animation != null) {
+                            animation.setToAir();
+                            send(pkg.getSender(),"successfully cleared.");
+                        } else send(pkg.getSender(),"The block animation \"" + args[2] + "\" doesn't exist!");
+                        break;
                 }
             }
 
