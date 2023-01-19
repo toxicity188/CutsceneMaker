@@ -1,5 +1,6 @@
 package kor.toxicity.cutscenemaker.events;
 
+import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,6 +20,7 @@ public class ActionStartEvent extends EntityEvent implements ICutsceneEvent, Can
 
     public ActionStartEvent(Entity what, ActionContainer container) {
         super(what);
+        CutsceneMaker.debug( what.getName() + "'s some action started.");
         this.container = container;
     }
 

@@ -1,5 +1,6 @@
 package kor.toxicity.cutscenemaker.events;
 
+import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.quests.QuestSet;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,6 +19,7 @@ public class QuestCompleteEvent extends PlayerEvent implements ICutsceneEvent {
 
     public QuestCompleteEvent(Player who, QuestSet questSet) {
         super(who);
+        CutsceneMaker.debug( questSet.getName() + " quest completed by " + who.getName() + ".");
         this.questSet = questSet;
         money = questSet.getMoney();
         exp = questSet.getExp();

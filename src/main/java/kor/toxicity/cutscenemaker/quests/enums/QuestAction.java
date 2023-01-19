@@ -8,7 +8,7 @@ import org.bukkit.entity.Player;
 import java.util.function.BiConsumer;
 
 @RequiredArgsConstructor
-public enum QuestSetTask {
+public enum QuestAction {
     GIVE(QuestSet::give), //give quest
     COMPLETE(QuestSet::complete), //remove quest without any rewards.
     REMOVE(QuestSet::remove), //remove quest and give all rewards to player.

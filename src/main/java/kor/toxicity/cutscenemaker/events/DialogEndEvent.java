@@ -1,5 +1,6 @@
 package kor.toxicity.cutscenemaker.events;
 
+import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.quests.Dialog;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,6 +18,7 @@ public class DialogEndEvent extends PlayerEvent implements ICutsceneEvent {
     public DialogEndEvent(Player who, Dialog dialog) {
         super(who);
         this.dialog = dialog;
+        CutsceneMaker.debug( "Dialog ended by " + who.getName() + ".");
     }
 
     @Override

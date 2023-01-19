@@ -1,5 +1,6 @@
 package kor.toxicity.cutscenemaker.events;
 
+import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.quests.Dialog;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +21,7 @@ public class DialogStartEvent extends PlayerEvent implements ICutsceneEvent, Can
 
     public DialogStartEvent(Player who, Dialog dialog) {
         super(who);
+        CutsceneMaker.debug( "Dialog started by " + who.getName() + ".");
         this.dialog = dialog;
     }
 

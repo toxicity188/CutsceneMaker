@@ -122,11 +122,7 @@ public final class CutsceneManager {
         private void load(Player player) {
             Bukkit.getScheduler().runTaskAsynchronously(plugin,() -> {
                 VarsContainer c = new VarsContainer(player);
-                try {
-                    c.load(plugin);
-                } catch (Exception t) {
-                    c.register(plugin);
-                }
+                c.load(plugin);
                 c.autoSave(plugin, CutsceneConfig.getInstance().getAutoSaveTime());
                 container.put(player, c);
                 Bukkit.getScheduler().runTask(plugin,() -> EvtUtil.call(new UserDataLoadEvent(player)));
@@ -137,11 +133,7 @@ public final class CutsceneManager {
             Bukkit.getScheduler().runTaskAsynchronously(plugin,() -> {
                 VarsContainer c = container.get(e.getPlayer());
                 if (c != null) {
-                    try {
-                        c.save(plugin);
-                    } catch (Exception t) {
-                        throw new RuntimeException("An error has occurred.");
-                    }
+                    c.save(plugin);
                     c.stop();
                     container.remove(e.getPlayer());
                 }

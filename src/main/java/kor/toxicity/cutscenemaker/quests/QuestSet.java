@@ -5,7 +5,6 @@ import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.data.ActionData;
-import kor.toxicity.cutscenemaker.data.ItemData;
 import kor.toxicity.cutscenemaker.events.QuestCompleteEvent;
 import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
@@ -157,17 +156,6 @@ public final class QuestSet {
         return (nonNull) ? Collections.emptyList() : null;
     }
 
-    private ItemBuilder[] toItemBuilder(List<String> list) {
-        return list.stream().map(i -> {
-            ItemBuilder builder = ItemData.getItem(i);
-            if (builder == null) CutsceneMaker.warn("The item named \"" + i + "\"doesn't exist!");
-            return builder;
-        }).filter(Objects::nonNull).toArray(ItemBuilder[]::new);
-    }
-    public int requiredStorage(Player player) {
-        if (giveItem == null) return -1;
-        return Arrays.stream(giveItem).mapToInt(b -> InvUtil.getInstance().storage(player,b.get(player))).sum();
-    }
     public boolean isReady(Player player) {
         if (giveItem == null) return true;
         for (ItemBuilder builder : giveItem) {

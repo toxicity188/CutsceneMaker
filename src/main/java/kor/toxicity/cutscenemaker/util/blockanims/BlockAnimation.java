@@ -37,7 +37,7 @@ public class BlockAnimation {
 
             int available = stream.available();
             if (available % 15 != 0) {
-                CutsceneMaker.warn("Invalid File data:" + file.getName());
+                CutsceneMaker.warn("Invalid File data: " + file.getName());
                 return null;
             }
             int size = Math.floorDiv(available,DATA_LENGTH);
@@ -186,11 +186,9 @@ public class BlockAnimation {
             state.setRawData(data);
             state.update(true);
         }
-        @SuppressWarnings("deprecation")
         private void setToAir() {
             BlockState state = world.getBlockAt(x,y,z).getState();
             state.setType(Material.AIR);
-            state.setRawData(data);
             state.update(true);
         }
     }

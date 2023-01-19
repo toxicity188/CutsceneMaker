@@ -7,6 +7,7 @@ import kor.toxicity.cutscenemaker.util.ConfigLoad;
 import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -26,6 +27,7 @@ public final class CutsceneMaker extends JavaPlugin {
 
     private final Set<Reloadable> reload = new LinkedHashSet<>();
     private static CutsceneManager manager;
+    private static boolean debug;
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
@@ -39,7 +41,10 @@ public final class CutsceneMaker extends JavaPlugin {
         manager = new CutsceneManager(this);
         reload.add(command::unregister);
         reload.add(new GuiRegister(this));
-        reload.add(() -> CutsceneConfig.getInstance().load(this));
+        reload.add(() -> {
+            CutsceneConfig.getInstance().load(this);
+            debug = CutsceneConfig.getInstance().isDebug();
+        });
         reload.add(new EventData(this));
         reload.add(new ItemData(this));
         reload.add(new LocationData(this));
@@ -54,13 +59,7 @@ public final class CutsceneMaker extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        Bukkit.getOnlinePlayers().forEach(p -> Optional.of(manager.getVars(p)).ifPresent(f -> {
-            try {
-                f.save(this);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }));
+        Bukkit.getOnlinePlayers().forEach(p -> Optional.of(manager.getVars(p)).ifPresent(f -> f.save(this)));
         send("Plugin disabled.");
     }
 
@@ -79,10 +78,14 @@ public final class CutsceneMaker extends JavaPlugin {
     }
 
     public static void send(String s) {
-        Bukkit.getConsoleSender().sendMessage(NAME + " " + s);
+        Bukkit.getLogger().info(NAME + " " + s);
     }
-
-    public static void warn(String s) {Bukkit.getLogger().warning(NAME + " " + s);}
+    public static void warn(String s) {
+        Bukkit.getLogger().warning(NAME + " " + s);
+    }
+    public static void debug(String s) {
+        if (debug) Bukkit.getLogger().info(NAME + " Debug: " + s);
+    }
 
     public CutsceneManager getManager() {
         return manager;

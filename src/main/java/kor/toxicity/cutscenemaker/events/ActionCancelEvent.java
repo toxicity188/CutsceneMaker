@@ -1,5 +1,6 @@
 package kor.toxicity.cutscenemaker.events;
 
+import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.events.enums.CancelCause;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import lombok.Getter;
@@ -21,6 +22,7 @@ public class ActionCancelEvent extends EntityEvent implements ICutsceneEvent {
 
     public ActionCancelEvent(Entity what, ActionContainer container, CancelCause cause) {
         super(what);
+        CutsceneMaker.debug( what.getName() + "'s some action cancelled, cause: " + cause);
         this.container = container;
         this.cause = cause;
     }

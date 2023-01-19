@@ -2,6 +2,7 @@ package kor.toxicity.cutscenemaker.util.vars;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
+import kor.toxicity.cutscenemaker.CutsceneMaker;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -30,30 +31,42 @@ public class VarsContainer {
 
     public void autoSave(JavaPlugin pl, long delay) {
         delay *= 20;
-        task = Bukkit.getScheduler().runTaskTimerAsynchronously(pl,() -> {
-            try {
-                save(pl);
-            } catch (IOException e) {
-                register(pl);
-            }
-        },delay,delay);
+        task = Bukkit.getScheduler().runTaskTimerAsynchronously(pl,() -> save(pl),delay,delay);
     }
     public void stop() {
         if (task != null) task.cancel();
     }
 
-    public void save(JavaPlugin pl) throws IOException {
-        CSVWriter writer = new CSVWriter(new FileWriter(pl.getDataFolder().getAbsolutePath() + "\\User\\" + player.getUniqueId().toString() + ".csv"));
-        writer.writeAll(vars.entrySet().stream().filter(e -> !e.getKey().startsWith("_")).map(e -> new String[] {e.getKey(),e.getValue().getVar()}).collect(Collectors.toList()));
-        writer.close();
+    public void save(JavaPlugin pl) {
+        String name = pl.getDataFolder().getAbsolutePath() + "\\User\\" + player.getUniqueId().toString() + ".csv";
+        try (CSVWriter writer = new CSVWriter(new FileWriter(name))) {
+            writer.writeAll(vars.entrySet().stream().filter(e -> !e.getKey().startsWith("_")).map(e -> new String[] {e.getKey(),e.getValue().getVar()}).collect(Collectors.toList()));
+            CutsceneMaker.debug(player.getName() + "'s user data saved.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            CutsceneMaker.warn("Unable to save the user data of " + player.getName());
+        }
     }
 
-    public void load(JavaPlugin pl) throws IOException {
-        CSVReader reader = new CSVReader(new FileReader(pl.getDataFolder().getAbsolutePath() + "\\User\\" + player.getUniqueId().toString() + ".csv"));
-        reader.forEach(t -> {
-            if (t.length >= 2) vars.put(t[0],new Vars(t[1]));
-        });
-        reader.close();
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public void load(JavaPlugin pl) {
+        String name = pl.getDataFolder().getAbsolutePath() + "\\User\\" + player.getUniqueId().toString() + ".csv";
+        File create = new File(name);
+        if (!create.exists()) {
+            try {
+                create.createNewFile();
+                CutsceneMaker.debug("unable to find " + player.getName() + "'s data file. so create a new data file.");
+            } catch (IOException ignored) {}
+        }
+        try (CSVReader reader = new CSVReader(new FileReader(name))) {
+            reader.forEach(t -> {
+                if (t.length >= 2) vars.put(t[0],new Vars(t[1]));
+            });
+            CutsceneMaker.debug(player.getName() + "'s data loaded.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            CutsceneMaker.warn("Unable to load the user data of " + player.getName());
+        }
     }
 
     public synchronized Vars get(String key) {
@@ -78,14 +91,6 @@ public class VarsContainer {
             return global.containsKey(key);
         } else {
             return vars.containsKey(key);
-        }
-    }
-
-    public boolean register(JavaPlugin pl) {
-        try {
-            return new File(pl.getDataFolder().getAbsolutePath() + "\\User\\" + player.getUniqueId().toString() + ".csv").createNewFile();
-        } catch (Exception e) {
-            return false;
         }
     }
     public void remove(String key) {

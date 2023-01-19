@@ -21,7 +21,7 @@ public class CutsceneConfig {
     @Getter
     private GameMode defaultGameMode;
     @Getter
-    private boolean changeGameMode;
+    private boolean changeGameMode, debug;
     @Getter
     private int autoSaveTime;
     @Getter
@@ -51,6 +51,7 @@ public class CutsceneConfig {
             dialogReader = getMaterial(load.getString("default-dialog-reader","BOOK"));
 
             changeGameMode = load.getBoolean("change-game-mode",true);
+            debug = load.getBoolean("debug",false);
             autoSaveTime = load.getInt("auto-save-time",300);
 
             defaultTypingSound = QuestUtil.getInstance().getSoundPlay(load.getString("default-typing-sound","block.stone_button.click_on 0.2 0.7"));

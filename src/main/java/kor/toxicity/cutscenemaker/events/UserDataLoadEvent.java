@@ -1,5 +1,6 @@
 package kor.toxicity.cutscenemaker.events;
 
+import kor.toxicity.cutscenemaker.CutsceneMaker;
 import lombok.Getter;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
@@ -11,6 +12,7 @@ public class UserDataLoadEvent extends PlayerEvent implements ICutsceneEvent {
 
     public UserDataLoadEvent(Player who) {
         super(who);
+        CutsceneMaker.debug( who.getName() + " joined.");
     }
 
     @Override

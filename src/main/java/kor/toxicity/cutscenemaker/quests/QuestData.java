@@ -4,8 +4,8 @@ import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.data.CutsceneData;
 import kor.toxicity.cutscenemaker.data.ItemData;
-import kor.toxicity.cutscenemaker.quests.enums.QuestGuiButton;
-import kor.toxicity.cutscenemaker.quests.enums.QuestSetTask;
+import kor.toxicity.cutscenemaker.quests.enums.QuestButton;
+import kor.toxicity.cutscenemaker.quests.enums.QuestAction;
 import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import kor.toxicity.cutscenemaker.util.gui.InventorySupplier;
@@ -109,10 +109,10 @@ public final class QuestData extends CutsceneData {
                                 QuestSet get = QUEST_SET_MAP.get(ItemUtil.readInternalTag(item,INTERNAL_NAME_KEY));
                                 if (get == null) return;
                                 if (get.isCancellable()) {
-                                    p.closeInventory();
-                                    questList.remove(get);
+                                    get.remove(p);
                                     MessageSender printer = QUEST_MESSAGE_MAP.get("quest-cancel-message");
                                     if (printer != null) printer.send(p);
+                                    pl.getManager().runTaskLater(p::closeInventory,1);
                                 } else {
                                     MessageSender printer = QUEST_MESSAGE_MAP.get("quest-cancel-fail-message");
                                     if (printer != null) printer.send(p);
@@ -168,13 +168,13 @@ public final class QuestData extends CutsceneData {
     static final Map<String,MessageSender> QUEST_MESSAGE_MAP = new HashMap<>();
     private static final List<GuiButton> QUEST_GUI_BUTTON = new ArrayList<>();
     private static class GuiButton {
-        private final QuestGuiButton button;
+        private final QuestButton button;
         private final int slot;
         private final ItemBuilder builder;
-        private GuiButton(QuestGuiButton button, ConfigurationSection section) {
+        private GuiButton(QuestButton button, ConfigurationSection section) {
             this.button = button;
             slot = section.getInt("Slot", button.getDefaultSlot());
-            builder = (section.isSet("Item")) ? InvUtil.getInstance().fromConfig(section,"Item") : QuestGuiButton.DEFAULT_ITEM_BUILDER;
+            builder = (section.isSet("Item")) ? InvUtil.getInstance().fromConfig(section,"Item") : QuestButton.DEFAULT_ITEM_BUILDER;
         }
     }
     private InventorySupplier supplier;
@@ -194,7 +194,7 @@ public final class QuestData extends CutsceneData {
         if (button != null) {
             for (String key : button.getKeys(false)) {
                 try {
-                    QuestGuiButton button1 = QuestGuiButton.valueOf(key.toUpperCase());
+                    QuestButton button1 = QuestButton.valueOf(key.toUpperCase());
                     QUEST_GUI_BUTTON.add(new GuiButton(button1, button.getConfigurationSection(key)));
                 } catch (Exception ignored) {}
             }
@@ -267,7 +267,7 @@ public final class QuestData extends CutsceneData {
 
     }
 
-    public static boolean applyQuest(Player player, String name, QuestSetTask task) {
+    public static boolean applyQuest(Player player, String name, QuestAction task) {
         QuestSet questSet = QUEST_SET_MAP.get(name);
         if (questSet == null) return false;
         task.getTask().accept(questSet,player);

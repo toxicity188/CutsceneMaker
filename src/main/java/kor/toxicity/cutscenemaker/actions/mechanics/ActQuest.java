@@ -4,7 +4,7 @@ import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.quests.QuestData;
-import kor.toxicity.cutscenemaker.quests.enums.QuestSetTask;
+import kor.toxicity.cutscenemaker.quests.enums.QuestAction;
 import kor.toxicity.cutscenemaker.util.reflect.DataField;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -15,7 +15,7 @@ public class ActQuest extends CutsceneAction {
     @DataField(throwable = true)
     public String type;
 
-    private QuestSetTask task;
+    private QuestAction task;
 
     public ActQuest(CutsceneManager pl) {
         super(pl);
@@ -25,9 +25,9 @@ public class ActQuest extends CutsceneAction {
     public void initialize() {
         super.initialize();
         try {
-            task = QuestSetTask.valueOf(type.toUpperCase());
+            task = QuestAction.valueOf(type.toUpperCase());
         } catch (Exception e) {
-            task = QuestSetTask.GIVE;
+            task = QuestAction.GIVE;
         }
     }
 
