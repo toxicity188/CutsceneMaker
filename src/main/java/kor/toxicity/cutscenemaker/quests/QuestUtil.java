@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -28,11 +29,23 @@ public final class QuestUtil {
         Dialog[] dialog = list.stream().map(this::getDialog).filter(Objects::nonNull).toArray(Dialog[]::new);
         return (dialog.length > 0) ? dialog : null;
     }
-    Dialog getDialog(String s) {
-        Dialog d = QuestData.DIALOG_MAP.get(s);
-        if (d == null) CutsceneMaker.warn("the Dialog named \"" + s + "\" doesn't exist!");
-        return d;
+    QnA[] getQnA(List<String> list) {
+        QnA[] qna = list.stream().map(s -> getFromMap(s,QuestData.QNA_MAP,"QnA")).filter(Objects::nonNull).toArray(QnA[]::new);
+        return (qna.length > 0) ? qna : null;
     }
+    Present[] getPresent(List<String> list) {
+        Present[] presents = list.stream().map(s -> getFromMap(s,QuestData.PRESENT_MAP,"Present")).filter(Objects::nonNull).toArray(Present[]::new);
+        return (presents.length > 0) ? presents : null;
+    }
+    Dialog getDialog(String s) {
+        return getFromMap(s,QuestData.DIALOG_MAP,"Dialog");
+    }
+    private static <V> V getFromMap(String s, Map<String,V> targetMap, String name) {
+        V v = targetMap.get(s);
+        if (v == null) CutsceneMaker.warn("the " + name + " named \"" + s + "\" doesn't exist!");
+        return v;
+    }
+
     public Consumer<Player> getSoundPlay(String s) {
         String[] sounds = TextUtil.getInstance().split(s," ");
         String sound = sounds[0];

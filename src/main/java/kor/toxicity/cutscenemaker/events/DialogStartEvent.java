@@ -9,13 +9,9 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;
 
-public class DialogStartEvent extends PlayerEvent implements ICutsceneEvent, Cancellable {
+public class DialogStartEvent extends PlayerEvent implements ICutsceneEvent {
     @Getter
     private static final HandlerList handlerList = new HandlerList();
-
-    @Getter
-    @Setter
-    private boolean cancelled = false;
     @Getter
     private final Dialog dialog;
 

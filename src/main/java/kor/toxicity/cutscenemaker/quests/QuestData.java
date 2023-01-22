@@ -4,17 +4,19 @@ import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.data.CutsceneData;
 import kor.toxicity.cutscenemaker.data.ItemData;
-import kor.toxicity.cutscenemaker.quests.enums.QuestButton;
 import kor.toxicity.cutscenemaker.quests.enums.QuestAction;
-import kor.toxicity.cutscenemaker.util.*;
+import kor.toxicity.cutscenemaker.quests.enums.QuestButton;
+import kor.toxicity.cutscenemaker.util.ConfigLoad;
+import kor.toxicity.cutscenemaker.util.ItemBuilder;
+import kor.toxicity.cutscenemaker.util.ItemUtil;
+import kor.toxicity.cutscenemaker.util.TextUtil;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
-import kor.toxicity.cutscenemaker.util.gui.InventorySupplier;
 import kor.toxicity.cutscenemaker.util.gui.GuiAdapter;
 import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
+import kor.toxicity.cutscenemaker.util.gui.InventorySupplier;
 import kor.toxicity.cutscenemaker.util.gui.MouseButton;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -26,12 +28,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public final class QuestData extends CutsceneData {
 
     static final Map<String,Dialog> DIALOG_MAP = new HashMap<>();
+    static final Map<String,Present> PRESENT_MAP = new HashMap<>();
     static final Map<String,QuestSet> QUEST_SET_MAP = new HashMap<>();
     static final Map<String,QnA> QNA_MAP = new HashMap<>();
     private static final Map<String,NPCData> NPC_MAP = new HashMap<>();
@@ -55,21 +59,23 @@ public final class QuestData extends CutsceneData {
                     String name = TextUtil.getInstance().getEntityName(e.getRightClicked());
                     NPCData data = NPC_MAP.get(name);
                     if (data != null) {
-                        int vars = (data.followVars != null) ? (int) manager.getVars(player).get(data.followVars).getAsNum(0).doubleValue() : 0;
+                        int vars = (data.followVars != null)
+                                ? (int) manager.getVars(player).get(data.followVars).getAsNum(0).doubleValue()
+                                : ThreadLocalRandom.current().nextInt(0,data.dialogs.length);
                         data.dialogs[Math.min(data.dialogs.length - 1, vars)].run(
                                 player,
                                 name,
                                 (data.supplier != null) ? data.supplier.getInventory(player) : null,
                                 data.soundPlay
                         );
-                        delay.put(player,manager.runTaskLaterAsynchronously(() -> delay.remove(player), 4));
+                        delay.put(player,manager.runTaskLaterAsynchronously(() -> delay.remove(player), 20));
                     }
                 }
             }
         });
         Dialog.setExecutor(pl);
         getPlugin().getCommand("quest").setExecutor((sender, command, label, args) -> {
-            Bukkit.getScheduler().runTask(getPlugin(),() -> {
+            getPlugin().getManager().runTask(() -> {
                 if (sender instanceof Player) {
                     Player p = (Player) sender;
                     Inventory inventory = supplier.getInventory(p);
@@ -174,7 +180,7 @@ public final class QuestData extends CutsceneData {
         private GuiButton(QuestButton button, ConfigurationSection section) {
             this.button = button;
             slot = section.getInt("Slot", button.getDefaultSlot());
-            builder = (section.isSet("Item")) ? InvUtil.getInstance().fromConfig(section,"Item") : QuestButton.DEFAULT_ITEM_BUILDER;
+            builder = (section.isSet("Item")) ? new ItemBuilder(section) : QuestButton.DEFAULT_ITEM_BUILDER;
         }
     }
     private InventorySupplier supplier;
@@ -184,6 +190,7 @@ public final class QuestData extends CutsceneData {
         QUEST_MESSAGE_MAP.clear();
         DIALOG_MAP.clear();
         NPC_MAP.clear();
+        PRESENT_MAP.clear();
         QNA_MAP.clear();
         QUEST_GUI_BUTTON.clear();
         QUEST_SET_MAP.clear();
@@ -219,7 +226,7 @@ public final class QuestData extends CutsceneData {
         ConfigLoad dialog = getPlugin().read("Dialog");
         dialog.getAllFiles().forEach(s -> {
             try {
-                DIALOG_MAP.put(s,new Dialog(getPlugin().getManager(),dialog.getConfigurationSection(s)));
+                DIALOG_MAP.put(s,new Dialog(s,getPlugin().getManager(),dialog.getConfigurationSection(s)));
             } catch (Exception e) {
                 CutsceneMaker.warn("Error: " + e.getMessage() + " (Dialog " + s + ")");
             }
@@ -230,6 +237,14 @@ public final class QuestData extends CutsceneData {
                 QNA_MAP.put(s,new QnA(getPlugin().getManager(),qna.getConfigurationSection(s)));
             } catch (Exception e) {
                 CutsceneMaker.warn("Error: " + e.getMessage() + " (QnA " + s + ")");
+            }
+        });
+        ConfigLoad present = getPlugin().read("Present");
+        present.getAllFiles().forEach(s -> {
+            try {
+                PRESENT_MAP.put(s,new Present(getPlugin().getManager(),present.getConfigurationSection(s)));
+            } catch (Exception e) {
+                CutsceneMaker.warn("Error: " + e.getMessage() + " (Present " + s + ")");
             }
         });
         Dialog.LATE_CHECK.forEach(Runnable::run);
@@ -253,6 +268,7 @@ public final class QuestData extends CutsceneData {
         send(QUEST_SET_MAP.size(),"QuestSets");
         send(DIALOG_MAP.size(),"Dialogs");
         send(QNA_MAP.size(),"QnAs");
+        send(PRESENT_MAP.size(),"Presents");
         send(NPC_MAP.size(),"NPCs");
     }
     private void send(int i, String s) {

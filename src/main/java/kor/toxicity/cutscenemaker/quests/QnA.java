@@ -54,9 +54,7 @@ final class QnA {
                 Button button1 = buttonMap.get(slot);
                 if (button1 != null) {
                     manager.runTask(() -> {
-                        if (button1.dialogs != null) {
-                            random(button1.dialogs).run(current);
-                        } else current.player.closeInventory();
+                        if (button1.dialogs == null || !random(button1.dialogs).run(current)) current.player.closeInventory();
                     });
                 }
             }

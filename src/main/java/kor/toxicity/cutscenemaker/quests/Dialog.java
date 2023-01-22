@@ -14,18 +14,21 @@ import kor.toxicity.cutscenemaker.util.functions.ActionPredicate;
 import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -91,13 +94,13 @@ public final class Dialog {
 
     private static final Map<String,BiConsumer<Dialog,List<String>>> STRING_LIST_PARSER = new HashMap<>();
     static void stopAll(CutsceneMaker plugin) {
-        plugin.getManager().runTaskLater(() -> {
+        plugin.getManager().runTask(() -> {
             CURRENT_TASK.forEach((p, d) -> {
                 d.cancel();
                 if (d.current.isOpened) p.closeInventory();
             });
             CURRENT_TASK.clear();
-        },0);
+        });
     }
 
     private static <V> void addValue(Map<String,V> target, V value, String... key) {
@@ -156,7 +159,7 @@ public final class Dialog {
         })));
         STRING_LIST_PARSER.put("CheckQuest",(q,t) -> LATE_CHECK.add(() -> t.forEach(s -> {
             String[] args = TextUtil.getInstance().split(s," ");
-            ActionPredicate<Player> predicate = getQuestChecker(args[0],(args.length > 1) ? args[1].toLowerCase() : "complete");
+            ActionPredicate<Player> predicate = q.getQuestChecker(args[0],(args.length > 1) ? args[1].toLowerCase() : "complete");
             if (predicate != null) {
                 if (args.length > 2) {
                     Dialog dialog = QuestUtil.getInstance().getDialog(args[2]);
@@ -181,24 +184,27 @@ public final class Dialog {
         );
         addValue(
                 STRING_LIST_PARSER,
-                (q,t) -> LATE_CHECK.add(() -> {
-                    QnA[] qna = t.stream().map(s -> {
-                        QnA quest = QuestData.QNA_MAP.get(s);
-                        if (quest == null) CutsceneMaker.warn("the QnA named \"" + s + "\" doesn't exist!");
-                        return quest;
-                    }).filter(Objects::nonNull).toArray(QnA[]::new);
-                    if (qna.length > 0) q.endQnA = qna;
-                }),
+                (q,t) -> LATE_CHECK.add(() -> q.endQnA = QuestUtil.getInstance().getQnA(t)),
                 "LinkedQnA","QnA"
+        );
+        addValue(
+                STRING_LIST_PARSER,
+                (q,t) -> LATE_CHECK.add(() -> q.endPresent = QuestUtil.getInstance().getPresent(t)),
+                "LinkedPresent","Present"
         );
         addValue(
                 STRING_LIST_PARSER,
                 (q,t) -> q.takeItem = QuestUtil.getInstance().getItemBuilders(t),
                 "TakeItem","Take"
         );
+        addValue(
+                STRING_LIST_PARSER,
+                (q,t) -> q.giveItem = QuestUtil.getInstance().getItemBuilders(t),
+                "GiveItem","Give"
+        );
         STRING_LIST_PARSER.put("SetQuest",(q,t) -> t.stream().map(s -> {
             String[] a = TextUtil.getInstance().split(s," ");
-            return getQuestConsumer(a[0],(a.length > 1) ? a[1].toLowerCase() : "give");
+            return q.getQuestConsumer(a[0],(a.length > 1) ? a[1].toLowerCase() : "give");
         }).filter(Objects::nonNull).forEach(c -> q.setQuest = q.setQuest.andThen(c)));
         STRING_LIST_PARSER.put("SetVars",(q,t) -> t.stream().map(s -> {
             String[] a = TextUtil.getInstance().split(s," ");
@@ -206,19 +212,19 @@ public final class Dialog {
             if (a.length > 1) {
                 vars = QuestUtil.getInstance().getVarsConsumer(a[0],(a.length > 2) ? a[2] : null,a[1]);
             } else vars = null;
-            if (vars == null) CutsceneMaker.warn("unable to load this variable operation: \"" + s + "\"");
+            if (vars == null) q.warn("unable to load this variable operation: \"" + s + "\"");
             return vars;
         }).filter(Objects::nonNull).forEach(c -> q.setQuest = q.setQuest.andThen(c)));
     }
     private boolean cancelDamage = true, cancelPickup = true;
     private final CutsceneManager manager;
     private final DialogRecord[] records;
-    private Dialog[] subDialog;
-    private Dialog[] endDialog;
+    private Dialog[] subDialog, endDialog;
     private String[] actions;
     private QnA[] endQnA;
+    private Present[] endPresent;
 
-    private ItemBuilder[] takeItem;
+    private ItemBuilder[] takeItem, giveItem;
 
     private Consumer<Player> setQuest = p -> {};
     private Predicate<DialogCurrent> conditions;
@@ -255,6 +261,11 @@ public final class Dialog {
                     if (run != null && run.current.cancelPickup) e.setCancelled(true);
                 }
             }
+            @EventHandler(priority = EventPriority.HIGHEST)
+            public void onInteract(PlayerInteractEvent e) {
+                DialogRun run = getDialogRun(e.getPlayer());
+                if (run != null) e.setCancelled(true);
+            }
             @EventHandler
             public void onQuit(PlayerQuitEvent e) {
                 DialogRun run = getDialogRun(e.getPlayer());
@@ -273,11 +284,11 @@ public final class Dialog {
                             delay.put(p,plugin.getManager().runTaskLaterAsynchronously(() -> delay.remove(p), 4));
                             if (e.isLeftClick()) {
                                 run.current.time = Math.max(run.current.time - 1, 1);
-                                run.reader.restart(run.current.time);
+                                run.restart(run.current.time);
                             }
                             if (e.isRightClick()) {
                                 run.current.time = Math.min(run.current.time + 1, 4);
-                                run.reader.restart(run.current.time);
+                                run.restart(run.current.time);
                             }
                         }
                     }
@@ -286,7 +297,11 @@ public final class Dialog {
         });
     }
 
-    Dialog(CutsceneManager manager, ConfigurationSection section) {
+    @Getter
+    private final String name;
+    private final boolean exception;
+    Dialog(String name, CutsceneManager manager, ConfigurationSection section) {
+        this.name = "(Dialog " + name + ")";
         this.manager = manager;
         List<String> talk = getStringList(section,"Talk");
         if (talk != null) {
@@ -294,10 +309,11 @@ public final class Dialog {
                 try {
                     return new DialogRecord(s);
                 } catch (Exception e) {
-                    CutsceneMaker.warn("Error: " + e.getMessage());
+                    warn("Error: " + e.getMessage());
                     return null;
                 }
             }).filter(Objects::nonNull).toArray(DialogRecord[]::new);
+            exception = section.getBoolean("Exception",false);
 
             READER_STRING.apply(this,section);
             READER_CONFIGURATION.apply(this,section);
@@ -325,13 +341,16 @@ public final class Dialog {
             });
         } else throw new IllegalStateException("Invalid statement.");
     }
-    private static ActionPredicate<Player> getQuestChecker(String name, String action) {
+    private void warn(String msg) {
+        CutsceneMaker.warn(msg + " " + name);
+    }
+    private ActionPredicate<Player> getQuestChecker(String name, String action) {
         QuestSet questSet = getQuestSet(name);
         if (questSet != null) {
             switch (action) {
                 default:
-                    CutsceneMaker.warn("The quest checker \"" + name + "\" doesn't exist!");
-                    CutsceneMaker.warn("So it changed to \"complete\" automatically.");
+                    warn("The quest checker \"" + name + "\" doesn't exist!");
+                    warn("So it changed to \"complete\" automatically.");
                 case "complete":
                     return questSet::isCompleted;
                 case "ready":
@@ -347,13 +366,13 @@ public final class Dialog {
             }
         } else return null;
     }
-    private static Consumer<Player> getQuestConsumer(String key, String action) {
+    private Consumer<Player> getQuestConsumer(String key, String action) {
         QuestSet set = getQuestSet(key);
         if (set != null) {
             switch (action) {
                 default:
-                    CutsceneMaker.warn("The quest action \"" + action + "\" doesn't exist!");
-                    CutsceneMaker.warn("So it changed to \"give\" automatically.");
+                    warn("The quest action \"" + action + "\" doesn't exist!");
+                    warn("So it changed to \"give\" automatically. ");
                 case "give":
                     return set::give;
                 case "complete":
@@ -363,15 +382,18 @@ public final class Dialog {
             }
         } else return null;
     }
-    private static QuestSet getQuestSet(String key) {
+    private QuestSet getQuestSet(String key) {
         QuestSet questSet = QuestData.QUEST_SET_MAP.get(key);
-        if (questSet == null) CutsceneMaker.warn("The QuestSet named \"" + key + "\" doesn't exist!");
+        if (questSet == null) warn("The QuestSet named \"" + key + "\" doesn't exist!");
         return questSet;
     }
     private <T> T random(T[] dialogs) {
         return dialogs[ThreadLocalRandom.current().nextInt(0,dialogs.length)];
     }
 
+    private static boolean isSet(Player player) {
+        return CURRENT_TASK.containsKey(player);
+    }
     public void run(@NotNull Player player, @NotNull String talker, @Nullable Consumer<Player> typingSound) {
         run(player,talker,null,typingSound);
     }
@@ -394,21 +416,18 @@ public final class Dialog {
         );
     }
     public void run(@NotNull Player player, @NotNull String talker, @Nullable Inventory inv, @Nullable Map<String,Consumer<Player>> typingSound) {
-        DialogStartEvent event = new DialogStartEvent(player,this);
-        EvtUtil.call(event);
-        if (!event.isCancelled()) {
-            run(new DialogCurrent(player, talker, inv, typingSound));
-        }
+        if (isSet(player)) return;
+        if (run(new DialogCurrent(player, talker, inv, typingSound))) EvtUtil.call(new DialogStartEvent(player,this));
     }
     synchronized boolean run(DialogCurrent current) {
-        if (CURRENT_TASK.containsKey(current.player)) return false;
         if (conditions == null || conditions.test(current)) {
             current.cancelPickup = cancelPickup;
             current.cancelDamage = cancelDamage;
+            if (giveItem != null) current.addGiveItem(giveItem);
             if (takeItem != null) current.addTakeItem(takeItem);
             CURRENT_TASK.put(current.player, new DialogRun(current));
-        } else if (subDialog != null) return random(subDialog).run(current);
-        return true;
+        } else if (subDialog != null) return !isSet(current.player) && random(subDialog).run(current);
+        return isSet(current.player);
     }
     private void addPredicate(Predicate<DialogCurrent> predicate) {
         if (conditions == null) conditions = predicate;
@@ -417,9 +436,8 @@ public final class Dialog {
     private List<String> getStringList(ConfigurationSection section, String key) {
         return (section.isSet(key)) ? section.getStringList(key) : null;
     }
-    private class DialogRun {
+    private class DialogRun implements Runnable {
         private final DialogCurrent current;
-        private final DialogReader reader = new DialogReader();
         private TypingExecutor executor;
         private int count;
 
@@ -436,18 +454,23 @@ public final class Dialog {
                     current.isOpened = false;
                     return;
                 }
+                if (endPresent != null) {
+                    random(endPresent).run(current);
+                    current.isOpened = false;
+                    return;
+                }
                 if (current.isOpened) {
                     current.player.closeInventory();
                     current.isOpened = false;
                 }
-                current.finish();
+                if (!exception) current.finish();
                 EvtUtil.call(new DialogEndEvent(current.player,Dialog.this));
                 if (actions != null) ActionData.start(random(actions), current.player);
             }
         }
         private void stop() {
             CURRENT_TASK.remove(current.player);
-            reader.cancel();
+            endTask();
         }
         private void load() {
             if (count < records.length) {
@@ -455,7 +478,7 @@ public final class Dialog {
                 if (!record.printer.print(current.player).equals("skip")) {
                     if (record.typingManager != null) executor = record.typingManager.initialize(current);
                     else if (executor == null) executor = DEFAULT_TYPING_EXECUTOR.initialize(current);
-                    reader.initialize(record);
+                    init(record);
                     count++;
                 } else {
                     count++;
@@ -465,72 +488,70 @@ public final class Dialog {
                 cancel();
             }
         }
-        private class DialogReader implements Runnable {
-            private String message;
-            private String output;
-            private BukkitTask task;
-            private Consumer<Player> soundActual;
+        private String message;
+        private String output;
+        private BukkitTask task;
+        private Consumer<Player> soundActual;
 
-            private int length;
-            private int outputLength;
-            private void initialize(DialogRecord record) {
-                length = 0;
-                outputLength = 0;
-                this.message = record.invoke(current.player);
-                char[] array = message.toCharArray();
-                int size = 0;
-                for (char c : array) {
-                    if (c != '*') size++;
+        private int length;
+        private int outputLength;
+        private void init(DialogRecord record) {
+            length = 0;
+            outputLength = 0;
+            this.message = record.invoke(current.player);
+            char[] array = message.toCharArray();
+            int size = 0;
+            for (char c : array) {
+                if (c != '*') size++;
+            }
+            char[] newArray = new char[size];
+            int i = 0;
+            for (char c : array) {
+                if (c != '*') {
+                    newArray[i++] = c;
                 }
-                char[] newArray = new char[size];
-                int i = 0;
-                for (char c : array) {
-                    if (c != '*') {
-                        newArray[i++] = c;
+            }
+            output = new String(newArray);
+
+            String talker = (record.talker != null) ? record.talker.print(current.player) : current.talker;
+            Consumer<Player> sound = (current.typingSound != null) ? current.typingSound.get(talker) : null;
+            soundActual = (sound != null) ? sound : CutsceneConfig.getInstance().getDefaultTypingSound();
+
+            executor.initialize(record,talker);
+            start(current.time);
+        }
+
+        private void restart(long time) {
+            if (length < message.length()) {
+                endTask();
+                start(time);
+            }
+        }
+        private void start(long time) {
+            task = manager.runTaskTimer(this,0,time);
+        }
+        @Override
+        public void run() {
+            if (length < message.length()) {
+                length++;
+                if (message.charAt(length -1) != '*') {
+                    outputLength++;
+                    char t = '§';
+                    int i = 0;
+                    while (message.charAt(length - 1) == t || (length >= 2 && message.charAt(length - 2) == t)) {
+                        length = Math.min(length + 2,message.length());
+                        i += 2;
                     }
+                    outputLength = Math.min(outputLength + i,output.length());
+                    executor.apply(ChatColor.WHITE + output.substring(0, outputLength), soundActual);
                 }
-                output = new String(newArray);
-
-                String talker = (record.talker != null) ? record.talker.print(current.player) : current.talker;
-                Consumer<Player> sound = (current.typingSound != null) ? current.typingSound.get(talker) : null;
-                soundActual = (sound != null) ? sound : CutsceneConfig.getInstance().getDefaultTypingSound();
-
-                executor.initialize(record,talker);
-                start(current.time);
+            } else {
+                endTask();
+                task = manager.runTaskLater(this::load,20);
             }
-
-            private void restart(long time) {
-                if (length < message.length()) {
-                    cancel();
-                    start(time);
-                }
-            }
-            private void start(long time) {
-                task = manager.runTaskTimer(this,0,time);
-            }
-            @Override
-            public void run() {
-                if (length < message.length()) {
-                    length++;
-                    if (message.charAt(length -1) != '*') {
-                        outputLength++;
-                        char t = '§';
-                        int i = 0;
-                        while (message.charAt(length - 1) == t || (length >= 2 && message.charAt(length - 2) == t)) {
-                            length = Math.min(length + 2,message.length());
-                            i += 2;
-                        }
-                        outputLength = Math.min(outputLength + i,output.length());
-                        executor.apply(ChatColor.WHITE + output.substring(0, outputLength), soundActual);
-                    }
-                } else {
-                    cancel();
-                    task = manager.runTaskLater(DialogRun.this::load,20);
-                }
-            }
-            private void cancel() {
-                if (task != null) task.cancel();
-            }
+        }
+        private void endTask() {
+            if (task != null) task.cancel();
         }
     }
 
@@ -547,18 +568,23 @@ public final class Dialog {
             taskMap.putIfAbsent(name,action);
         }
         private void forEach(Dialog dialog, ConfigurationSection section, String key, BiConsumer<DialogRecord,T> consumer) {
-            if (section.isSet(key) && section.isConfigurationSection(key)) {
-                ConfigurationSection target = section.getConfigurationSection(key);
-                for (String s : target.getKeys(false)) {
-                    try {
-                        int i = Integer.parseInt(s);
-                        DialogRecord record = (dialog.records.length >= i) ? dialog.records[i - 1] : null;
-                        if (record != null) {
-                            T get = getter.apply(target,s);
-                            if (get != null) consumer.accept(record,get);
-                        }
-                    } catch (Exception ignored) {
-                    }
+            if (!section.isSet(key)) return;
+            if (!section.isConfigurationSection(key)) {
+                dialog.warn("Invalid syntax: " + key);
+                return;
+            }
+            ConfigurationSection target = section.getConfigurationSection(key);
+            for (String s : target.getKeys(false)) {
+                try {
+                    int i = Integer.parseInt(s);
+                    DialogRecord record = (dialog.records.length >= i) ? dialog.records[i - 1] : null;
+                    if (record != null) {
+                        T get = getter.apply(target,s);
+                        if (get != null) consumer.accept(record,get);
+                        else dialog.warn("Unable to get value from key \"" + s + "\"!");
+                    } else dialog.warn("The " + s + " line of Talk is not set!");
+                } catch (Exception ignored) {
+                    dialog.warn("This is not integer: " + s);
                 }
             }
         }
@@ -575,6 +601,7 @@ public final class Dialog {
         private boolean cancelDamage;
         private boolean cancelPickup;
         private List<ItemBuilder> takeItem;
+        private List<ItemBuilder> giveItem;
         private DialogCurrent(Player player, String talker, Inventory inventory, Map<String,Consumer<Player>> typingSound) {
             this.player = player;
             this.talker = talker;
@@ -582,14 +609,23 @@ public final class Dialog {
             this.typingSound = typingSound;
         }
 
+        void addGiveItem(ItemBuilder... items) {
+            if (giveItem == null) giveItem = new ArrayList<>(items.length);
+            giveItem.addAll(Arrays.asList(items));
+        }
         void addTakeItem(ItemBuilder... items) {
             if (takeItem == null) takeItem = new ArrayList<>(items.length);
             takeItem.addAll(Arrays.asList(items));
         }
-        void finish() {
+        private void finish() {
             if (takeItem != null) {
                 for (ItemBuilder builder : takeItem) {
                     InvUtil.getInstance().take(player,builder.get(player));
+                }
+            }
+            if (giveItem != null) {
+                for (ItemBuilder builder : giveItem) {
+                    InvUtil.getInstance().give(player,builder.get(player));
                 }
             }
         }

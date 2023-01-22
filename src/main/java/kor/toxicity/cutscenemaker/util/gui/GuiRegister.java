@@ -15,6 +15,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class GuiRegister extends CutsceneData implements Listener {
 
@@ -26,13 +27,13 @@ public final class GuiRegister extends CutsceneData implements Listener {
     @Override
     public void reload() {
         getPlugin().getManager().runTaskLater(() -> {
-            new WeakHashMap<>(EXECUTOR_MAP).keySet().forEach(Player::closeInventory);
+            EXECUTOR_MAP.keySet().forEach(Player::closeInventory);
             CLICK_DELAY.values().forEach(BukkitTask::cancel);
             EXECUTOR_MAP.clear();
             CLICK_DELAY.clear();
         },0);
     }
-    private static final Map<Player,GuiExecutor> EXECUTOR_MAP = new HashMap<>();
+    private static final Map<Player,GuiExecutor> EXECUTOR_MAP = new ConcurrentHashMap<>();
     private static final Map<Player,BukkitTask> CLICK_DELAY = new HashMap<>();
 
     public static void registerNewGui(GuiExecutor executor) {

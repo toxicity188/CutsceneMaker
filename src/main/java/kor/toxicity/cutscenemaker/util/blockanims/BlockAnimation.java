@@ -9,9 +9,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.util.Vector;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,14 +24,10 @@ public class BlockAnimation {
         data = new AnimationData[size];
     }
 
-    @SuppressWarnings("deprecation")
     public static BlockAnimation read(File file, World world) {
-        try (FileInputStream stream = new FileInputStream(file)) {
-            int buffer;
-            int i = 0, g = 0;
+        try (FileInputStream fs = new FileInputStream(file); BufferedInputStream stream = new BufferedInputStream(fs)) {
 
-            byte[] shortArray = new byte[2];
-            byte[] intArray = new byte[4];
+            byte[] dataArray = new byte[DATA_LENGTH];
 
             int available = stream.available();
             if (available % 15 != 0) {
@@ -42,44 +36,43 @@ public class BlockAnimation {
             }
             int size = Math.floorDiv(available,DATA_LENGTH);
             BlockAnimation animation = new BlockAnimation(size);
-            AnimationData anim = new AnimationData();
-            anim.world = world;
-            while ((buffer = stream.read()) != -1) {
-                if (i >= DATA_LENGTH) {
-                    i = 0;
-                    anim = new AnimationData();
-                    anim.world = world;
-                }
-                byte b = (byte) buffer;
-                if (i < 2) {
-                    shortArray[i] = b;
-                    if (i == 1)
-                        anim.material = Material.getMaterial(((0xFF & shortArray[0]) << 8) | (0xFF & shortArray[1]));
-                } else if (i < 3) {
-                    anim.data = b;
-                } else if (i < 7) {
-                    intArray[i - 3] = b;
-                    if (i == 6) anim.x = getIntFromArray(intArray);
-                } else if (i < 11) {
-                    intArray[i - 7] = b;
-                    if (i == 10) anim.y = getIntFromArray(intArray);
-                } else {
-                    intArray[i - 11] = b;
-                    if (i == 14) {
-                        anim.z = getIntFromArray(intArray);
-                        animation.data[g++] = anim;
+
+            int buffer;
+            int i = 0, g = 0;
+            try {
+                while ((buffer = stream.read()) != -1) {
+                    if (i >= DATA_LENGTH) {
+                        i = 0;
+                        animation.data[g++] = getData(world, dataArray);
                     }
+                    dataArray[i++] = (byte) buffer;
                 }
-                i++;
+                animation.data[g] = getData(world, dataArray);
+                return animation;
+            } catch (Exception e) {
+                CutsceneMaker.warn("Invalid block data found in \"" + file.getName() + "\". maybe the minecraft version is incorrect.");
             }
-            return animation;
         } catch (Exception e) {
-            CutsceneMaker.warn("Unable to load the file \"" + file.getName() + "\"");
+            CutsceneMaker.warn("Unable to load the file \"" + file.getName() + "\".");
         }
         return null;
     }
-    private static int getIntFromArray(byte[] intArray) {
-        return ((0xFF & intArray[0]) << 24) | ((0xFF & intArray[1]) << 16) | ((0xFF & intArray[2]) << 8) | (0xFF & intArray[3]);
+    private static final Material[] MATERIAL_VALUES = Material.values();
+    private static AnimationData getData(World world, byte[] dataArray) {
+        AnimationData anim = new AnimationData();
+        anim.world = world;
+        anim.material = MATERIAL_VALUES[getShortFromArray(dataArray[0],dataArray[1])];
+        anim.data = dataArray[2];
+        anim.x = getIntFromArray(dataArray[3],dataArray[4],dataArray[5],dataArray[6]);
+        anim.y = getIntFromArray(dataArray[7],dataArray[8],dataArray[9],dataArray[10]);
+        anim.z = getIntFromArray(dataArray[11],dataArray[12],dataArray[13],dataArray[14]);
+        return anim;
+    }
+    private static int getShortFromArray(byte one, byte two) {
+        return ((0xFF & one) << 8) | (0xFF & two);
+    }
+    private static int getIntFromArray(byte one, byte two, byte three, byte four) {
+        return ((0xFF & one) << 24) | ((0xFF & two) << 16) | ((0xFF & three) << 8) | (0xFF & four);
     }
     public AnimationPacket toPacket() {
         if (normalPacket == null) normalPacket = AnimationPacket.createData(this);
@@ -132,13 +125,12 @@ public class BlockAnimation {
         }
         return anim;
     }
-    @SuppressWarnings("deprecation")
     public void write(File file) {
-        try (FileOutputStream stream = new FileOutputStream(file)) {
+        try (FileOutputStream fs = new FileOutputStream(file); BufferedOutputStream stream = new BufferedOutputStream(fs)) {
             byte[] array = new byte[data.length * DATA_LENGTH];
             int i = 0;
             for (AnimationData datum : data) {
-                short m = (short) datum.material.getId();
+                short m = (short) datum.material.ordinal();
                 array[i++] = (byte) (m >>> 8);
                 array[i++] = (byte) ((m << 8) >>> 8);
                 array[i++] = datum.data;

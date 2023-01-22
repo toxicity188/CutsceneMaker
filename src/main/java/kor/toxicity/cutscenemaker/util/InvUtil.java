@@ -57,6 +57,7 @@ public final class InvUtil {
     }
     public ItemBuilder fromConfig(ConfigurationSection c, String s) {
         if (c.isItemStack(s)) return new ItemBuilder(c.getItemStack(s));
+        else if (c.isConfigurationSection(s)) return new ItemBuilder(c.getConfigurationSection(s));
         else if (c.isString(s)) {
             Matcher matcher = SIMPLE_ITEM_PATTERN.matcher(c.getString(s));
             if (matcher.find()) {

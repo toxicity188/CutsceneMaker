@@ -8,3 +8,6 @@ Message:
         sound: entity.experience_orb.pickup 1 1 #<사운드 이름> <소리 크기> <소리 높이>
     quest-cancel-message: "퀘스트가 취소되었습니다."
     quest-cancel-fail-message: "취소가 불가능한 퀘스트 입니다."
+    quest-no-item-presented-message: "현재 아무 아이템도 제시하지 않은 상태입니다.."
+    quest-no-item-found-message: "제시할 수 없는 아이템 입니다."
+    quest-less-item-amount-message: "아이템의 수량이 부족하여 제시할 수 없습니다."

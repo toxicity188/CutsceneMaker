@@ -39,7 +39,7 @@ public class VarsContainer {
 
     public void save(JavaPlugin pl) {
         String name = pl.getDataFolder().getAbsolutePath() + "\\User\\" + player.getUniqueId().toString() + ".csv";
-        try (CSVWriter writer = new CSVWriter(new FileWriter(name))) {
+        try (FileWriter file = new FileWriter(name); CSVWriter writer = new CSVWriter(file)) {
             writer.writeAll(vars.entrySet().stream().filter(e -> !e.getKey().startsWith("_")).map(e -> new String[] {e.getKey(),e.getValue().getVar()}).collect(Collectors.toList()));
             CutsceneMaker.debug(player.getName() + "'s user data saved.");
         } catch (Exception e) {
@@ -58,7 +58,7 @@ public class VarsContainer {
                 CutsceneMaker.debug("unable to find " + player.getName() + "'s data file. so create a new data file.");
             } catch (IOException ignored) {}
         }
-        try (CSVReader reader = new CSVReader(new FileReader(name))) {
+        try (FileReader file = new FileReader(name); CSVReader reader = new CSVReader(file)) {
             reader.forEach(t -> {
                 if (t.length >= 2) vars.put(t[0],new Vars(t[1]));
             });

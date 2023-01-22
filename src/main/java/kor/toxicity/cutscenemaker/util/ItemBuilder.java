@@ -3,9 +3,14 @@ package kor.toxicity.cutscenemaker.util;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +21,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @EqualsAndHashCode
-public class ItemBuilder {
+public class ItemBuilder implements ItemSupplier {
     @Getter
     private final ItemStack item;
     @EqualsAndHashCode.Exclude
@@ -25,7 +30,40 @@ public class ItemBuilder {
     @EqualsAndHashCode.Exclude
     private final boolean sameItem;
 
-    public ItemBuilder(ItemStack item) {
+    private static final ItemStack DEFAULT_ITEM = new ItemStack(Material.APPLE);
+    static {
+        ItemMeta meta = DEFAULT_ITEM.getItemMeta();
+        meta.setDisplayName(ChatColor.WHITE + "fail to load an item.");
+        DEFAULT_ITEM.setItemMeta(meta);
+    }
+
+    public ItemBuilder(@NotNull ConfigurationSection section) {
+        this(getFromConfig(Objects.requireNonNull(section)));
+    }
+    private static ItemStack getFromConfig(ConfigurationSection section) {
+        ItemStack stack;
+        try {
+            stack = new ItemStack(Material.valueOf(section.getString("Type").toUpperCase()));
+        } catch (Exception e) {
+            return DEFAULT_ITEM;
+        }
+        stack.setAmount((short) section.getInt("Amount",1));
+        stack.setDurability((short) section.getInt("Data",0));
+        ItemMeta meta = stack.getItemMeta();
+        if (section.isSet("Lore")) {
+            try {
+                meta.setLore(section.getStringList("Lore").stream().map(s -> ChatColor.WHITE + TextUtil.getInstance().colored(s)).collect(Collectors.toList()));
+            } catch (Exception ignored) {}
+        }
+        meta.setUnbreakable(section.getBoolean("Unbreakable",true));
+        String name = section.getString("Display",null);
+        if (name != null) meta.setDisplayName(ChatColor.WHITE + TextUtil.getInstance().colored(name));
+        meta.addItemFlags(ItemFlag.values());
+        stack.setItemMeta(meta);
+        return stack;
+    }
+
+    public ItemBuilder(@NotNull ItemStack item) {
         this.item = Objects.requireNonNull(item);
         ItemMeta meta = item.getItemMeta();
 
@@ -51,6 +89,9 @@ public class ItemBuilder {
             i.setItemMeta(m);
             return i;
         } : e -> item;
+    }
+    public int getAmount() {
+        return item.getAmount();
     }
     public ItemBuilder setAmount(int i) {
         ItemStack target = item.clone();
