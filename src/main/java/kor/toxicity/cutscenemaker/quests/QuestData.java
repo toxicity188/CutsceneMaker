@@ -4,18 +4,17 @@ import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.data.CutsceneData;
 import kor.toxicity.cutscenemaker.data.ItemData;
+import kor.toxicity.cutscenemaker.quests.data.QuestCurrent;
 import kor.toxicity.cutscenemaker.quests.enums.QuestAction;
 import kor.toxicity.cutscenemaker.quests.enums.QuestButton;
-import kor.toxicity.cutscenemaker.util.ConfigLoad;
-import kor.toxicity.cutscenemaker.util.ItemBuilder;
-import kor.toxicity.cutscenemaker.util.ItemUtil;
-import kor.toxicity.cutscenemaker.util.TextUtil;
+import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import kor.toxicity.cutscenemaker.util.gui.GuiAdapter;
 import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
 import kor.toxicity.cutscenemaker.util.gui.InventorySupplier;
 import kor.toxicity.cutscenemaker.util.gui.MouseButton;
 import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
@@ -25,6 +24,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
@@ -44,14 +44,15 @@ public final class QuestData extends CutsceneData {
         Dialog dialog = DIALOG_MAP.get(name);
         if (dialog != null) dialog.run(player,talker,null);
     }
+    public static Dialog getDialog(String name) {
+        return DIALOG_MAP.get(name);
+    }
 
     public QuestData(CutsceneMaker pl) {
         super(pl);
         CutsceneManager manager = pl.getManager();
         manager.register(new Listener() {
-
             private final Map<Player,BukkitTask> delay = new HashMap<>();
-
             @EventHandler
             public void onRightClick(PlayerInteractAtEntityEvent e) {
                 Player player = e.getPlayer();
@@ -95,7 +96,6 @@ public final class QuestData extends CutsceneData {
                             }
                         }
                     }
-
                     final int totalSize = (int) Math.ceil((double) questList.size() / 9D);
 
                     int loop = first;
@@ -103,22 +103,54 @@ public final class QuestData extends CutsceneData {
                         inventory.setItem(loop, ItemUtil.setInternalTag(questSet.getIcon(p),INTERNAL_NAME_KEY,questSet.getName()));
                         loop++;
                     }
-                    GuiRegister.registerNewGui(new GuiAdapter(p, inventory) {
-                        private int page = 1;
-                        private String type;
-                        private List<QuestSet> sorted;
+                    final QuestCurrent current = new QuestCurrent(new ArrayList<>(QuestSet.TYPE_LIST));
+                    current.setTotalPage(totalSize);
+                    Set<CurrentGuiButton> buttonSet = new HashSet<>();
+                    for (GuiButton guiButton : QUEST_GUI_BUTTON) {
+                        inventory.setItem(guiButton.slot, guiButton.builder.get(p));
 
+                        ItemStack copy = inventory.getItem(guiButton.slot);
+                        buttonSet.add(new CurrentGuiButton(
+                                guiButton.button,
+                                copy,
+                                current
+                        ));
+                    }
+                    GuiRegister.registerNewGui(new GuiAdapter(p, inventory) {
                         @Override
                         public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
-                            if (!isPlayerInventory) {
+                            if (isPlayerInventory) return;
+                            CurrentGuiButton action = buttonSet.stream().filter(c -> c.stack.equals(item)).findFirst().orElse(null);
+                            if (action != null) {
+                                switch (action.button) {
+                                    case TYPE_SORT:
+                                        switch (button) {
+                                            case LEFT:
+                                            case LEFT_WITH_SHIFT:
+                                                sort();
+                                                break;
+                                            case RIGHT:
+                                            case RIGHT_WITH_SHIFT:
+                                                removeSort();
+                                                break;
+                                        }
+                                        break;
+                                    case PAGE_BEFORE:
+                                        addPage(-1);
+                                        break;
+                                    case PAGE_AFTER:
+                                        addPage(1);
+                                        break;
+                                }
+                            } else {
                                 if (button != MouseButton.LEFT_WITH_SHIFT) return;
-                                QuestSet get = QUEST_SET_MAP.get(ItemUtil.readInternalTag(item,INTERNAL_NAME_KEY));
+                                QuestSet get = QUEST_SET_MAP.get(ItemUtil.readInternalTag(item, INTERNAL_NAME_KEY));
                                 if (get == null) return;
                                 if (get.isCancellable()) {
                                     get.remove(p);
                                     MessageSender printer = QUEST_MESSAGE_MAP.get("quest-cancel-message");
                                     if (printer != null) printer.send(p);
-                                    pl.getManager().runTaskLater(p::closeInventory,1);
+                                    pl.getManager().runTaskLater(p::closeInventory, 1);
                                 } else {
                                     MessageSender printer = QUEST_MESSAGE_MAP.get("quest-cancel-fail-message");
                                     if (printer != null) printer.send(p);
@@ -127,47 +159,85 @@ public final class QuestData extends CutsceneData {
                         }
 
                         private void addPage(int i) {
-                            page = Math.min(Math.max(page + i, 1), totalSize);
-                            clear();
+                            current.setPage(Math.min(Math.max(current.getPage() + i, 1), current.getTotalPage()));
                             setup();
                         }
-
-                        private QuestSet getQuest(int i) {
-                            List<QuestSet> questSets = getQuestList();
-                            return (questSets.size() > i) ? questSets.get(i - 1) : null;
-                        }
-
-                        private List<QuestSet> getQuestList() {
-                            return (sorted != null) ? sorted : questList;
-                        }
-
-                        private List<QuestSet> init(String key) {
-                            if (type == null || !type.equals(key))
-                                sorted = questList.stream().filter(q -> q.getType().equals(key)).collect(Collectors.toList());
-                            type = key;
-                            return sorted;
-                        }
-
-                        private void clear() {
-                            for (int i = 9; i < 18; i++) {
-                                inventory.setItem(i, null);
+                        private void sort() {
+                            int size = current.getTypeList().size();
+                            if (size == 0) return;
+                            current.setPage(1);
+                            int index = current.getTypeIndex();
+                            if (index >= size) {
+                                index = 0;
+                                current.setTypeIndex(0);
                             }
+                            current.setTypeIndex(index + 1);
+                            String key = current.getTypeList().get(index);
+                            List<QuestSet> sorted = questList.stream().filter(q -> {
+                                String t = q.getType();
+                                return t != null && t.equals(key);
+                            }).collect(Collectors.toList());
+                            current.setType(key);
+                            current.setSorted(sorted);
+                            current.setTotalPage((int)Math.ceil((double)sorted.size()/9D));
+                            setup();
                         }
-
+                        private void removeSort() {
+                            current.setType(null);
+                            current.setPage(1);
+                            current.setTotalPage(totalSize);
+                            setup();
+                        }
                         private void setup() {
-                            int k = (page - 1) * 9;
+                            int k = (current.getPage() - 1) * 9;
                             int i = first;
-                            List<QuestSet> questSets = getQuestList();
-                            for (QuestSet questSet : questSets.subList(k, Math.min(k + 8, questSets.size()))) {
-                                inventory.setItem(i, questSet.getIcon(p));
-                                i++;
+                            List<QuestSet> questSets = (current.getType() != null && current.getSorted() != null) ? current.getSorted() : questList;
+                            List<QuestSet> subList = questSets.subList(k, Math.min(k + 9, questSets.size()));
+                            for (QuestSet questSet : subList) {
+                                inventory.setItem(i++, ItemUtil.setInternalTag(questSet.getIcon(p),INTERNAL_NAME_KEY,questSet.getName()));
                             }
+                            for (int t = 0; t < 9 - subList.size(); t++) {
+                                inventory.setItem(i++,null);
+                            }
+                            buttonSet.forEach(CurrentGuiButton::reloadLore);
+                            p.updateInventory();
                         }
                     });
                 }
             });
             return true;
         });
+    }
+    @EqualsAndHashCode
+    private static class CurrentGuiButton {
+        private final QuestButton button;
+        @EqualsAndHashCode.Exclude
+        private final ItemStack stack;
+        @EqualsAndHashCode.Exclude
+        private final ItemMeta meta;
+        @EqualsAndHashCode.Exclude
+        private final QuestCurrent current;
+        @EqualsAndHashCode.Exclude
+        private final List<String> lore;
+
+        private CurrentGuiButton(QuestButton button, ItemStack stack, QuestCurrent current) {
+            this.button = button;
+            this.stack = stack;
+            this.meta = stack.getItemMeta();
+            this.current = current;
+            lore = meta.getLore();
+            reloadLore();
+        }
+        private void reloadLore() {
+            if (lore == null) meta.setLore(button.getLore(current));
+            else {
+                List<String> ret = new ArrayList<>(button.getLore(current));
+                ret.add("");
+                ret.addAll(lore);
+                meta.setLore(ret);
+            }
+            stack.setItemMeta(meta);
+        }
     }
 
     private static final InventorySupplier DEFAULT_GUI_SUPPLIER = new InventorySupplier(new FunctionPrinter("Quest Gui"),3,null);
@@ -180,7 +250,7 @@ public final class QuestData extends CutsceneData {
         private GuiButton(QuestButton button, ConfigurationSection section) {
             this.button = button;
             slot = section.getInt("Slot", button.getDefaultSlot());
-            builder = (section.isSet("Item")) ? new ItemBuilder(section) : QuestButton.DEFAULT_ITEM_BUILDER;
+            builder = (section.isSet("Item")) ? InvUtil.getInstance().fromConfig(section,"Item") : QuestButton.DEFAULT_ITEM_BUILDER;
         }
     }
     private InventorySupplier supplier;
@@ -194,6 +264,7 @@ public final class QuestData extends CutsceneData {
         QNA_MAP.clear();
         QUEST_GUI_BUTTON.clear();
         QUEST_SET_MAP.clear();
+        QuestSet.TYPE_LIST.clear();
         ConfigLoad def = getPlugin().readSingleFile("quest");
         ConfigurationSection gui = def.getConfigurationSection("Gui");
         supplier = (gui != null) ? new InventorySupplier(gui) : DEFAULT_GUI_SUPPLIER;
@@ -264,7 +335,7 @@ public final class QuestData extends CutsceneData {
                if (data.dialogs != null) NPC_MAP.put(section.getString("Name",s),data);
             }
         });
-        QuestSet.clear();
+        QuestSet.EVENT_MAP.clear();
         send(QUEST_SET_MAP.size(),"QuestSets");
         send(DIALOG_MAP.size(),"Dialogs");
         send(QNA_MAP.size(),"QnAs");

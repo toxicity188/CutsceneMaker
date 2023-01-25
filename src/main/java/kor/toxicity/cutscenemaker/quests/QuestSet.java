@@ -18,6 +18,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.material.Tree;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -29,7 +30,7 @@ import java.util.stream.Collectors;
 public final class QuestSet {
 
     private static final List<BiConsumer<Player,Double>> EXP_GETTER = new ArrayList<>();
-    static List<String> TYPE_LIST = new ArrayList<>();
+    static final NavigableSet<String> TYPE_LIST = new TreeSet<>();
     public static void addExpGetter(BiConsumer<Player,Double> consumer) {
         EXP_GETTER.add(consumer);
     }
@@ -171,6 +172,7 @@ public final class QuestSet {
     public boolean has(Player player) {
         return plugin.getManager().getVars(player).contains("quest." +name);
     }
+    static final Map<String,QuestEvent> EVENT_MAP = new HashMap<>();
     public void complete(Player player) {
         QuestCompleteEvent event = new QuestCompleteEvent(player,this);
         EvtUtil.call(event);
@@ -203,11 +205,7 @@ public final class QuestSet {
         return listeners != null && listeners.stream().allMatch(e -> e.isCompleted(player));
     }
 
-    private static final Map<String,QuestEvent> EVENT_MAP = new HashMap<>();
-    static void clear() {
-        TYPE_LIST.clear();
-        EVENT_MAP.clear();
-    }
+
     private static final class QuestEvent {
         private Predicate<LivingEntity> predicate;
         private final ActionContainer container;

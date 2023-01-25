@@ -28,6 +28,7 @@ import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
@@ -271,6 +272,11 @@ public final class Dialog {
                 DialogRun run = getDialogRun(e.getPlayer());
                 if (run != null) run.stop();
             }
+            @EventHandler
+            public void onCommand(PlayerCommandPreprocessEvent e) {
+                DialogRun run = getDialogRun(e.getPlayer());
+                if (run != null) e.setCancelled(true);
+            }
             private final Map<Player,BukkitTask> delay = new HashMap<>();
             @EventHandler
             public void onInvClick(InventoryClickEvent e) {
@@ -391,7 +397,7 @@ public final class Dialog {
         return dialogs[ThreadLocalRandom.current().nextInt(0,dialogs.length)];
     }
 
-    private static boolean isSet(Player player) {
+    public static boolean isRunning(Player player) {
         return CURRENT_TASK.containsKey(player);
     }
     public void run(@NotNull Player player, @NotNull String talker, @Nullable Consumer<Player> typingSound) {
@@ -416,7 +422,7 @@ public final class Dialog {
         );
     }
     public void run(@NotNull Player player, @NotNull String talker, @Nullable Inventory inv, @Nullable Map<String,Consumer<Player>> typingSound) {
-        if (isSet(player)) return;
+        if (isRunning(player)) return;
         if (run(new DialogCurrent(player, talker, inv, typingSound))) EvtUtil.call(new DialogStartEvent(player,this));
     }
     synchronized boolean run(DialogCurrent current) {
@@ -426,8 +432,8 @@ public final class Dialog {
             if (giveItem != null) current.addGiveItem(giveItem);
             if (takeItem != null) current.addTakeItem(takeItem);
             CURRENT_TASK.put(current.player, new DialogRun(current));
-        } else if (subDialog != null) return !isSet(current.player) && random(subDialog).run(current);
-        return isSet(current.player);
+        } else if (subDialog != null) return !isRunning(current.player) && random(subDialog).run(current);
+        return isRunning(current.player);
     }
     private void addPredicate(Predicate<DialogCurrent> predicate) {
         if (conditions == null) conditions = predicate;
@@ -645,7 +651,7 @@ public final class Dialog {
                 String t = matcher.group("talker");
                 if (t != null) talker = new FunctionPrinter(t);
                 this.printer = new FunctionPrinter(matcher.group("content"));
-            } else throw new RuntimeException("unable to read talk statement:" + printer);
+            } else throw new RuntimeException("unable to read this talk syntax: " + printer);
         }
         public void addConsumer(Consumer<Player> playerConsumer) {
             if (consumer == null) consumer = playerConsumer;

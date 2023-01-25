@@ -256,12 +256,10 @@ public final class CutsceneCommand implements TabExecutor, Listener {
                     if (player1 != null) {
                         pl.getManager().runTaskAsynchronously(() -> {
                             Map<String,Vars> varsMap = new WeakHashMap<>();
-                            try {
-                                CSVReader reader = new CSVReader(new FileReader(pl.getDataFolder().getAbsolutePath() + "\\User\\" + player1.getUniqueId() + ".csv"));
+                            try (FileReader file = new FileReader(pl.getDataFolder().getAbsolutePath() + "\\User\\" + player1.getUniqueId() + ".csv"); CSVReader reader = new CSVReader(file)) {
                                 reader.forEach(s -> {
                                     if (s.length > 1) varsMap.put(s[0],new Vars(s[1]));
                                 });
-                                reader.close();
                             } catch (Exception ignored) {}
                             send(pkg.getSender(), "This offline-player " + player1.getName() + "'s variable list. " + ChatColor.GRAY + "(" + player1.getUniqueId() + ")");
                             showVars(pkg.getSender(),varsMap);

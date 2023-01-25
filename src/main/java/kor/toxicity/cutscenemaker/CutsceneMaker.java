@@ -7,7 +7,6 @@ import kor.toxicity.cutscenemaker.util.ConfigLoad;
 import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -59,7 +58,7 @@ public final class CutsceneMaker extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        Bukkit.getOnlinePlayers().forEach(p -> Optional.of(manager.getVars(p)).ifPresent(f -> f.save(this)));
+        Bukkit.getOnlinePlayers().forEach(p -> Optional.ofNullable(manager.getVars(p)).ifPresent(f -> f.save(this)));
         send("Plugin disabled.");
     }
 
@@ -78,7 +77,7 @@ public final class CutsceneMaker extends JavaPlugin {
     }
 
     public static void send(String s) {
-        Bukkit.getLogger().info(NAME + " " + s);
+        Bukkit.getConsoleSender().sendMessage(NAME + " " + s);
     }
     public static void warn(String s) {
         Bukkit.getLogger().warning(NAME + " " + s);

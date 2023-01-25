@@ -5,5 +5,5 @@ public enum MouseButton {
     RIGHT,
     LEFT_WITH_SHIFT,
     RIGHT_WITH_SHIFT,
-    NUMBER_KEY,
+    OTHER,
 }

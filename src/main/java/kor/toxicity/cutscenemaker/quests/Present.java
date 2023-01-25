@@ -14,18 +14,21 @@ import lombok.EqualsAndHashCode;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 final class Present {
 
     private static final FunctionPrinter DEFAULT_TITLE = new FunctionPrinter("Click your item you want to present!");
     private static final ItemSupplier DEFAULT_ITEM_SUPPLIER;
+    private static final Consumer<Player> DEFAULT_SOUND = QuestUtil.getInstance().getSoundPlay("item.armor.equip_chain 1 1");
     private static final String NO_ITEM_PRESENTED_MESSAGE = "quest-no-item-presented-message";
     private static final String NO_ITEM_FOUND_MESSAGE = "quest-no-item-found-message";
     private static final String LESS_ITEM_AMOUNT_MESSAGE = "quest-less-item-amount-message";
@@ -44,11 +47,14 @@ final class Present {
     private final FunctionPrinter name;
     private final ItemSupplier supplier;
     private final boolean take;
+    private final Consumer<Player> soundPlay;
 
     Present(CutsceneManager manager, ConfigurationSection section) {
         this.manager = manager;
         name = (section.isSet("Name") && section.isSet("Name")) ? new FunctionPrinter(section.getString("Name")) : DEFAULT_TITLE;
         take = section.getBoolean("TakeItem",true);
+        String sound = section.getString("Sound",null);
+        soundPlay = (sound != null) ? QuestUtil.getInstance().getSoundPlay(sound) : DEFAULT_SOUND;
         getSection(section,"Present").ifPresent(c -> c.getKeys(false).forEach(s -> getSection(c,s).ifPresent(t -> {
             try {
                 presentKeys.add(new PresentKey(t));
@@ -79,7 +85,7 @@ final class Present {
                         }
                         inv.setItem(11,entry.getValue());
                         stack = entry.getKey();
-                        current.player.playSound(current.player.getLocation(),"item.armor.equip_chain",1.0F,1.0F);
+                        soundPlay.accept(current.player);
                         current.player.updateInventory();
                     } else sendMessage(NO_ITEM_FOUND_MESSAGE);
                 } else if (slot == 15) {

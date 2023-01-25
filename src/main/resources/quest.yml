@@ -2,6 +2,22 @@ Gui:
     Name: 진행중인 퀘스트 목록
     Rows: 3
 
+Button:
+    page_before:
+        Slot: 19
+        Item: ?stone_button 0 이전 페이지
+    page_after:
+        Slot: 25
+        Item: ?stone_button 0 다음 페이지
+    type_sort:
+        Slot: 22
+        Item:
+            Type: stone_button
+            Display: 정렬
+            Lore:
+                - "Left - 정렬하기"
+                - "Right - 정렬 해제"
+
 Message:
     quest-give:
         message: "다음 퀘스트가 발주되었습니다: " #출력 메세지
