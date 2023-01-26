@@ -99,12 +99,14 @@ public final class QuestData extends CutsceneData {
                     final int totalSize = (int) Math.ceil((double) questList.size() / 9D);
 
                     int loop = first;
-                    for (QuestSet questSet : questList.subList(0, Math.min(questList.size(), 8))) {
+                    List<QuestSet> sub = questList.subList(0, Math.min(questList.size(), 9));
+                    sub.sort(Comparator.comparing(QuestSet::getName));
+                    for (QuestSet questSet : sub) {
                         inventory.setItem(loop, ItemUtil.setInternalTag(questSet.getIcon(p),INTERNAL_NAME_KEY,questSet.getName()));
                         loop++;
                     }
                     final QuestCurrent current = new QuestCurrent(new ArrayList<>(QuestSet.TYPE_LIST));
-                    current.setTotalPage(totalSize);
+                    current.setTotalPage(Math.max(totalSize,1));
                     Set<CurrentGuiButton> buttonSet = new HashSet<>();
                     for (GuiButton guiButton : QUEST_GUI_BUTTON) {
                         inventory.setItem(guiButton.slot, guiButton.builder.get(p));
@@ -179,7 +181,7 @@ public final class QuestData extends CutsceneData {
                             }).collect(Collectors.toList());
                             current.setType(key);
                             current.setSorted(sorted);
-                            current.setTotalPage((int)Math.ceil((double)sorted.size()/9D));
+                            current.setTotalPage(Math.max((int)Math.ceil((double)sorted.size()/9D),1));
                             setup();
                         }
                         private void removeSort() {
@@ -193,6 +195,7 @@ public final class QuestData extends CutsceneData {
                             int i = first;
                             List<QuestSet> questSets = (current.getType() != null && current.getSorted() != null) ? current.getSorted() : questList;
                             List<QuestSet> subList = questSets.subList(k, Math.min(k + 9, questSets.size()));
+                            subList.sort(Comparator.comparing(QuestSet::getName));
                             for (QuestSet questSet : subList) {
                                 inventory.setItem(i++, ItemUtil.setInternalTag(questSet.getIcon(p),INTERNAL_NAME_KEY,questSet.getName()));
                             }
