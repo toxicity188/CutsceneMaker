@@ -9,6 +9,7 @@ import kor.toxicity.cutscenemaker.data.ItemData;
 import kor.toxicity.cutscenemaker.util.*;
 import lombok.Setter;
 import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -36,7 +37,7 @@ public final class ConditionBuilder<T> {
         LIVING_ENTITY.STRING.addFunction("tool",(p,j) -> {
             if (p instanceof Player) {
                 ItemStack i = ((Player) p).getInventory().getItemInMainHand();
-                if (i != null && i.getItemMeta().getDisplayName() != null) return i.getItemMeta().getDisplayName();
+                if (i != null && i.getItemMeta().getDisplayName() != null) return TextUtil.getInstance().uncolored(i.getItemMeta().getDisplayName());
             }
             return "<none>";
         });
@@ -195,7 +196,7 @@ public final class ConditionBuilder<T> {
                 return CutsceneMaker.getVars((Player) entity,array.get(0).getAsString()).getVar();
             }
         });
-
+        LIVING_ENTITY.STRING.addFunction("world", (e,j) -> e.getWorld().getName());
     }
     public static boolean isFunction(String target) {
         return FUNCTION_PATTERN.matcher(target).find();

@@ -23,7 +23,7 @@ public final class TextUtil {
 
 
     public String toSimpleLoc(Location loc) {
-        return loc.getX() + COMMA + loc.getY() + COMMA + loc.getZ();
+        return loc.getBlockX() + COMMA + loc.getBlockY() + COMMA + loc.getBlockZ();
     }
 
     public String colored(String s) {

@@ -84,13 +84,8 @@ public class ActItem extends CutsceneAction {
         if (entity instanceof Player) {
             Player p = ((Player) entity);
             ItemStack item = apply.apply(p);
-            if (give) p.getInventory().addItem(item);
-            else {
-                InvUtil.getInstance().getSimilarItem(p,item).ifPresent(i -> {
-                    if (i.getAmount() > item.getAmount()) i.setAmount(i.getAmount() - item.getAmount());
-                    else p.getInventory().remove(item);
-                });
-            }
+            if (give) InvUtil.getInstance().give(p,item);
+            else InvUtil.getInstance().take(p,item);
         }
     }
     private String a(String t) {
