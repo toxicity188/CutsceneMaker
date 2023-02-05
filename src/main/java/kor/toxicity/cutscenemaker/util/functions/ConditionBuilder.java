@@ -9,7 +9,6 @@ import kor.toxicity.cutscenemaker.data.ItemData;
 import kor.toxicity.cutscenemaker.util.*;
 import lombok.Setter;
 import org.bukkit.Bukkit;
-import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;

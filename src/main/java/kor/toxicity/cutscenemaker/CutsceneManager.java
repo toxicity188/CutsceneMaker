@@ -7,6 +7,7 @@ import kor.toxicity.cutscenemaker.events.UserDataLoadEvent;
 import kor.toxicity.cutscenemaker.util.DataContainer;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
 import kor.toxicity.cutscenemaker.util.blockanims.BlockAnimation;
+import kor.toxicity.cutscenemaker.util.databases.CutsceneDB;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import kor.toxicity.cutscenemaker.util.vars.VarsContainer;
@@ -121,10 +122,7 @@ public final class CutsceneManager {
         }
         private void load(Player player) {
             Bukkit.getScheduler().runTaskAsynchronously(plugin,() -> {
-                VarsContainer c = new VarsContainer(player);
-                c.load(plugin);
-                c.autoSave(plugin, CutsceneConfig.getInstance().getAutoSaveTime());
-                container.put(player, c);
+                container.put(player, CutsceneDB.load(player,plugin));
                 Bukkit.getScheduler().runTask(plugin,() -> EvtUtil.call(new UserDataLoadEvent(player)));
             });
         }
@@ -133,8 +131,7 @@ public final class CutsceneManager {
             Bukkit.getScheduler().runTaskAsynchronously(plugin,() -> {
                 VarsContainer c = container.get(e.getPlayer());
                 if (c != null) {
-                    c.save(plugin);
-                    c.stop();
+                    CutsceneDB.save(e.getPlayer(),plugin,c);
                     container.remove(e.getPlayer());
                 }
             });

@@ -30,6 +30,7 @@ repositories {
 }
 
 dependencies {
+    compileOnly group: 'mysql', name: 'mysql-connector-java', version: '8.0.32'
     compileOnly 'org.projectlombok:lombok:1.18.24'
     compileOnly 'com.github.SkriptLang:Skript:dev37c'
     annotationProcessor 'org.projectlombok:lombok:1.18.24'

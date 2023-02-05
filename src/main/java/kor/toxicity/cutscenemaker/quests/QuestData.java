@@ -187,7 +187,7 @@ public final class QuestData extends CutsceneData {
                         private void removeSort() {
                             current.setType(null);
                             current.setPage(1);
-                            current.setTotalPage(totalSize);
+                            current.setTotalPage(Math.max(totalSize,1));
                             setup();
                         }
                         private void setup() {
@@ -268,7 +268,7 @@ public final class QuestData extends CutsceneData {
         QUEST_GUI_BUTTON.clear();
         QUEST_SET_MAP.clear();
         QuestSet.TYPE_LIST.clear();
-        ConfigLoad def = getPlugin().readSingleFile("quest");
+        ConfigLoad def = getPlugin().readResourceFile("quest");
         ConfigurationSection gui = def.getConfigurationSection("Gui");
         supplier = (gui != null) ? new InventorySupplier(gui) : DEFAULT_GUI_SUPPLIER;
         ConfigurationSection button = def.getConfigurationSection("Button");

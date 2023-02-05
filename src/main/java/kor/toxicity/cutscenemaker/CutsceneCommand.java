@@ -6,10 +6,12 @@ import kor.toxicity.cutscenemaker.commands.CommandListener;
 import kor.toxicity.cutscenemaker.commands.CommandPacket;
 import kor.toxicity.cutscenemaker.commands.SenderType;
 import kor.toxicity.cutscenemaker.data.ActionData;
+import kor.toxicity.cutscenemaker.data.CutsceneData;
 import kor.toxicity.cutscenemaker.events.ActionReloadEndEvent;
 import kor.toxicity.cutscenemaker.events.ActionReloadStartEvent;
 import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.util.blockanims.BlockAnimation;
+import kor.toxicity.cutscenemaker.util.databases.CutsceneDB;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import kor.toxicity.cutscenemaker.util.vars.VarsContainer;
 import org.bukkit.*;
@@ -255,14 +257,8 @@ public final class CutsceneCommand implements TabExecutor, Listener {
                     OfflinePlayer player1 = Arrays.stream(Bukkit.getOfflinePlayers()).filter(o -> o.getName().equals(name)).findFirst().orElse(null);
                     if (player1 != null) {
                         pl.getManager().runTaskAsynchronously(() -> {
-                            Map<String,Vars> varsMap = new WeakHashMap<>();
-                            try (FileReader file = new FileReader(pl.getDataFolder().getAbsolutePath() + "\\User\\" + player1.getUniqueId() + ".csv"); CSVReader reader = new CSVReader(file)) {
-                                reader.forEach(s -> {
-                                    if (s.length > 1) varsMap.put(s[0],new Vars(s[1]));
-                                });
-                            } catch (Exception ignored) {}
                             send(pkg.getSender(), "This offline-player " + player1.getName() + "'s variable list. " + ChatColor.GRAY + "(" + player1.getUniqueId() + ")");
-                            showVars(pkg.getSender(),varsMap);
+                            showVars(pkg.getSender(), CutsceneDB.read(player1,pl).getVars());
                         });
                     } else send(pkg.getSender(), "Error: player not found");
                 } else {
