@@ -4,6 +4,7 @@ import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import de.slikey.effectlib.EffectManager;
 import kor.toxicity.cutscenemaker.events.UserDataLoadEvent;
+import kor.toxicity.cutscenemaker.shaded.mewin.WGRegionEvents.WGRegionEventsListener;
 import kor.toxicity.cutscenemaker.util.DataContainer;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
 import kor.toxicity.cutscenemaker.util.blockanims.BlockAnimation;
@@ -22,6 +23,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -65,6 +67,10 @@ public final class CutsceneManager {
 
         ProtocolLib = ProtocolLibrary.getProtocolManager();
         EffectLib = new EffectManager(plugin);
+
+        if (Bukkit.getPluginManager().isPluginEnabled("WorldGuard")) {
+            EvtUtil.register(plugin,new WGRegionEventsListener(plugin));
+        }
     }
     public static boolean onDelay(Player player) {
         return applyDelay == null || applyDelay.apply(player);
@@ -128,6 +134,16 @@ public final class CutsceneManager {
         }
         @EventHandler(priority = EventPriority.MONITOR)
         public void onQuit(PlayerQuitEvent e) {
+            Bukkit.getScheduler().runTaskAsynchronously(plugin,() -> {
+                VarsContainer c = container.get(e.getPlayer());
+                if (c != null) {
+                    CutsceneDB.save(e.getPlayer(),plugin,c);
+                    container.remove(e.getPlayer());
+                }
+            });
+        }
+        @EventHandler(priority = EventPriority.MONITOR)
+        public void onKick(PlayerKickEvent e) {
             Bukkit.getScheduler().runTaskAsynchronously(plugin,() -> {
                 VarsContainer c = container.get(e.getPlayer());
                 if (c != null) {

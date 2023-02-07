@@ -35,8 +35,9 @@ public abstract class ActionHandler implements Listener {
         handlers.put("custom", HandlerCustom.class);
         handlers.put("worldchange", HandlerChangeWorld.class);
         handlers.put("itemclick", HandlerItemClick.class);
-        if (Bukkit.getPluginManager().isPluginEnabled("Quest")) {
-            handlers.put("dialogcomplete", HandlerDialogComplete.class);
+        if (Bukkit.getPluginManager().isPluginEnabled("WorldGuard")) {
+            handlers.put("enter", HandlerRegionEnter.class);
+            handlers.put("exit", HandlerRegionExit.class);
         }
     }
 
