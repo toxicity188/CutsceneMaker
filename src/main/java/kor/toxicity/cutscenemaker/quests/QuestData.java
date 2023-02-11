@@ -57,7 +57,7 @@ public final class QuestData extends CutsceneData {
             public void onRightClick(PlayerInteractAtEntityEvent e) {
                 Player player = e.getPlayer();
                 if (!delay.containsKey(player)) {
-                    String name = TextUtil.getInstance().getEntityName(e.getRightClicked());
+                    String name = TextUtil.getEntityName(e.getRightClicked());
                     NPCData data = NPC_MAP.get(name);
                     if (data != null) {
                         int vars = (data.followVars != null)
@@ -267,7 +267,7 @@ public final class QuestData extends CutsceneData {
         private GuiButton(QuestButton button, ConfigurationSection section) {
             this.button = button;
             slot = section.getInt("Slot", button.getDefaultSlot());
-            builder = (section.isSet("Item")) ? InvUtil.getInstance().fromConfig(section,"Item") : QuestButton.DEFAULT_ITEM_BUILDER;
+            builder = (section.isSet("Item")) ? InvUtil.fromConfig(section,"Item") : QuestButton.DEFAULT_ITEM_BUILDER;
         }
     }
     private InventorySupplier supplier;
@@ -342,10 +342,10 @@ public final class QuestData extends CutsceneData {
             ConfigurationSection section = npc.getConfigurationSection(s);
             if (section != null && section.isSet("Dialog")) {
                Consumer<Player> typingSound = null;
-               if (section.isSet("TypingSound") && section.isString("TypingSound")) typingSound = QuestUtil.getInstance().getSoundPlay(section.getString("TypingSound"));
+               if (section.isSet("TypingSound") && section.isString("TypingSound")) typingSound = QuestUtil.getSoundPlay(section.getString("TypingSound"));
                NPCData data = new NPCData(
                        section.getString("Vars",null),
-                       QuestUtil.getInstance().getDialog(section.getStringList("Dialog")),
+                       QuestUtil.getDialog(section.getStringList("Dialog")),
                        typingSound,
                        (section.isSet("Inventory")) ? (section.isConfigurationSection("Inventory") ? new InventorySupplier(section.getConfigurationSection("Inventory")) : ItemData.getGui(section.getString("Inventory"))) : null
                );

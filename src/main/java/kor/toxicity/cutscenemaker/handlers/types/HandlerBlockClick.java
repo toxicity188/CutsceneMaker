@@ -71,7 +71,7 @@ public class HandlerBlockClick extends ActionHandler {
         if (action != null) {
             try {
                 List<Action> act = new ArrayList<>();
-                Arrays.stream(TextUtil.getInstance().split(action, "or")).map(s -> {
+                Arrays.stream(TextUtil.split(action, "or")).map(s -> {
                     try {
                         return EventClickType.valueOf(s.toUpperCase());
                     } catch (Exception e) {

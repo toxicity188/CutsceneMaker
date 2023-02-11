@@ -1,8 +1,5 @@
 package kor.toxicity.cutscenemaker.util;
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -16,23 +13,22 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class TextUtil {
-    @Getter
-    private static final TextUtil instance = new TextUtil();
-
+    private TextUtil() {
+        throw new RuntimeException();
+    }
     public static final String COMMA = ",";
 
 
-    public String toSimpleLoc(Location loc) {
+    public static String toSimpleLoc(Location loc) {
         return loc.getBlockX() + COMMA + loc.getBlockY() + COMMA + loc.getBlockZ();
     }
 
-    public String colored(String s) {
+    public static String colored(String s) {
         return s.replace('&','§');
     }
 
-    public String toSingleText(List<String> text) {
+    public static String toSingleText(List<String> text) {
         StringBuilder a = new StringBuilder();
         int l = 0;
         for (String s : text) {
@@ -42,28 +38,28 @@ public final class TextUtil {
         }
         return a.toString();
     }
-    public String[] split(String t, String index) {
+    public static String[] split(String t, String index) {
         return t.contains(index) ? t.split(index) : new String[] {t};
     }
 
-    public String getEntityName(Entity e) {
+    public static String getEntityName(Entity e) {
         return (e.getName() != null && !e.getName().equals("")) ? uncolored(e.getName()) : e.getType().toString().toLowerCase();
     }
-    public String getItemName(ItemStack stack) {
+    public static String getItemName(ItemStack stack) {
         ItemMeta meta = stack.getItemMeta();
         String display;
         return stack.getAmount() + " of " + (((display = meta.getDisplayName()) != null) ? display : stack.getType().toString().toLowerCase());
     }
 
-    public String uncolored(String s) {
+    public static String uncolored(String s) {
         return ChatColor.stripColor(s);
     }
 
-    public String applyComma(double d) {
+    public static String applyComma(double d) {
         return new DecimalFormat().format(d);
     }
 
-    public Function<LivingEntity,Location> getBlockLocation(String world, String location) {
+    public static Function<LivingEntity,Location> getBlockLocation(String world, String location) {
         if (location != null && location.contains(",")) {
             try {
                 double[] d = Arrays.stream(location.split(",")).mapToDouble(Double::parseDouble).toArray();

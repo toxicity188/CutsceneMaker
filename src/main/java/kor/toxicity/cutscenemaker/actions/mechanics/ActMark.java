@@ -49,7 +49,7 @@ public class ActMark extends CutsceneAction {
     public void initialize() {
         super.initialize();
         if (location != null) {
-            String[] l = TextUtil.getInstance().split(location,",");
+            String[] l = TextUtil.split(location,",");
             if (l.length >= 3) {
                 double[] d = Arrays.stream(l).mapToDouble(s -> {
                     try {

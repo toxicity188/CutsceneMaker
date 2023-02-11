@@ -52,12 +52,12 @@ public class ItemBuilder implements ItemSupplier {
         ItemMeta meta = stack.getItemMeta();
         if (section.isSet("Lore")) {
             try {
-                meta.setLore(section.getStringList("Lore").stream().map(s -> ChatColor.WHITE + TextUtil.getInstance().colored(s)).collect(Collectors.toList()));
+                meta.setLore(section.getStringList("Lore").stream().map(s -> ChatColor.WHITE + TextUtil.colored(s)).collect(Collectors.toList()));
             } catch (Exception ignored) {}
         }
         meta.setUnbreakable(section.getBoolean("Unbreakable",true));
         String name = section.getString("Display",null);
-        if (name != null) meta.setDisplayName(ChatColor.WHITE + TextUtil.getInstance().colored(name));
+        if (name != null) meta.setDisplayName(ChatColor.WHITE + TextUtil.colored(name));
         meta.addItemFlags(ItemFlag.values());
         stack.setItemMeta(meta);
         return stack;

@@ -36,7 +36,7 @@ public class HandlerEntityClick extends ActionHandler {
         }
         if (name != null) {
             String n = name.replaceAll("_"," ");
-            build(e -> TextUtil.getInstance().getEntityName(e.getRightClicked()).equals(n));
+            build(e -> TextUtil.getEntityName(e.getRightClicked()).equals(n));
         }
         build(e -> CutsceneManager.onDelay(e.getPlayer()));
         type = null;

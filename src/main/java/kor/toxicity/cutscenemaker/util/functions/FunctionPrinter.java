@@ -14,16 +14,16 @@ public class FunctionPrinter {
     public final boolean ANY_MATCH;
 
     public FunctionPrinter(String s) {
-        String[] split = TextUtil.getInstance().split(s,PERCENT);
+        String[] split = TextUtil.split(s,PERCENT);
         if (split.length < 2 || s.chars().filter(c -> c == '%').sum() % 2 == 1) {
             ANY_MATCH = false;
-            String colored = TextUtil.getInstance().colored(split[0]);
+            String colored = TextUtil.colored(split[0]);
             apply = t -> colored;
         } else {
             List<Function<LivingEntity,String>> print = new ArrayList<>(split.length);
             int loop = 0;
             for (String t : split) {
-                String colored = TextUtil.getInstance().colored(t);
+                String colored = TextUtil.colored(t);
                 loop ++;
                 if (loop % 2 == 0) {
                     Function<LivingEntity,String> function = get(colored);
@@ -47,7 +47,7 @@ public class FunctionPrinter {
     }
 
     private String printNumber(double d) {
-        return (d == Math.floor(d)) ? TextUtil.getInstance().applyComma(d) : String.format("%.2f", d);
+        return (d == Math.floor(d)) ? TextUtil.applyComma(d) : String.format("%.2f", d);
     }
 
     private Function<LivingEntity,String> get(String t) {

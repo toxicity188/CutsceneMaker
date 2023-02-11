@@ -24,7 +24,7 @@ class MessageSender {
         if (section.isConfigurationSection(key)) {
             ConfigurationSection get = section.getConfigurationSection(key);
             String sound = get.getString("sound",null);
-            soundPlay = (sound != null) ? QuestUtil.getInstance().getSoundPlay(sound) : null;
+            soundPlay = (sound != null) ? QuestUtil.getSoundPlay(sound) : null;
             String msg = get.getString("message",null);
             if (msg == null) throw new RuntimeException("Unable to find the message value: " + key);
             printer = new FunctionPrinter(msg);

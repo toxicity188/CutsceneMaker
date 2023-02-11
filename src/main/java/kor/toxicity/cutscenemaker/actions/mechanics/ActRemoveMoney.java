@@ -18,6 +18,6 @@ public class ActRemoveMoney extends CutsceneAction {
 
     @Override
     public void apply(LivingEntity entity) {
-        if (entity instanceof Player) MoneyUtil.getInstance().removeMoney((Player) entity, amount);
+        if (entity instanceof Player) MoneyUtil.removeMoney((Player) entity, amount);
     }
 }

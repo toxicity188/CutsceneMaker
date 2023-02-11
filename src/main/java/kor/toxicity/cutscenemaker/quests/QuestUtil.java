@@ -6,9 +6,6 @@ import kor.toxicity.cutscenemaker.util.ItemBuilder;
 import kor.toxicity.cutscenemaker.util.TextUtil;
 import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.configuration.MemorySection;
@@ -21,24 +18,23 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class QuestUtil {
-    @Getter
-    private static final QuestUtil instance = new QuestUtil();
-
-    Dialog[] getDialog(List<String> list) {
-        Dialog[] dialog = list.stream().map(this::getDialog).filter(Objects::nonNull).toArray(Dialog[]::new);
+    private QuestUtil() {
+        throw new RuntimeException();
+    }
+    static Dialog[] getDialog(List<String> list) {
+        Dialog[] dialog = list.stream().map(QuestUtil::getDialog).filter(Objects::nonNull).toArray(Dialog[]::new);
         return (dialog.length > 0) ? dialog : null;
     }
-    QnA[] getQnA(List<String> list) {
+    static QnA[] getQnA(List<String> list) {
         QnA[] qna = list.stream().map(s -> getFromMap(s,QuestData.QNA_MAP,"QnA")).filter(Objects::nonNull).toArray(QnA[]::new);
         return (qna.length > 0) ? qna : null;
     }
-    Present[] getPresent(List<String> list) {
+    static Present[] getPresent(List<String> list) {
         Present[] presents = list.stream().map(s -> getFromMap(s,QuestData.PRESENT_MAP,"Present")).filter(Objects::nonNull).toArray(Present[]::new);
         return (presents.length > 0) ? presents : null;
     }
-    Dialog getDialog(String s) {
+    static Dialog getDialog(String s) {
         return getFromMap(s,QuestData.DIALOG_MAP,"Dialog");
     }
     private static <V> V getFromMap(String s, Map<String,V> targetMap, String name) {
@@ -47,25 +43,25 @@ public final class QuestUtil {
         return v;
     }
 
-    public Consumer<Player> getSoundPlay(String s) {
-        String[] sounds = TextUtil.getInstance().split(s," ");
+    public static Consumer<Player> getSoundPlay(String s) {
+        String[] sounds = TextUtil.split(s," ");
         String sound = sounds[0];
         final float volume, pitch;
         volume = (sounds.length > 1) ? getFloat(sounds[1]) : 1;
         pitch = (sounds.length > 2) ? getFloat(sounds[2]) : 1;
         return p -> p.playSound(p.getLocation(),sound,volume,pitch);
     }
-    private float getFloat(String target) {
+    private static float getFloat(String target) {
         try {
             return Float.parseFloat(target);
         } catch (Exception e) {
             return (float) 1;
         }
     }
-    ItemBuilder[] getItemBuilders(List<String> names) {
+    static ItemBuilder[] getItemBuilders(List<String> names) {
         ItemBuilder[] builders = names.stream().map(s -> {
-            String[] t = TextUtil.getInstance().split(s, " ");
-            ItemBuilder builder = InvUtil.getInstance().toName(t[0]);
+            String[] t = TextUtil.split(s, " ");
+            ItemBuilder builder = InvUtil.toName(t[0]);
             if (builder == null) CutsceneMaker.warn("The item named \"" + t[0] + "\" doesn't exist!");
             if (builder != null && t.length > 1) {
                 try {
@@ -78,7 +74,7 @@ public final class QuestUtil {
         }).filter(Objects::nonNull).toArray(ItemBuilder[]::new);
         return (builders.length > 0) ? builders : null;
     }
-    Consumer<Player> getVarsConsumer(String key, String value, String change) {
+    static Consumer<Player> getVarsConsumer(String key, String value, String change) {
         String lower = change.toLowerCase();
         switch (lower) {
             case "set":
@@ -131,7 +127,7 @@ public final class QuestUtil {
         }
     }
 
-    ConfigurationSection copy(ConfigurationSection section) {
+    static ConfigurationSection copy(ConfigurationSection section) {
         ConfigurationSection ret = new MemoryConfiguration();
         section.getKeys(true).forEach(k -> {
             if (section.get(k).getClass() == MemorySection.class) {
@@ -143,14 +139,14 @@ public final class QuestUtil {
         return ret;
     }
 
-    String[] deleteLast(String[] array) {
+    static String[] deleteLast(String[] array) {
         if (array == null) return null;
         if (array.length <= 1) return null;
         String[] newArray = new String[array.length - 1];
         System.arraycopy(array, 0, newArray, 0, array.length - 1);
         return newArray;
     }
-    String[] plusElement(String[] array, String element) {
+    static String[] plusElement(String[] array, String element) {
         String[] newArray;
         if (array != null) {
             newArray = new String[array.length + 1];

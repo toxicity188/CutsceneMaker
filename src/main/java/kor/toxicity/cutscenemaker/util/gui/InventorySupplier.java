@@ -29,7 +29,7 @@ public class InventorySupplier {
             ConfigurationSection item = section.getConfigurationSection("Item");
             for (String key : item.getKeys(false)) {
                 try {
-                    builderMap.put(Integer.parseInt(key), InvUtil.getInstance().fromConfig(item,key));
+                    builderMap.put(Integer.parseInt(key), InvUtil.fromConfig(item,key));
                 } catch (Exception ignored) {
                 }
             }
@@ -47,7 +47,7 @@ public class InventorySupplier {
         return (sameInventory) ? getInventory(null) : null;
     }
     public Inventory getInventory(Player player) {
-        Inventory inv = InvUtil.getInstance().create(name.print(player),row);
+        Inventory inv = InvUtil.create(name.print(player),row);
         if (builderMap != null) builderMap.forEach((i,b) -> inv.setItem(i,b.get(player)));
         return inv;
     }

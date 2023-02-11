@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
 public final class Dialog extends AbstractEditorSupplier {
 
     private static final TypingManager DEFAULT_TYPING_EXECUTOR = current -> {
-        if (current.inventory == null) current.inventory = InvUtil.getInstance().create(current.talker + "'s dialog",CutsceneConfig.getInstance().getDefaultDialogRows());
+        if (current.inventory == null) current.inventory = InvUtil.create(current.talker + "'s dialog",CutsceneConfig.getInstance().getDefaultDialogRows());
         if (!current.isOpened) {
             current.isOpened = true;
             current.player.openInventory(current.inventory);
@@ -138,13 +138,13 @@ public final class Dialog extends AbstractEditorSupplier {
             d.typingManager = TYPING_MANAGER_MAP.get(s);
             if (d.typingManager == null) CutsceneMaker.warn("The Interface named \"" + s + "\" doesn't exist!");
         });
-        READER_STRING.add("Sound",(d,s) -> d.addConsumer(QuestUtil.getInstance().getSoundPlay(s)));
+        READER_STRING.add("Sound",(d,s) -> d.addConsumer(QuestUtil.getSoundPlay(s)));
         READER_CONFIGURATION.add("Item",(d,c) -> c.getKeys(false).forEach(s -> {
             try {
                 int i = Integer.parseInt(s);
                 CutsceneConfig config = CutsceneConfig.getInstance();
                 if (i != config.getDefaultDialogCenter() && i < config.getDefaultDialogRows() * 9) {
-                    ItemBuilder builder = InvUtil.getInstance().fromConfig(c,s);
+                    ItemBuilder builder = InvUtil.fromConfig(c,s);
                     if (builder != null) d.stacks.put(i, builder);
                 }
             } catch (Exception e) {
@@ -152,33 +152,33 @@ public final class Dialog extends AbstractEditorSupplier {
             }
         }));
         STRING_LIST_PARSER.put("Condition",(q,t) -> LATE_CHECK.add(() -> t.forEach(s -> {
-            String[] cond = TextUtil.getInstance().split(s," ");
+            String[] cond = TextUtil.split(s," ");
             ActionPredicate<LivingEntity> check = (cond.length >= 3) ? ConditionBuilder.LIVING_ENTITY.find(cond) : null;
             if (check != null) {
                 if (cond.length > 3) {
-                    Dialog dialog = QuestUtil.getInstance().getDialog(cond[3]);
+                    Dialog dialog = QuestUtil.getDialog(cond[3]);
                     if (dialog != null) q.addPredicate(d -> check.castInstead(p -> dialog.run(d)).test(d.player));
                 } else q.addPredicate(d -> check.test(d.player));
             }
         })));
         STRING_LIST_PARSER.put("CheckQuest",(q,t) -> LATE_CHECK.add(() -> t.forEach(s -> {
-            String[] args = TextUtil.getInstance().split(s," ");
+            String[] args = TextUtil.split(s," ");
             ActionPredicate<Player> predicate = q.getQuestChecker(args[0],(args.length > 1) ? args[1].toLowerCase() : "complete");
             if (predicate != null) {
                 if (args.length > 2) {
-                    Dialog dialog = QuestUtil.getInstance().getDialog(args[2]);
+                    Dialog dialog = QuestUtil.getDialog(args[2]);
                     if (dialog != null) q.addPredicate(d -> predicate.castInstead(p -> dialog.run(d)).test(d.player));
                 } else q.addPredicate(d -> predicate.test(d.player));
             }
         })));
         addValue(
                 STRING_LIST_PARSER,
-                (q,t) -> LATE_CHECK.add(() -> q.endDialog = QuestUtil.getInstance().getDialog(t)),
+                (q,t) -> LATE_CHECK.add(() -> q.endDialog = QuestUtil.getDialog(t)),
                 "LinkedDialog","Dialog"
         );
         addValue(
                 STRING_LIST_PARSER,
-                (q,t) -> LATE_CHECK.add(() -> q.subDialog = QuestUtil.getInstance().getDialog(t)),
+                (q,t) -> LATE_CHECK.add(() -> q.subDialog = QuestUtil.getDialog(t)),
                 "LinkedSubDialog","SubDialog"
         );
         addValue(
@@ -188,33 +188,33 @@ public final class Dialog extends AbstractEditorSupplier {
         );
         addValue(
                 STRING_LIST_PARSER,
-                (q,t) -> LATE_CHECK.add(() -> q.endQnA = QuestUtil.getInstance().getQnA(t)),
+                (q,t) -> LATE_CHECK.add(() -> q.endQnA = QuestUtil.getQnA(t)),
                 "LinkedQnA","QnA"
         );
         addValue(
                 STRING_LIST_PARSER,
-                (q,t) -> LATE_CHECK.add(() -> q.endPresent = QuestUtil.getInstance().getPresent(t)),
+                (q,t) -> LATE_CHECK.add(() -> q.endPresent = QuestUtil.getPresent(t)),
                 "LinkedPresent","Present"
         );
         addValue(
                 STRING_LIST_PARSER,
-                (q,t) -> q.takeItem = QuestUtil.getInstance().getItemBuilders(t),
+                (q,t) -> q.takeItem = QuestUtil.getItemBuilders(t),
                 "TakeItem","Take"
         );
         addValue(
                 STRING_LIST_PARSER,
-                (q,t) -> q.giveItem = QuestUtil.getInstance().getItemBuilders(t),
+                (q,t) -> q.giveItem = QuestUtil.getItemBuilders(t),
                 "GiveItem","Give"
         );
         STRING_LIST_PARSER.put("SetQuest",(q,t) -> t.stream().map(s -> {
-            String[] a = TextUtil.getInstance().split(s," ");
+            String[] a = TextUtil.split(s," ");
             return q.getQuestConsumer(a[0],(a.length > 1) ? a[1].toLowerCase() : "give");
         }).filter(Objects::nonNull).forEach(c -> q.setQuest = q.setQuest.andThen(c)));
         STRING_LIST_PARSER.put("SetVars",(q,t) -> t.stream().map(s -> {
-            String[] a = TextUtil.getInstance().split(s," ");
+            String[] a = TextUtil.split(s," ");
             Consumer<Player> vars;
             if (a.length > 1) {
-                vars = QuestUtil.getInstance().getVarsConsumer(a[0],(a.length > 2) ? a[2] : null,a[1]);
+                vars = QuestUtil.getVarsConsumer(a[0],(a.length > 2) ? a[2] : null,a[1]);
             } else vars = null;
             if (vars == null) q.warn("unable to load this variable operation: \"" + s + "\"");
             return vars;
@@ -326,7 +326,7 @@ public final class Dialog extends AbstractEditorSupplier {
 
             if (section.isSet("TypingSound") && section.isConfigurationSection("TypingSound")) {
                 ConfigurationSection typing = section.getConfigurationSection("TypingSound");
-                typingSounds = typing.getKeys(false).stream().collect(Collectors.toMap(s -> s.replace("_"," "), s -> QuestUtil.getInstance().getSoundPlay(typing.getString(s))));
+                typingSounds = typing.getKeys(false).stream().collect(Collectors.toMap(s -> s.replace("_"," "), s -> QuestUtil.getSoundPlay(typing.getString(s))));
             }
             if (section.isSet("Option") && section.isConfigurationSection("Option")) {
                 ConfigurationSection option = section.getConfigurationSection("Option");
@@ -627,12 +627,12 @@ public final class Dialog extends AbstractEditorSupplier {
         private void finish() {
             if (takeItem != null) {
                 for (ItemBuilder builder : takeItem) {
-                    InvUtil.getInstance().take(player,builder.get(player));
+                    InvUtil.take(player,builder.get(player));
                 }
             }
             if (giveItem != null) {
                 for (ItemBuilder builder : giveItem) {
-                    InvUtil.getInstance().give(player,builder.get(player));
+                    InvUtil.give(player,builder.get(player));
                 }
             }
         }
@@ -677,7 +677,7 @@ public final class Dialog extends AbstractEditorSupplier {
         return new DialogEditor(player);
     }
     private class DialogEditor extends AbstractEditor {
-        private final ConfigurationSection resource = QuestUtil.getInstance().copy(section);
+        private final ConfigurationSection resource = QuestUtil.copy(section);
         private TalkEditor[] talk;
 
         private String[] linkedDialog = getStringArray("LinkedDialog","Dialog");
@@ -685,6 +685,13 @@ public final class Dialog extends AbstractEditorSupplier {
         private String[] linkedQnA = getStringArray("LinkedQnA","QnA");
         private String[] linkedPresent = getStringArray("LinkedPresent","Present");
         private String[] linkedAction = getStringArray("LinkedAction","Action");
+
+        private String[] checkQuest = getStringArray("CheckQuest");
+        private String[] setQuest = getStringArray("SetQuest");
+
+
+        private String[] condition = getStringArray("Condition");
+        private String[] setVars = getStringArray("SetVars");
 
         private int page = 1;
         private int totalPage = 1;
@@ -765,7 +772,7 @@ public final class Dialog extends AbstractEditorSupplier {
             },5);
         }
         private String write(String target) {
-            return (target != null) ? ChatColor.WHITE + TextUtil.getInstance().colored(target) : ChatColor.GRAY + "<none>";
+            return (target != null) ? ChatColor.WHITE + TextUtil.colored(target) : ChatColor.GRAY + "<none>";
         }
         private ItemStack write(ItemStack target, String name, List<String> lore) {
             ItemMeta meta = target.getItemMeta();
@@ -777,7 +784,7 @@ public final class Dialog extends AbstractEditorSupplier {
         private List<String> write(List<String> target) {
             return (target != null) ? target
                     .stream()
-                    .map(s -> ChatColor.GRAY + " - " + ChatColor.WHITE + TextUtil.getInstance().colored(s))
+                    .map(s -> ChatColor.GRAY + " - " + ChatColor.WHITE + TextUtil.colored(s))
                     .collect(Collectors.toList()) : Collections.singletonList(ChatColor.GRAY + "<none>");
         }
 
@@ -793,14 +800,14 @@ public final class Dialog extends AbstractEditorSupplier {
                 return (item != null) ? item.getKeys(false)
                         .stream()
                         .map(l -> {
-                            ItemBuilder builder = InvUtil.getInstance().fromConfig(item,l);
-                            if (builder != null) return l + ": " + TextUtil.getInstance().getItemName(builder.get(player));
+                            ItemBuilder builder = InvUtil.fromConfig(item,l);
+                            if (builder != null) return l + ": " + TextUtil.getItemName(builder.get(player));
                             else return ChatColor.YELLOW + "<error!>";
                         })
                         .collect(Collectors.toList()) : null;
             }
             private void open() {
-                Inventory sub = InvUtil.getInstance().create(invName + ": Talk",3);
+                Inventory sub = InvUtil.create(invName + ": Talk",3);
                 sub.setItem(9,getItem(Material.BOOK,"Talk",talk));
                 sub.setItem(11,getItem(Material.PAPER,"Talker",talker));
                 sub.setItem(13,getItem(Material.NOTE_BLOCK,"Sound",sound));
@@ -875,7 +882,7 @@ public final class Dialog extends AbstractEditorSupplier {
                                 });
                                 break;
                             case 17:
-                                Inventory cal = InvUtil.getInstance().create("Put your item in here!",CutsceneConfig.getInstance().getDefaultDialogRows());
+                                Inventory cal = InvUtil.create("Put your item in here!",CutsceneConfig.getInstance().getDefaultDialogRows());
                                 cal.setItem(
                                         CutsceneConfig.getInstance().getDefaultDialogCenter(),
                                         write(
@@ -886,7 +893,7 @@ public final class Dialog extends AbstractEditorSupplier {
                                 );
                                 ConfigurationSection t = TalkEditor.this.item;
                                 if (t != null) t.getKeys(false).forEach(s -> {
-                                    ItemBuilder builder = InvUtil.getInstance().fromConfig(t,s);
+                                    ItemBuilder builder = InvUtil.fromConfig(t,s);
                                     if (builder != null) {
                                         try {
                                             cal.setItem(
@@ -952,6 +959,8 @@ public final class Dialog extends AbstractEditorSupplier {
                 inv.setItem(9 + i++,talkItem);
             }
             ItemStack iron = new ItemStack(Material.IRON_INGOT);
+            ItemStack gold = new ItemStack(Material.GOLD_INGOT);
+            ItemStack emerald = new ItemStack(Material.EMERALD);
             inv.setItem(47,write(
                     iron,
                     "Linked Dialog",
@@ -977,6 +986,26 @@ public final class Dialog extends AbstractEditorSupplier {
                     "Linked Action",
                     toList(linkedAction)
             ));
+            inv.setItem(0,write(
+                    gold,
+                    "Check Quest",
+                    toList(checkQuest)
+            ));
+            inv.setItem(1,write(
+                    gold,
+                    "Set Quest",
+                    toList(setQuest)
+            ));
+            inv.setItem(2,write(
+                    emerald,
+                    "Condition",
+                    toList(condition)
+            ));
+            inv.setItem(3,write(
+                    emerald,
+                    "Set Vars",
+                    toList(setVars)
+            ));
         }
         private <T> List<T> toList(T[] array) {
             return (array != null) ? Arrays.asList(array) : null;
@@ -984,7 +1013,7 @@ public final class Dialog extends AbstractEditorSupplier {
         @Override
         public GuiExecutor getMainExecutor() {
             if (inv == null) {
-                inv = InvUtil.getInstance().create(invName, 6);
+                inv = InvUtil.create(invName, 6);
                 resetInv();
             }
             setupPage();
@@ -1014,6 +1043,78 @@ public final class Dialog extends AbstractEditorSupplier {
                                 setupPage();
                                 resetInv();
                                 break;
+                            case 0:
+                                signTask(
+                                        button,
+                                        new String[] {
+                                                "",
+                                                "",
+                                                "1: QuestSet's name",
+                                                "2: has/complete/ready"
+                                        },
+                                        s -> {
+                                            if (s[1].equals("")) s[1] = "complete";
+                                            if (getQuestSet(s[0]) == null) {
+                                                CutsceneMaker.send(player,"The QuestSet named \"" + s[0] + "\" doesn't exist!");
+                                            } else checkQuest = QuestUtil.plusElement(checkQuest,s[0] + " " + s[1]);
+                                        },
+                                        () -> checkQuest = QuestUtil.deleteLast(checkQuest)
+                                );
+                                break;
+                            case 1:
+                                signTask(
+                                        button,
+                                        new String[] {
+                                                "",
+                                                "",
+                                                "1: QuestSet's name",
+                                                "2: give/complete/remove"
+                                        },
+                                        s -> {
+                                            if (s[1].equals("")) s[1] = "complete";
+                                            if (getQuestSet(s[0]) == null) {
+                                                CutsceneMaker.send(player,"The QuestSet named \"" + s[0] + "\" doesn't exist!");
+                                            } else setQuest = QuestUtil.plusElement(setQuest,s[0] + " " + s[1]);
+                                        },
+                                        () -> setQuest = QuestUtil.deleteLast(setQuest)
+                                );
+                                break;
+                            case 2:
+                                signTask(
+                                        button,
+                                        new String[] {
+                                                "",
+                                                "format) <fun/value> <operator> <//>",
+                                                "ex) name[] == toxicity",
+                                                "ex2) health[] > num[_var]"
+                                        },
+                                        s -> {
+                                            String[] t = TextUtil.split(s[0]," ");
+                                            if (t.length > 2 && ConditionBuilder.LIVING_ENTITY.find(t) != null) {
+                                                condition = QuestUtil.plusElement(condition,s[0]);
+                                            } else CutsceneMaker.send(player,"Invalid syntax: " + s[0]);
+                                        },
+                                        () -> condition = QuestUtil.deleteLast(condition)
+                                );
+                                break;
+                            case 3:
+                                signTask(
+                                        button,
+                                        new String[] {
+                                                "",
+                                                "format) <name> <operator> <fun/value>",
+                                                "ex) _var + randomInt[1,100]",
+                                                "ex2) _var del"
+                                        },
+                                        s -> {
+                                            String[] t = TextUtil.split(s[0]," ");
+                                            if (t.length > 2 && QuestUtil.getVarsConsumer(t[0],t[1],t[2]) != null) {
+                                                setVars = QuestUtil.plusElement(setVars,s[0]);
+                                            } else CutsceneMaker.send(player,"Invalid syntax: " + s[0]);
+                                        },
+                                        () -> setVars = QuestUtil.deleteLast(setVars)
+                                );
+                                break;
                             case 47:
                                 signTask(
                                         button,
@@ -1021,9 +1122,9 @@ public final class Dialog extends AbstractEditorSupplier {
                                         s -> {
                                             if (!QuestData.DIALOG_MAP.containsKey(s[0])) {
                                                 CutsceneMaker.send(player,"The Dialog named \"" + s[0] + "\" doesn't exist!");
-                                            } else linkedDialog = QuestUtil.getInstance().plusElement(linkedDialog,s[0]);
+                                            } else linkedDialog = QuestUtil.plusElement(linkedDialog,s[0]);
                                         },
-                                        () -> linkedDialog = QuestUtil.getInstance().deleteLast(linkedAction)
+                                        () -> linkedDialog = QuestUtil.deleteLast(linkedAction)
                                 );
                                 break;
                             case 48:
@@ -1033,9 +1134,9 @@ public final class Dialog extends AbstractEditorSupplier {
                                         s -> {
                                             if (!QuestData.DIALOG_MAP.containsKey(s[0])) {
                                                 CutsceneMaker.send(player,"The Dialog named \"" + s[0] + "\" doesn't exist!");
-                                            } else linkedSubDialog = QuestUtil.getInstance().plusElement(linkedSubDialog,s[0]);
+                                            } else linkedSubDialog = QuestUtil.plusElement(linkedSubDialog,s[0]);
                                         },
-                                        () -> linkedSubDialog = QuestUtil.getInstance().deleteLast(linkedSubDialog)
+                                        () -> linkedSubDialog = QuestUtil.deleteLast(linkedSubDialog)
                                 );
                                 break;
                             case 49:
@@ -1045,9 +1146,9 @@ public final class Dialog extends AbstractEditorSupplier {
                                         s -> {
                                             if (!QuestData.QNA_MAP.containsKey(s[0])) {
                                                 CutsceneMaker.send(player,"The QnA named \"" + s[0] + "\" doesn't exist!");
-                                            } else linkedQnA = QuestUtil.getInstance().plusElement(linkedQnA,s[0]);
+                                            } else linkedQnA = QuestUtil.plusElement(linkedQnA,s[0]);
                                         },
-                                        () -> linkedQnA = QuestUtil.getInstance().deleteLast(linkedQnA)
+                                        () -> linkedQnA = QuestUtil.deleteLast(linkedQnA)
                                 );
                                 break;
                             case 50:
@@ -1057,17 +1158,17 @@ public final class Dialog extends AbstractEditorSupplier {
                                         s -> {
                                             if (!QuestData.PRESENT_MAP.containsKey(s[0])) {
                                                 CutsceneMaker.send(player,"The Present named \"" + s[0] + "\" doesn't exist!");
-                                            } else linkedPresent = QuestUtil.getInstance().plusElement(linkedPresent,s[0]);
+                                            } else linkedPresent = QuestUtil.plusElement(linkedPresent,s[0]);
                                         },
-                                        () -> linkedPresent = QuestUtil.getInstance().deleteLast(linkedPresent)
+                                        () -> linkedPresent = QuestUtil.deleteLast(linkedPresent)
                                 );
                                 break;
                             case 51:
                                 signTask(
                                         button,
                                         "write the Action's name!",
-                                        s -> linkedAction = QuestUtil.getInstance().plusElement(linkedAction,s[0]),
-                                        () -> linkedAction = QuestUtil.getInstance().deleteLast(linkedAction)
+                                        s -> linkedAction = QuestUtil.plusElement(linkedAction,s[0]),
+                                        () -> linkedAction = QuestUtil.deleteLast(linkedAction)
                                 );
                                 break;
                             case 52:
@@ -1081,11 +1182,14 @@ public final class Dialog extends AbstractEditorSupplier {
             };
         }
         private void signTask(MouseButton button, String msg, Consumer<String[]> callback, Runnable resizeArray) {
+            signTask(button,new String[] {"",msg,"","",},callback,resizeArray);
+        }
+        private void signTask(MouseButton button, String[] msg, Consumer<String[]> callback, Runnable resizeArray) {
             switch (button) {
                 case LEFT:
                     CallbackManager.openSign(
                             player,
-                            new String[] {"",msg,"",""},
+                            msg,
                             s -> {
                                 if (s[0].equals("")) {
                                     CutsceneMaker.send(player,"value cannot be empty string!");
@@ -1131,6 +1235,14 @@ public final class Dialog extends AbstractEditorSupplier {
             resource.set("QnA",linkedQnA);
             resource.set("Present",linkedPresent);
             resource.set("Action",linkedAction);
+
+            //Variable Configuration
+            resource.set("SetVars",setVars);
+            resource.set("Condition",condition);
+
+            //Quest Configuration
+            resource.set("CheckQuest",checkQuest);
+            resource.set("SetQuest",setQuest);
             return resource;
         }
     }

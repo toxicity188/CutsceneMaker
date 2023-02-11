@@ -176,7 +176,7 @@ public final class ActionData extends CutsceneData {
                     JsonElement e = PARSER.parse(arg.replaceAll("=", ":"));
                     obj.apply(e.getAsJsonObject());
                 });
-                if (!obj.isLoaded()) throw new NoValueFoundException("Class \"" + clazz + "\" must set value \"" + TextUtil.getInstance().toSingleText(obj.getErrorField()) + "\"");
+                if (!obj.isLoaded()) throw new NoValueFoundException("Class \"" + clazz + "\" must set value \"" + TextUtil.toSingleText(obj.getErrorField()) + "\"");
                 a.initialize();
                 return a;
             } catch (Exception e) {

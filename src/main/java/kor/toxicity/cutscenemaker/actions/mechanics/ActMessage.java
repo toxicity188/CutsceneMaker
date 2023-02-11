@@ -75,7 +75,7 @@ public class ActMessage extends RepeatableAction {
     }
     private FunctionPrinter[] a(String s) {
         if (s == null) return null;
-        return Arrays.stream(TextUtil.getInstance().split(s, "//")).map(FunctionPrinter::new).toArray(FunctionPrinter[]::new);
+        return Arrays.stream(TextUtil.split(s, "//")).map(FunctionPrinter::new).toArray(FunctionPrinter[]::new);
     }
 
     @Override

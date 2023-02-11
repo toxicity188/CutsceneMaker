@@ -36,14 +36,14 @@ public final class ConditionBuilder<T> {
         LIVING_ENTITY.STRING.addFunction("tool",(p,j) -> {
             if (p instanceof Player) {
                 ItemStack i = ((Player) p).getInventory().getItemInMainHand();
-                if (i != null && i.getItemMeta().getDisplayName() != null) return TextUtil.getInstance().uncolored(i.getItemMeta().getDisplayName());
+                if (i != null && i.getItemMeta().getDisplayName() != null) return TextUtil.uncolored(i.getItemMeta().getDisplayName());
             }
             return "<none>";
         });
-        LIVING_ENTITY.STRING.addFunction("location",(e,j) -> TextUtil.getInstance().toSimpleLoc(e.getLocation()));
+        LIVING_ENTITY.STRING.addFunction("location",(e,j) -> TextUtil.toSimpleLoc(e.getLocation()));
         LIVING_ENTITY.NUMBER.addFunction("money",(e,j) -> {
             if (e instanceof Player) {
-                return MoneyUtil.getInstance().getMoney((Player) e);
+                return MoneyUtil.getMoney((Player) e);
             }
             return 0;
         });
@@ -107,7 +107,7 @@ public final class ConditionBuilder<T> {
         LIVING_ENTITY.BOOL.addFunction("op",(e,j) -> e.isOp());
         LIVING_ENTITY.BOOL.addFunction("inregion",(e,j) -> {
             if (j.size() > 0) {
-                return RegionUtil.getInstance().inRegion(e,j.get(0).getAsString());
+                return RegionUtil.inRegion(e,j.get(0).getAsString());
             }
             return false;
         });
@@ -116,19 +116,19 @@ public final class ConditionBuilder<T> {
             public Boolean apply(LivingEntity entity, JsonArray array) {
                 if (!(entity instanceof Player)) return false;
                 Player p = (Player) entity;
-                return InvUtil.getInstance().has(p,ItemData.getItem(p,array.get(0).getAsString()));
+                return InvUtil.has(p,ItemData.getItem(p,array.get(0).getAsString()));
             }
 
             @Override
             public boolean check(JsonArray array) {
-                return array.size() > 0 && InvUtil.getInstance().toName(array.get(0).getAsString()) != null;
+                return array.size() > 0 && InvUtil.toName(array.get(0).getAsString()) != null;
             }
         });
 
         LIVING_ENTITY.NUMBER.addFunction("storage",(e,j) -> {
             if (!(e instanceof Player)) return 0;
             Player p = (Player) e;
-            return InvUtil.getInstance().storage(p,(j.size() > 0) ? ItemData.getItem(p,j.get(0).getAsString()) : null);
+            return InvUtil.storage(p,(j.size() > 0) ? ItemData.getItem(p,j.get(0).getAsString()) : null);
         });
         LIVING_ENTITY.NUMBER.addFunction("amount", new CompileFunction<LivingEntity, Number>() {
             @Override
@@ -145,7 +145,7 @@ public final class ConditionBuilder<T> {
                         return e -> {
                             if (!(e instanceof Player)) return 0;
                             Player p = (Player) e;
-                            return InvUtil.getInstance().getTotalAmount(p,builder.get(p));
+                            return InvUtil.getTotalAmount(p,builder.get(p));
                         };
                     }
                 };
@@ -153,14 +153,14 @@ public final class ConditionBuilder<T> {
 
             @Override
             public boolean check(JsonArray array) {
-                return array.size() > 0 && InvUtil.getInstance().toName(array.get(0).getAsString()) != null;
+                return array.size() > 0 && InvUtil.toName(array.get(0).getAsString()) != null;
             }
         });
 
 
         LIVING_ENTITY.NUMBER.addFunction("emptyspace",(e,j) -> {
             if (!(e instanceof Player)) return 0;
-            return InvUtil.getInstance().emptySpace((Player) e);
+            return InvUtil.emptySpace((Player) e);
         });
         LIVING_ENTITY.NUMBER.addFunction("num", new CheckableFunction<LivingEntity, Number>() {
             @Override

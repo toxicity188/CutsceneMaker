@@ -21,7 +21,7 @@ public class HandlerCommand extends ActionHandler {
 
     @Override
     protected void initialize() {
-        String[] vars = TextUtil.getInstance().split(command," ");
+        String[] vars = TextUtil.split(command," ");
         if (vars.length == 1) {
             CutsceneCommand.createCommand(vars[0], (sender, command1, label, args) -> {
                 if (sender instanceof LivingEntity) apply((LivingEntity) sender);

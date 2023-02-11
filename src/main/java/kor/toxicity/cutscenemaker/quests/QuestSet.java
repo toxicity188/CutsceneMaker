@@ -67,7 +67,7 @@ public final class QuestSet {
     QuestSet(CutsceneMaker plugin, String node, ConfigurationSection section) {
         this.plugin = plugin;
 
-        name = TextUtil.getInstance().colored(section.getString("Name",node));
+        name = TextUtil.colored(section.getString("Name",node));
         type = section.getString("Type",null);
         if (type != null) TYPE_LIST.add(type);
         title = getFunctionPrinter(section);
@@ -81,8 +81,8 @@ public final class QuestSet {
         exp = section.getDouble("Exp",0);
 
 
-        giveItem = getArray(section, "RewardItem", l -> QuestUtil.getInstance().getItemBuilders(l));
-        takeItem = getArray(section, "TakeItem", l -> QuestUtil.getInstance().getItemBuilders(l));
+        giveItem = getArray(section, "RewardItem", l -> QuestUtil.getItemBuilders(l));
+        takeItem = getArray(section, "TakeItem", l -> QuestUtil.getItemBuilders(l));
 
         getConfig(section,"Events").ifPresent(events -> {
             listeners = new ArrayList<>();
@@ -101,7 +101,7 @@ public final class QuestSet {
             String n = t.getString("Location");
             Location l = plugin.getManager().getLocations().getValue(n);
             if (l != null) set.add(new NamedLocation(
-                    TextUtil.getInstance().colored(t.getString("Name","Unknown Name")),
+                    TextUtil.colored(t.getString("Name","Unknown Name")),
                     l
             ));
             else CutsceneMaker.warn("The Location named \"" + n + "\" doesn't exist!");
@@ -121,12 +121,12 @@ public final class QuestSet {
 
         final List<String> rewardsArray;
 
-        String expString = TextUtil.getInstance().applyComma(exp);
-        String moneyString = TextUtil.getInstance().applyComma(money);
+        String expString = TextUtil.applyComma(exp);
+        String moneyString = TextUtil.applyComma(money);
         if (giveItem != null) {
             rewardsArray = new ArrayList<>(giveItem.length + 2);
             for (ItemBuilder builder : giveItem) {
-                rewardsArray.add(InvUtil.getInstance().getItemName(builder.get(player)));
+                rewardsArray.add(InvUtil.getItemName(builder.get(player)));
             }
             rewardsArray.add("Exp: " + expString);
             rewardsArray.add("Gold: " + moneyString);
@@ -178,7 +178,7 @@ public final class QuestSet {
     public boolean isReady(Player player) {
         if (giveItem == null) return true;
         for (ItemBuilder builder : giveItem) {
-            if (InvUtil.getInstance().storage(player,builder.get(player)) == 0) return false;
+            if (InvUtil.storage(player,builder.get(player)) == 0) return false;
         }
         return true;
     }
@@ -199,14 +199,14 @@ public final class QuestSet {
         double money = event.getMoney();
         Consumer<Player> consumer = CutsceneConfig.getInstance().getQuestCompleteSound();
         if (consumer != null) {
-            player.sendTitle(title.print(player),"Quest Complete! - Gold: " + TextUtil.getInstance().applyComma(money) + ", Exp:  " + TextUtil.getInstance().applyComma(exp),10,60,10);
+            player.sendTitle(title.print(player),"Quest Complete! - Gold: " + TextUtil.applyComma(money) + ", Exp:  " + TextUtil.applyComma(exp),10,60,10);
             consumer.accept(player);
         }
-        if (takeItem != null) InvUtil.getInstance().take(player, Arrays.stream(takeItem).map(i -> i.get(player)).toArray(ItemStack[]::new));
+        if (takeItem != null) InvUtil.take(player, Arrays.stream(takeItem).map(i -> i.get(player)).toArray(ItemStack[]::new));
         if (giveItem != null) for (ItemBuilder builder : giveItem) {
             player.getInventory().addItem(builder.get(player));
         }
-        MoneyUtil.getInstance().addMoney(player,money);
+        MoneyUtil.addMoney(player,money);
         EXP_GETTER.forEach(b -> b.accept(player,exp));
         remove(player);
         if (completeAction != null) ActionData.start(completeAction,player);
@@ -247,7 +247,7 @@ public final class QuestSet {
         private QuestListener(ConfigurationSection section) {
             lore = new FunctionPrinter(section.getString("Lore","fail to read custom lore."));
             if (stringSet(section,"Condition")) {
-                String[] t = TextUtil.getInstance().split(section.getString("Condition")," ");
+                String[] t = TextUtil.split(section.getString("Condition")," ");
                 if (t.length >= 3) condition = ConditionBuilder.LIVING_ENTITY.find(t);
                 else condition = null;
             } else condition = null;
@@ -293,7 +293,7 @@ public final class QuestSet {
             return condition == null || condition.test(player);
         }
         private String getLore(Player player) {
-            return (isCompleted(player) ? ChatColor.STRIKETHROUGH + TextUtil.getInstance().uncolored(lore.print(player)) + ChatColor.YELLOW + ChatColor.BOLD + " Success!":  lore.print(player));
+            return (isCompleted(player) ? ChatColor.STRIKETHROUGH + TextUtil.uncolored(lore.print(player)) + ChatColor.YELLOW + ChatColor.BOLD + " Success!":  lore.print(player));
         }
     }
     private class VarsAdder extends CutsceneAction {
@@ -321,14 +321,14 @@ public final class QuestSet {
         }
 
         private LocationSet build(String name) {
-            inventory = InvUtil.getInstance().create(name,(int) Math.ceil((double) set.size() / 9D) + 2);
+            inventory = InvUtil.create(name,(int) Math.ceil((double) set.size() / 9D) + 2);
             ItemStack stack = new ItemStack(Material.BOOK);
             ItemMeta meta = stack.getItemMeta();
             int i = 0;
             for (NamedLocation n : set) {
                 meta.setDisplayName(ChatColor.WHITE + n.name);
                 meta.setLore(Collections.singletonList(
-                        ChatColor.WHITE + TextUtil.getInstance().toSimpleLoc(n.location)
+                        ChatColor.WHITE + TextUtil.toSimpleLoc(n.location)
                 ));
                 stack.setItemMeta(meta);
                 inventory.setItem(9 + i++,stack);

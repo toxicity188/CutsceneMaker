@@ -54,8 +54,8 @@ public class CutsceneConfig {
             debug = load.getBoolean("debug",false);
             autoSaveTime = load.getInt("auto-save-time",300);
 
-            defaultTypingSound = QuestUtil.getInstance().getSoundPlay(load.getString("default-typing-sound","block.stone_button.click_on 0.2 0.7"));
-            questCompleteSound = QuestUtil.getInstance().getSoundPlay(load.getString("quest-complete-sound","ui.toast.challenge_complete 1 1"));
+            defaultTypingSound = QuestUtil.getSoundPlay(load.getString("default-typing-sound","block.stone_button.click_on 0.2 0.7"));
+            questCompleteSound = QuestUtil.getSoundPlay(load.getString("quest-complete-sound","ui.toast.challenge_complete 1 1"));
 
             defaultTypingDelay = getValue(load.getInt("default-typing-delay",2),1,4);
             defaultDialogRows = getValue(load.getInt("default-dialog-rows",5),1,6);

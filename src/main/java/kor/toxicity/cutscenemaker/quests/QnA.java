@@ -38,8 +38,8 @@ final class QnA extends AbstractEditorSupplier {
                 try {
                     ConfigurationSection detail = button.getConfigurationSection(s);
                     buttonMap.put(Integer.parseInt(s),new Button(
-                            InvUtil.getInstance().fromConfig(detail,"Item"),
-                            QuestUtil.getInstance().getDialog(detail.getStringList("Dialog"))
+                            InvUtil.fromConfig(detail,"Item"),
+                            QuestUtil.getDialog(detail.getStringList("Dialog"))
                     ));
                 } catch (Exception ignored) {
 
@@ -48,7 +48,7 @@ final class QnA extends AbstractEditorSupplier {
         } else throw new IllegalStateException("Invalid statement.");
     }
     void run(Dialog.DialogCurrent current) {
-        Inventory inventory = InvUtil.getInstance().create((name != null) ? name.print(current.player) : (current.inventory != null ? current.inventory.getTitle() : current.talker + "'s question"),slot);
+        Inventory inventory = InvUtil.create((name != null) ? name.print(current.player) : (current.inventory != null ? current.inventory.getTitle() : current.talker + "'s question"),slot);
         ItemStack itemStack = current.inventory.getItem(CutsceneConfig.getInstance().getDefaultDialogCenter());
         buttonMap.forEach((i,b) -> inventory.setItem(i,b.builder.get(current.player)));
         if (itemStack != null) inventory.setItem(center,itemStack);
@@ -82,7 +82,7 @@ final class QnA extends AbstractEditorSupplier {
     }
 
     private class QnAEditor extends AbstractEditor {
-        private final ConfigurationSection resources = QuestUtil.getInstance().copy(section);
+        private final ConfigurationSection resources = QuestUtil.copy(section);
         private final Map<Integer,ConfigurationSection> sectionMap = new HashMap<>();
         private String name = getString(resources,"Name").orElse(null);
         private int slot = getInt(resources,"Slot").orElse(3);
@@ -107,9 +107,9 @@ final class QnA extends AbstractEditorSupplier {
             manager.runTaskLater(this::updateGui,5);
         }
         private Inventory getInventory() {
-            Inventory inv = InvUtil.getInstance().create(invName,slot + 1);
+            Inventory inv = InvUtil.create(invName,slot + 1);
             sectionMap.forEach((k,v) -> {
-                ItemBuilder builder = InvUtil.getInstance().fromConfig(v,"Item");
+                ItemBuilder builder = InvUtil.fromConfig(v,"Item");
                 if (builder != null) inv.setItem(
                         k,
                         addLore(builder.get(player), Arrays.asList(
@@ -136,11 +136,11 @@ final class QnA extends AbstractEditorSupplier {
             };
         }
         private void openButtonEditor(int slot, ConfigurationSection button) {
-            ItemBuilder item = InvUtil.getInstance().fromConfig(button,"Item");
+            ItemBuilder item = InvUtil.fromConfig(button,"Item");
             if (item == null) return;
 
             ItemStack defItem = item.get(player);
-            Inventory sub = InvUtil.getInstance().create(invName + ": " + slot,6);
+            Inventory sub = InvUtil.create(invName + ": " + slot,6);
             sub.setItem(13,defItem);
             GuiRegister.registerNewGui(new GuiAdapter(player,sub) {
                 private ItemStack stack = defItem;
@@ -150,7 +150,7 @@ final class QnA extends AbstractEditorSupplier {
                     if (item.getType() == Material.AIR) return;
                     if (isPlayerInventory) {
                         sub.setItem(13,item);
-                        InvUtil.getInstance().give(player,stack);
+                        InvUtil.give(player,stack);
                         stack = sub.getItem(13);
                         item.setAmount(0);
                     } else {

@@ -47,7 +47,7 @@ public class HandlerWalk extends ActionHandler {
     @Override
     protected void initialize() {
         if (location != null) {
-            Function<LivingEntity, Location> function = TextUtil.getInstance().getBlockLocation(world, location);
+            Function<LivingEntity, Location> function = TextUtil.getBlockLocation(world, location);
             if (function != null) build(e -> {
                 Player p = e.getPlayer();
                 Location loc = p.getLocation();
@@ -65,7 +65,7 @@ public class HandlerWalk extends ActionHandler {
             } catch (Exception ignored) {}
         }
         if (region != null) {
-            build(e -> RegionUtil.getInstance().inRegion(e.getPlayer(),region));
+            build(e -> RegionUtil.inRegion(e.getPlayer(),region));
         }
         location = null;
         world = null;

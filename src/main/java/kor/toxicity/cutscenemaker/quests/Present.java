@@ -28,7 +28,7 @@ final class Present {
 
     private static final FunctionPrinter DEFAULT_TITLE = new FunctionPrinter("Click your item you want to present!");
     private static final ItemSupplier DEFAULT_ITEM_SUPPLIER;
-    private static final Consumer<Player> DEFAULT_SOUND = QuestUtil.getInstance().getSoundPlay("item.armor.equip_chain 1 1");
+    private static final Consumer<Player> DEFAULT_SOUND = QuestUtil.getSoundPlay("item.armor.equip_chain 1 1");
     private static final String NO_ITEM_PRESENTED_MESSAGE = "quest-no-item-presented-message";
     private static final String NO_ITEM_FOUND_MESSAGE = "quest-no-item-found-message";
     private static final String LESS_ITEM_AMOUNT_MESSAGE = "quest-less-item-amount-message";
@@ -54,7 +54,7 @@ final class Present {
         name = (section.isSet("Name") && section.isSet("Name")) ? new FunctionPrinter(section.getString("Name")) : DEFAULT_TITLE;
         take = section.getBoolean("TakeItem",true);
         String sound = section.getString("Sound",null);
-        soundPlay = (sound != null) ? QuestUtil.getInstance().getSoundPlay(sound) : DEFAULT_SOUND;
+        soundPlay = (sound != null) ? QuestUtil.getSoundPlay(sound) : DEFAULT_SOUND;
         getSection(section,"Present").ifPresent(c -> c.getKeys(false).forEach(s -> getSection(c,s).ifPresent(t -> {
             try {
                 presentKeys.add(new PresentKey(t));
@@ -63,11 +63,11 @@ final class Present {
             }
         })));
         if (presentKeys.size() == 0) throw new RuntimeException("This Present is empty!");
-        supplier = (section.isSet("Confirm")) ? InvUtil.getInstance().fromConfig(section,"Confirm") : DEFAULT_ITEM_SUPPLIER;
+        supplier = (section.isSet("Confirm")) ? InvUtil.fromConfig(section,"Confirm") : DEFAULT_ITEM_SUPPLIER;
     }
 
     void run(Dialog.DialogCurrent current) {
-        Inventory inv = InvUtil.getInstance().create(name.print(current.player),3);
+        Inventory inv = InvUtil.create(name.print(current.player),3);
         inv.setItem(13,current.inventory.getItem(CutsceneConfig.getInstance().getDefaultDialogCenter()));
         inv.setItem(15, supplier.get(current.player));
 
@@ -118,8 +118,8 @@ final class Present {
         private final Dialog[] dialog;
 
         private PresentKey(ConfigurationSection section) {
-            ItemBuilder item = InvUtil.getInstance().toName(section.getString("Item"));
-            dialog = QuestUtil.getInstance().getDialog(section.getStringList("Dialog"));
+            ItemBuilder item = InvUtil.toName(section.getString("Item"));
+            dialog = QuestUtil.getDialog(section.getStringList("Dialog"));
             if (item == null || dialog == null) throw new RuntimeException("The item or dialog value doesn't exist!");
 
             int amount = section.getInt("Amount",1);

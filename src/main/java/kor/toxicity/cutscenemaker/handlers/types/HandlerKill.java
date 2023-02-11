@@ -40,7 +40,7 @@ public class HandlerKill extends ActionHandler {
                 build(e -> e.getEntityType() == t);
             } catch (Exception ignored) {}
         }
-        if (name != null) build(e -> TextUtil.getInstance().getEntityName(e.getEntity()).equals(name));
+        if (name != null) build(e -> TextUtil.getEntityName(e.getEntity()).equals(name));
         if (world != null) {
             World w = Bukkit.getWorld(world);
             if (w != null) build(e -> e.getEntity().getWorld().equals(w));

@@ -38,7 +38,7 @@ public class ActIf extends CutsceneAction {
     @Override
     public void initialize() {
         super.initialize();
-        String[] str = TextUtil.getInstance().split(condition, " ");
+        String[] str = TextUtil.split(condition, " ");
         if (str.length < 3) {
             a();
         } else {

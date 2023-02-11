@@ -27,7 +27,7 @@ public class InventoryGui extends InventorySupplier {
                     String[] array = target.getStringList("Action").toArray(new String[0]);
                     buttonMap.put(Integer.parseInt(s), new Button(
                             target.getBoolean("Close",true),
-                            (target.isSet("Sound")) ? QuestUtil.getInstance().getSoundPlay(target.getString("Sound")) : null,
+                            (target.isSet("Sound")) ? QuestUtil.getSoundPlay(target.getString("Sound")) : null,
                             array
                     ));
                 } catch (Exception e) {

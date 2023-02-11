@@ -84,11 +84,11 @@ public class ActItem extends CutsceneAction {
         if (entity instanceof Player) {
             Player p = ((Player) entity);
             ItemStack item = apply.apply(p);
-            if (give) InvUtil.getInstance().give(p,item);
-            else InvUtil.getInstance().take(p,item);
+            if (give) InvUtil.give(p,item);
+            else InvUtil.take(p,item);
         }
     }
     private String a(String t) {
-        return TextUtil.getInstance().colored(t);
+        return TextUtil.colored(t);
     }
 }

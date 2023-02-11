@@ -274,7 +274,7 @@ public final class CutsceneCommand implements TabExecutor, Listener {
             }
             @CommandHandler(length = 0, description = "get the wand.", usage = "/cutscene wand",sender = SenderType.PLAYER)
             public void wand(CommandPacket pkg) {
-                InvUtil.getInstance().give((Player) pkg.getSender(), WAND);
+                InvUtil.give((Player) pkg.getSender(), WAND);
                 send(pkg.getSender(),"successfully got.");
             }
             @CommandHandler(length = 2, aliases = {"anim","b"},description = "set your block animation.", usage = "cutscene animation <save/load/air> <file>", sender = SenderType.PLAYER)
