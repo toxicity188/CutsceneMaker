@@ -7,4 +7,5 @@ import org.bukkit.Material;
 @Getter
 public final class LegacyMaterial implements CutsceneMaterial {
     private final Material sign = Material.valueOf("SIGN_POST");
+    private final Material commandBlock = Material.valueOf("COMMAND");
 }

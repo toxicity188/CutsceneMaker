@@ -75,6 +75,7 @@ public final class QuestData extends CutsceneData {
             }
         });
         Dialog.setExecutor(pl);
+        Navigator.register(pl);
         getPlugin().getCommand("quest").setExecutor((sender, command, label, args) -> {
             getPlugin().getManager().runTask(() -> {
                 if (sender instanceof Player) {
@@ -145,17 +146,30 @@ public final class QuestData extends CutsceneData {
                                         break;
                                 }
                             } else {
-                                if (button != MouseButton.LEFT_WITH_SHIFT) return;
                                 QuestSet get = QUEST_SET_MAP.get(ItemUtil.readInternalTag(item, INTERNAL_NAME_KEY));
                                 if (get == null) return;
-                                if (get.isCancellable()) {
-                                    get.remove(p);
-                                    MessageSender printer = QUEST_MESSAGE_MAP.get("quest-cancel-message");
-                                    if (printer != null) printer.send(p);
-                                    pl.getManager().runTaskLater(p::closeInventory, 1);
-                                } else {
-                                    MessageSender printer = QUEST_MESSAGE_MAP.get("quest-cancel-fail-message");
-                                    if (printer != null) printer.send(p);
+                                switch (button) {
+                                    case LEFT:
+                                        QuestSet.LocationSet set = get.getLocationSet();
+                                        if (set == null) {
+                                            MessageSender q = QUEST_MESSAGE_MAP.get("quest-no-location-found");
+                                            if (q != null) q.send(p);
+                                        } else set.open(p);
+                                        break;
+                                    case RIGHT:
+                                        Navigator.endNavigate(p);
+                                        break;
+                                    case LEFT_WITH_SHIFT:
+                                        if (get.isCancellable()) {
+                                            get.remove(p);
+                                            MessageSender printer = QUEST_MESSAGE_MAP.get("quest-cancel-message");
+                                            if (printer != null) printer.send(p);
+                                            pl.getManager().runTaskLater(p::closeInventory, 1);
+                                        } else {
+                                            MessageSender printer = QUEST_MESSAGE_MAP.get("quest-cancel-fail-message");
+                                            if (printer != null) printer.send(p);
+                                        }
+                                        break;
                                 }
                             }
                         }
@@ -298,21 +312,21 @@ public final class QuestData extends CutsceneData {
             }
         });
         ConfigLoad dialog = getPlugin().read("Dialog");
-        dialog.getAllFiles().forEach(s -> {
+        dialog.forEach((file,key) -> key.forEach(s -> {
             try {
-                DIALOG_MAP.put(s,new Dialog(s,getPlugin().getManager(),dialog.getConfigurationSection(s)));
+                DIALOG_MAP.put(s,new Dialog(file,s,getPlugin().getManager(),dialog.getConfigurationSection(s)));
             } catch (Exception e) {
                 CutsceneMaker.warn("Error: " + e.getMessage() + " (Dialog " + s + ")");
             }
-        });
+        }));
         ConfigLoad qna = getPlugin().read("QnA");
-        qna.getAllFiles().forEach(s -> {
+        qna.forEach((file,key) -> key.forEach(s -> {
             try {
-                QNA_MAP.put(s,new QnA(getPlugin().getManager(),qna.getConfigurationSection(s)));
+                QNA_MAP.put(s,new QnA(file,s,getPlugin().getManager(),qna.getConfigurationSection(s)));
             } catch (Exception e) {
                 CutsceneMaker.warn("Error: " + e.getMessage() + " (QnA " + s + ")");
             }
-        });
+        }));
         ConfigLoad present = getPlugin().read("Present");
         present.getAllFiles().forEach(s -> {
             try {
@@ -338,6 +352,7 @@ public final class QuestData extends CutsceneData {
                if (data.dialogs != null) NPC_MAP.put(section.getString("Name",s),data);
             }
         });
+        Navigator.reload();
         QuestSet.EVENT_MAP.clear();
         send(QUEST_SET_MAP.size(),"QuestSets");
         send(DIALOG_MAP.size(),"Dialogs");

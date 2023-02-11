@@ -35,6 +35,7 @@ import java.util.function.Function;
 
 public final class CutsceneManager {
 
+    @Getter
     private final CutsceneMaker plugin;
     private final CutsceneUser user;
     @Getter
@@ -108,7 +109,12 @@ public final class CutsceneManager {
         return user.container.get(player);
     }
     public Vars getVars(Player player, String name) {
-        return (getVars(player) != null) ? getVars(player).get(name) : null;
+        VarsContainer container;
+        return ((container = getVars(player)) != null) ? container.get(name) : null;
+    }
+    public boolean isSet(Player player, String name) {
+        VarsContainer container;
+        return (container = getVars(player)) != null && container.contains(name);
     }
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     private class CutsceneUser implements Listener {
@@ -134,16 +140,6 @@ public final class CutsceneManager {
         }
         @EventHandler(priority = EventPriority.MONITOR)
         public void onQuit(PlayerQuitEvent e) {
-            Bukkit.getScheduler().runTaskAsynchronously(plugin,() -> {
-                VarsContainer c = container.get(e.getPlayer());
-                if (c != null) {
-                    CutsceneDB.save(e.getPlayer(),plugin,c);
-                    container.remove(e.getPlayer());
-                }
-            });
-        }
-        @EventHandler(priority = EventPriority.MONITOR)
-        public void onKick(PlayerKickEvent e) {
             Bukkit.getScheduler().runTaskAsynchronously(plugin,() -> {
                 VarsContainer c = container.get(e.getPlayer());
                 if (c != null) {

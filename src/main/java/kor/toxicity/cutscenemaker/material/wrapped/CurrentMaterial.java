@@ -7,4 +7,5 @@ import org.bukkit.Material;
 @Getter
 public final class CurrentMaterial implements CutsceneMaterial {
     private final Material sign = Material.valueOf("OAK_SIGN");
+    private final Material commandBlock = Material.valueOf("COMMAND_BLOCK");
 }

@@ -8,6 +8,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.text.DecimalFormat;
 import java.util.Arrays;
@@ -27,7 +29,7 @@ public final class TextUtil {
     }
 
     public String colored(String s) {
-        return s.replaceAll("&","§");
+        return s.replace('&','§');
     }
 
     public String toSingleText(List<String> text) {
@@ -46,6 +48,11 @@ public final class TextUtil {
 
     public String getEntityName(Entity e) {
         return (e.getName() != null && !e.getName().equals("")) ? uncolored(e.getName()) : e.getType().toString().toLowerCase();
+    }
+    public String getItemName(ItemStack stack) {
+        ItemMeta meta = stack.getItemMeta();
+        String display;
+        return stack.getAmount() + " of " + (((display = meta.getDisplayName()) != null) ? display : stack.getType().toString().toLowerCase());
     }
 
     public String uncolored(String s) {

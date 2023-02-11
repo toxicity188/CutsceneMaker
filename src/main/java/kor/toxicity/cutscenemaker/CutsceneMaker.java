@@ -6,9 +6,12 @@ import kor.toxicity.cutscenemaker.quests.QuestData;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
 import kor.toxicity.cutscenemaker.util.databases.CutsceneDB;
 import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
+import kor.toxicity.cutscenemaker.util.gui.CallbackManager;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import kor.toxicity.cutscenemaker.util.vars.VarsContainer;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -44,6 +47,7 @@ public final class CutsceneMaker extends JavaPlugin {
         manager = new CutsceneManager(this);
         reload.add(command::unregister);
         reload.add(new GuiRegister(this));
+        reload.add(new CallbackManager(this));
         reload.add(() -> {
             CutsceneConfig.getInstance().load(this);
             debug = CutsceneConfig.getInstance().isDebug();
@@ -103,6 +107,9 @@ public final class CutsceneMaker extends JavaPlugin {
     public static void send(String s) {
         Bukkit.getConsoleSender().sendMessage(NAME + " " + s);
     }
+    public static void send(CommandSender sender, String s) {
+        sender.sendMessage(ChatColor.AQUA + NAME + ChatColor.WHITE + " " + s);
+    }
     public static void warn(String s) {
         Bukkit.getLogger().warning(NAME + " " + s);
     }
@@ -130,6 +137,9 @@ public final class CutsceneMaker extends JavaPlugin {
     }
     public static Vars getVars(Player player, String key) {
         return manager.getVars(player,key);
+    }
+    public static boolean isSet(Player player, String key) {
+        return manager.isSet(player,key);
     }
 
 }

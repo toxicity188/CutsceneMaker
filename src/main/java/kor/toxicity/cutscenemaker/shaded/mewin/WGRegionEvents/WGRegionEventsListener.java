@@ -30,12 +30,7 @@ public class WGRegionEventsListener implements Listener
         this.plugin = plugin;
         playerRegions = new HashMap<>();
     }
-    
-    @EventHandler
-    public void onPlayerKick(PlayerKickEvent e)
-    {
-        leave(e);
-    }
+
     
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent e)

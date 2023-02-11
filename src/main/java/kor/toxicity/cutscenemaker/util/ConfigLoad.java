@@ -18,9 +18,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class ConfigLoad {
 	
 	private final YamlConfiguration main = new YamlConfiguration();
-
-	private final List<String> fileList = new ArrayList<>();
-	private final Map<String,List<String>> keyList = new HashMap<>();
+	private final Map<String,Set<String>> keyList = new HashMap<>();
 	
 	public ConfigLoad(JavaPlugin pl, String file, String key) throws IOException, InvalidConfigurationException {
 		File test = new File(pl.getDataFolder(),file);
@@ -43,23 +41,20 @@ public class ConfigLoad {
 	public void QuestConfig_Load(File folder, String file, String key) throws IOException, InvalidConfigurationException {
 		File config = new File(folder, file);
 		if (config.exists() && file.contains(".yml")) {
-			if (file.contains(".yml")) fileList.add(file.replaceAll(".yml",""));
 			if (!key.equals("")) {
 				this.main.createSection(key);
 				key = key + ".";
 			}
 			YamlConfiguration t = new YamlConfiguration();
 			t.load(config);
-			List<String> listget = new ArrayList<>();
 			for (String i : t.getKeys(true)) {
-				if (!i.contains(".")) listget.add(i);
 				if (t.get(i).getClass() == MemorySection.class) { 
 					this.main.createSection(key + i);
 				} else {
 					this.main.set(key + i, t.get(i));
 				}
 			}
-			keyList.put(file.replaceAll(".yml",""), listget);
+			keyList.put(file.replaceAll(".yml",""), t.getKeys(false));
 		}
 	}
 
@@ -68,7 +63,7 @@ public class ConfigLoad {
 		keyList.forEach((a,b) -> t.addAll(b));
 		return t;
 	}
-	public void forEach(BiConsumer<String,List<String>> consumer) {
+	public void forEach(BiConsumer<String,Set<String>> consumer) {
 		keyList.forEach(consumer);
 	}
 

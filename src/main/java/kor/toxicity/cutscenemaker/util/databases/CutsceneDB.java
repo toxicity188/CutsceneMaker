@@ -50,7 +50,7 @@ public class CutsceneDB  {
             try (FileWriter file = new FileWriter(name); CSVWriter writer = new CSVWriter(file)) {
                 writer.writeAll(
                         container.getVars().entrySet().stream()
-                        .filter(e -> !e.getKey().startsWith("_"))
+                        .filter(e -> e.getKey().charAt(0) != '_' && !e.getValue().getVar().equals("<none>"))
                         .map(e -> new String[] {e.getKey(),e.getValue().getVar()})
                         .collect(Collectors.toList()));
                 CutsceneMaker.debug(player.getName() + "'s user data saved.");
@@ -94,7 +94,7 @@ public class CutsceneDB  {
                 create.execute("TRUNCATE " + name + ";");
             } catch (SQLException ignored) {}
             container.getVars().forEach((k,v) -> {
-                if (k.charAt(0) != '_') {
+                if (k.charAt(0) != '_' && !v.getVar().equals("<none>")) {
                     try (PreparedStatement statement = con.prepareStatement("INSERT INTO " + name + " VALUES(?,?);")) {
                         statement.setString(1, k);
                         statement.setString(2, v.getVar());

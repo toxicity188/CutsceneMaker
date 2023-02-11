@@ -9,16 +9,23 @@ import kor.toxicity.cutscenemaker.events.QuestCompleteEvent;
 import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
+import kor.toxicity.cutscenemaker.util.gui.GuiAdapter;
+import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
+import kor.toxicity.cutscenemaker.util.gui.MouseButton;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.material.Tree;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -54,6 +61,9 @@ public final class QuestSet {
     @Getter
     private final boolean cancellable;
 
+    @Getter
+    private final LocationSet locationSet;
+
     QuestSet(CutsceneMaker plugin, String node, ConfigurationSection section) {
         this.plugin = plugin;
 
@@ -74,21 +84,29 @@ public final class QuestSet {
         giveItem = getArray(section, "RewardItem", l -> QuestUtil.getInstance().getItemBuilders(l));
         takeItem = getArray(section, "TakeItem", l -> QuestUtil.getInstance().getItemBuilders(l));
 
-        ConfigurationSection events = getConfigurationSection(section,"Events");
-        if (events != null) {
+        getConfig(section,"Events").ifPresent(events -> {
             listeners = new ArrayList<>();
-            events.getKeys(false).forEach(s -> {
-                ConfigurationSection key = getConfigurationSection(events,s);
-                if (key != null) {
-                    try {
-                        listeners.add(new QuestListener(key));
-                    } catch (Exception e) {
-                        CutsceneMaker.warn("unable to read the quest event: "  + s + " (QuestSet " + name + ")");
-                    }
+            events.getKeys(false).forEach(s -> getConfig(events,s).ifPresent(key -> {
+                try {
+                    listeners.add(new QuestListener(key));
+                } catch (Exception e) {
+                    CutsceneMaker.warn("unable to read the quest event: "  + s + " (QuestSet " + name + ")");
                 }
-            });
+            }));
             if (listeners.isEmpty()) listeners = null;
-        }
+        });
+        LocationSet set = new LocationSet();
+        getConfig(section,"Locations").ifPresent(loc -> loc.getKeys(false).forEach(s -> getConfig(loc,s).ifPresent(t -> {
+            if (!t.isSet("Location")) return;
+            String n = t.getString("Location");
+            Location l = plugin.getManager().getLocations().getValue(n);
+            if (l != null) set.add(new NamedLocation(
+                    TextUtil.getInstance().colored(t.getString("Name","Unknown Name")),
+                    l
+            ));
+            else CutsceneMaker.warn("The Location named \"" + n + "\" doesn't exist!");
+        })));
+        locationSet = (!set.isEmpty()) ? set.build(section.getString("Navigator","click the location you want go to!")) : null;
     }
     public ItemStack getIcon(Player player) {
         ItemStack stack = CutsceneConfig.getInstance().getDefaultQuestIcon().clone();
@@ -198,8 +216,8 @@ public final class QuestSet {
         plugin.getManager().getVars(player).remove("quest." +name);
     }
 
-    private ConfigurationSection getConfigurationSection(ConfigurationSection section, String key) {
-        return (section.isSet(key) && section.isConfigurationSection(key)) ? section.getConfigurationSection(key) : null;
+    private Optional<ConfigurationSection> getConfig(ConfigurationSection section, String key) {
+        return (section.isSet(key) && section.isConfigurationSection(key)) ? Optional.of(section.getConfigurationSection(key)) : Optional.empty();
     }
     public boolean isCompleted(Player player) {
         return listeners != null && listeners.stream().allMatch(e -> e.isCompleted(player));
@@ -289,6 +307,52 @@ public final class QuestSet {
             Vars vars = plugin.getManager().getVars(p).get(name);
             vars.setVar(Double.toString(vars.getAsNum(0).doubleValue() + 1));
         }
+    }
+
+    static final class LocationSet {
+        private final List<NamedLocation> set = new ArrayList<>();
+        private Inventory inventory;
+
+        private boolean isEmpty() {
+            return set.isEmpty();
+        }
+        private void add(NamedLocation location) {
+            set.add(location);
+        }
+
+        private LocationSet build(String name) {
+            inventory = InvUtil.getInstance().create(name,(int) Math.ceil((double) set.size() / 9D) + 2);
+            ItemStack stack = new ItemStack(Material.BOOK);
+            ItemMeta meta = stack.getItemMeta();
+            int i = 0;
+            for (NamedLocation n : set) {
+                meta.setDisplayName(ChatColor.WHITE + n.name);
+                meta.setLore(Collections.singletonList(
+                        ChatColor.WHITE + TextUtil.getInstance().toSimpleLoc(n.location)
+                ));
+                stack.setItemMeta(meta);
+                inventory.setItem(9 + i++,stack);
+            }
+            return this;
+        }
+        void open(Player player) {
+            GuiRegister.registerNewGui(new GuiAdapter(player,inventory) {
+                @Override
+                public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
+                    int t = slot - 9;
+                    if (t >= 0 && t < set.size()) {
+                        Navigator.startNavigate(player,set.get(t).location);
+                    }
+                }
+            });
+        }
+    }
+    @RequiredArgsConstructor
+    @EqualsAndHashCode
+    private static class NamedLocation {
+        private final String name;
+        @EqualsAndHashCode.Exclude
+        private final Location location;
     }
 
 }

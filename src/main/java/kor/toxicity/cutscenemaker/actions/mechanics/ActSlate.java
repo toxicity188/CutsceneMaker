@@ -49,6 +49,10 @@ public class ActSlate extends CutsceneAction {
                 if (SLATE_TOGGLE.contains(e.getPlayer())) off(e.getPlayer());
             }
             @EventHandler
+            public void kick(PlayerKickEvent e) {
+                if (SLATE_TOGGLE.contains(e.getPlayer())) off(e.getPlayer());
+            }
+            @EventHandler
             public void start(ActionStartEvent e) {
                 if (e.getEntity() instanceof Player && SLATE_TOGGLE.contains((Player) e.getEntity())) e.setCancelled(true);
             }

@@ -6,6 +6,7 @@ import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.data.ActionData;
 import kor.toxicity.cutscenemaker.events.DialogEndEvent;
 import kor.toxicity.cutscenemaker.events.DialogStartEvent;
+import kor.toxicity.cutscenemaker.material.WrappedMaterial;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
 import kor.toxicity.cutscenemaker.util.InvUtil;
 import kor.toxicity.cutscenemaker.util.ItemBuilder;
@@ -13,11 +14,13 @@ import kor.toxicity.cutscenemaker.util.TextUtil;
 import kor.toxicity.cutscenemaker.util.functions.ActionPredicate;
 import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
+import kor.toxicity.cutscenemaker.util.gui.*;
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -49,7 +52,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public final class Dialog {
+public final class Dialog extends AbstractEditorSupplier {
 
     private static final TypingManager DEFAULT_TYPING_EXECUTOR = current -> {
         if (current.inventory == null) current.inventory = InvUtil.getInstance().create(current.talker + "'s dialog",CutsceneConfig.getInstance().getDefaultDialogRows());
@@ -218,7 +221,6 @@ public final class Dialog {
         }).filter(Objects::nonNull).forEach(c -> q.setQuest = q.setQuest.andThen(c)));
     }
     private boolean cancelDamage = true, cancelPickup = true;
-    private final CutsceneManager manager;
     private final DialogRecord[] records;
     private Dialog[] subDialog, endDialog;
     private String[] actions;
@@ -303,12 +305,10 @@ public final class Dialog {
         });
     }
 
-    @Getter
-    private final String name;
+
     private final boolean exception;
-    Dialog(String name, CutsceneManager manager, ConfigurationSection section) {
-        this.name = "(Dialog " + name + ")";
-        this.manager = manager;
+    Dialog(String fileName, String name, CutsceneManager manager, ConfigurationSection section) {
+        super(fileName, name, manager, section);
         List<String> talk = getStringList(section,"Talk");
         if (talk != null) {
             records = talk.stream().map(s -> {
@@ -348,7 +348,7 @@ public final class Dialog {
         } else throw new IllegalStateException("Invalid statement.");
     }
     private void warn(String msg) {
-        CutsceneMaker.warn(msg + " " + name);
+        CutsceneMaker.warn(msg + " (Dialog " + name + ")");
     }
     private ActionPredicate<Player> getQuestChecker(String name, String action) {
         QuestSet questSet = getQuestSet(name);
@@ -442,6 +442,7 @@ public final class Dialog {
     private List<String> getStringList(ConfigurationSection section, String key) {
         return (section.isSet(key)) ? section.getStringList(key) : null;
     }
+
     private class DialogRun implements Runnable {
         private final DialogCurrent current;
         private TypingExecutor executor;
@@ -669,5 +670,468 @@ public final class Dialog {
     private interface TypingExecutor {
         void initialize(DialogRecord record, String currentTalker);
         void apply(String message, Consumer<Player> soundPlay);
+    }
+
+    @Override
+    public Editor getEditor(Player player) {
+        return new DialogEditor(player);
+    }
+    private class DialogEditor extends AbstractEditor {
+        private final ConfigurationSection resource = QuestUtil.getInstance().copy(section);
+        private TalkEditor[] talk;
+
+        private String[] linkedDialog = getStringArray("LinkedDialog","Dialog");
+        private String[] linkedSubDialog = getStringArray("LinkedSubDialog","SubDialog");
+        private String[] linkedQnA = getStringArray("LinkedQnA","QnA");
+        private String[] linkedPresent = getStringArray("LinkedPresent","Present");
+        private String[] linkedAction = getStringArray("LinkedAction","Action");
+
+        private int page = 1;
+        private int totalPage = 1;
+
+        private String[] getStringArray(String... key) {
+            return getStringList(resource,key).map(s -> s.toArray(new String[0])).orElse(null);
+        }
+        DialogEditor(Player player) {
+            super(player, "Dialog");
+            List<String> list = getStringList(resource,"Talk").orElse(null);
+            if (list != null) {
+                talk = new TalkEditor[list.size()];
+                int i = 0;
+                TalkEditor editor;
+                ConfigurationSection items = getConfig(resource,"Item").orElse(null);
+                ConfigurationSection talkers = getConfig(resource,"Talker").orElse(null);
+                ConfigurationSection sounds = getConfig(resource,"Sound").orElse(null);
+                ConfigurationSection interfaces = getConfig(resource,"Interface").orElse(null);
+                for (String s : list) {
+                    String key = Integer.toString(i + 1);
+
+                    editor = new TalkEditor();
+
+                    Matcher matcher = TALK_PATTERN.matcher(s);
+                    if (matcher.find()) {
+                        editor.talk = matcher.group("content");
+                        String t = matcher.group("talker");
+                        editor.talker = (t != null) ? t : (talkers != null) ? getString(talkers,key).orElse(null) : null;
+                    }
+                    editor.sound = (sounds != null) ? getString(sounds,key).orElse(null) : null;
+                    editor.typing = (interfaces != null) ? getString(interfaces,key).orElse(null) : null;
+                    editor.item = (items != null) ? getConfig(items,key).orElse(null) : null;
+                    talk[i++] = editor;
+                }
+            }
+        }
+        private void extend(int index) {
+            TalkEditor[] editors = new TalkEditor[talk.length + 1];
+            int i = 0;
+            for (TalkEditor editor : talk) {
+                editors[i++] = editor;
+                if (i > index) break;
+            }
+            TalkEditor n = new TalkEditor();
+            n.talk = "a new talk";
+            editors[i++] = n;
+            if (i < editors.length) {
+                for (; i < editors.length; i++) {
+                    editors[i] = talk[i - 1];
+                }
+            }
+            talk = editors;
+            setupPage();
+        }
+        private void reduce(int index) {
+            talk[index] = null;
+            talk = Arrays.stream(talk).filter(Objects::nonNull).toArray(TalkEditor[]::new);
+            setupPage();
+        }
+        private void setupPage() {
+            totalPage = Math.max(talk.length/36,1);
+            ItemStack button = new ItemStack(Material.STONE_BUTTON);
+            inv.setItem(46,write(
+                    button,
+                    "previous page",
+                    Collections.singletonList("Page : " + page + " / " + totalPage)
+            ));
+            inv.setItem(52,write(
+                    button,
+                    "next page",
+                    Collections.singletonList("Page : " + page + " / " + totalPage)
+            ));
+        }
+        private void dialogUpdate() {
+            manager.runTaskLater(() -> {
+                resetInv();
+                updateGui();
+            },5);
+        }
+        private String write(String target) {
+            return (target != null) ? ChatColor.WHITE + TextUtil.getInstance().colored(target) : ChatColor.GRAY + "<none>";
+        }
+        private ItemStack write(ItemStack target, String name, List<String> lore) {
+            ItemMeta meta = target.getItemMeta();
+            meta.setDisplayName(ChatColor.WHITE + name);
+            meta.setLore(write(lore));
+            target.setItemMeta(meta);
+            return target;
+        }
+        private List<String> write(List<String> target) {
+            return (target != null) ? target
+                    .stream()
+                    .map(s -> ChatColor.GRAY + " - " + ChatColor.WHITE + TextUtil.getInstance().colored(s))
+                    .collect(Collectors.toList()) : Collections.singletonList(ChatColor.GRAY + "<none>");
+        }
+
+
+        private class TalkEditor {
+            private String talk, talker, sound, typing;
+            private ConfigurationSection item;
+
+            private void reopen() {
+                manager.runTaskLater(this::open,5);
+            }
+            private List<String> getItemList() {
+                return (item != null) ? item.getKeys(false)
+                        .stream()
+                        .map(l -> {
+                            ItemBuilder builder = InvUtil.getInstance().fromConfig(item,l);
+                            if (builder != null) return l + ": " + TextUtil.getInstance().getItemName(builder.get(player));
+                            else return ChatColor.YELLOW + "<error!>";
+                        })
+                        .collect(Collectors.toList()) : null;
+            }
+            private void open() {
+                Inventory sub = InvUtil.getInstance().create(invName + ": Talk",3);
+                sub.setItem(9,getItem(Material.BOOK,"Talk",talk));
+                sub.setItem(11,getItem(Material.PAPER,"Talker",talker));
+                sub.setItem(13,getItem(Material.NOTE_BLOCK,"Sound",sound));
+                sub.setItem(15,getItem(WrappedMaterial.getWrapper().getCommandBlock(),"Interface",typing));
+                sub.setItem(26,new ItemStack(Material.STONE_BUTTON));
+                sub.setItem(17,write(
+                        new ItemStack(Material.CHEST),
+                        "Item",
+                        getItemList()
+                ));
+                GuiRegister.registerNewGui(new GuiAdapter(player,sub) {
+                    @Override
+                    public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
+                        switch (slot) {
+                            case 26:
+                                resetInv();
+                                updateGui();
+                                break;
+                            case 9:
+                                CallbackManager.callbackChat(player,new String[]{
+                                        ChatColor.YELLOW + "enter a value in the chat. " + ChatColor.GOLD + "cancel: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "cancel" + ChatColor.WHITE + "\"",
+                                        ChatColor.GOLD + "format: " + ChatColor.GREEN + "<talk>" + ChatColor.WHITE + " or " + ChatColor.GREEN + "<talker: talk>",
+                                        ChatColor.GOLD + "function format: " + ChatColor.GREEN + "%function[]%"
+                                },e -> {
+                                    CutsceneMaker.send(player,"successfully changed.");
+                                    Matcher matcher = TALK_PATTERN.matcher(e[0]);
+                                    if (matcher.find()) {
+                                        talk = matcher.group("content");
+                                        talker = matcher.group("talker");
+                                    }
+                                    reopen();
+                                });
+                                break;
+                            case 11:
+                                CallbackManager.callbackChat(player,new String[]{
+                                        ChatColor.YELLOW + "enter a value in the chat. " + ChatColor.GOLD + "cancel: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "cancel" + ChatColor.WHITE + "\"",
+                                        ChatColor.GOLD + "format: " + ChatColor.GREEN + "<talker>",
+                                        ChatColor.GOLD + "function format: " + ChatColor.GREEN + "%function[]%",
+                                        ChatColor.GOLD + "remove: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "null" + ChatColor.WHITE + "\""
+                                },e -> {
+                                    CutsceneMaker.send(player,"successfully changed.");
+                                    talker = (e[0].equals("null")) ? null : e[0];
+                                    reopen();
+                                });
+                                break;
+                            case 13:
+                                CallbackManager.callbackChat(player,new String[]{
+                                        ChatColor.YELLOW + "enter a value in the chat. " + ChatColor.GOLD + "cancel: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "cancel" + ChatColor.WHITE + "\"",
+                                        ChatColor.GOLD + "format: " + ChatColor.GREEN + "<sound name> <volume> <pitch>",
+                                        ChatColor.GOLD + "remove: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "null" + ChatColor.WHITE + "\""
+                                },e -> {
+                                    CutsceneMaker.send(player,"successfully changed.");
+                                    sound = (e[0].equals("null")) ? null : e[0];
+                                    reopen();
+                                });
+                                break;
+                            case 15:
+                                CallbackManager.callbackChat(player,new String[]{
+                                        ChatColor.YELLOW + "enter a value in the chat. " + ChatColor.GOLD + "cancel: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "cancel" + ChatColor.WHITE + "\"",
+                                        ChatColor.GOLD + "format: " + ChatColor.GREEN + "<interface name>",
+                                        ChatColor.GOLD + "example: " + ChatColor.GREEN + "default",
+                                        ChatColor.GOLD + "remove: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "null" + ChatColor.WHITE + "\""
+                                },e -> {
+                                    String t = e[0].toLowerCase();
+                                    if (!TYPING_MANAGER_MAP.containsKey(t)) {
+                                        CutsceneMaker.send(player,"The Interface named \"" + t + "\" doesn't exist!");
+                                    } else {
+                                        CutsceneMaker.send(player,"successfully changed.");
+                                        typing = (e[0].equals("null")) ? null : e[0];
+                                    }
+                                    reopen();
+                                });
+                                break;
+                            case 17:
+                                Inventory cal = InvUtil.getInstance().create("Put your item in here!",CutsceneConfig.getInstance().getDefaultDialogRows());
+                                cal.setItem(
+                                        CutsceneConfig.getInstance().getDefaultDialogCenter(),
+                                        write(
+                                                new ItemStack(Material.BARRIER),
+                                                "Prevention",
+                                                Collections.singletonList("you can't put any item here!")
+                                        )
+                                );
+                                ConfigurationSection t = TalkEditor.this.item;
+                                if (t != null) t.getKeys(false).forEach(s -> {
+                                    ItemBuilder builder = InvUtil.getInstance().fromConfig(t,s);
+                                    if (builder != null) {
+                                        try {
+                                            cal.setItem(
+                                                    Integer.parseInt(s),
+                                                    builder.get(player)
+                                            );
+                                        } catch (Exception ignored) {}
+                                    }
+                                });
+                                CallbackManager.callbackInventory(
+                                        player,
+                                        cal,
+                                        m -> {
+                                            ConfigurationSection sec = new MemoryConfiguration();
+                                            m.forEach((k,v) -> {
+                                                String q = Integer.toString(k);
+                                                sec.set(q,(t != null && t.isSet(q)) ? t.get(q) : v);
+                                            });
+                                            TalkEditor.this.item = (sec.getKeys(false).isEmpty()) ? null : sec;
+                                            CutsceneMaker.send(player,"successfully changed.");
+                                            reopen();
+                                        }
+                                );
+                                break;
+                        }
+                    }
+                });
+            }
+            private ItemStack getItem(Material material, String name, String target) {
+                return write(
+                        new ItemStack(material),
+                        name,
+                        (target != null) ? Collections.singletonList(talk) : null
+                );
+            }
+        }
+        private Inventory inv;
+
+        public void resetInv() {
+            for (int t = 0; t < 36; t++) {
+                inv.setItem(t,null);
+            }
+            int i = 0;
+            final ItemStack talkItem = new ItemStack(Material.BOOK);
+            final ItemMeta meta = talkItem.getItemMeta();
+            if (talk != null) for (int t = (page - 1) * 36; t < Math.min(page * 36,talk.length); t++) {
+                TalkEditor s = talk[t];
+                meta.setDisplayName(ChatColor.WHITE + "Talk: " + (i + 1));
+                List<String> list = new ArrayList<>();
+                list.add(ChatColor.WHITE + write(s.talk));
+                list.add("");
+                list.add(ChatColor.YELLOW + "Talker: " + write(s.talker));
+                list.add(ChatColor.YELLOW + "Sound: " + write(s.sound));
+                list.add(ChatColor.YELLOW + "Interface: " + write(s.typing));
+                list.add(ChatColor.YELLOW + "Item:");
+                list.addAll(write(s.getItemList()));
+                list.add("");
+                list.add(ChatColor.GRAY + "(Left: rewrite this Talk)");
+                list.add(ChatColor.GRAY + "(Shift+Left: create new Talk)");
+                list.add(ChatColor.GRAY + "(Shift+Right: delete this Talk)");
+                meta.setLore(list);
+                talkItem.setItemMeta(meta);
+                inv.setItem(9 + i++,talkItem);
+            }
+            ItemStack iron = new ItemStack(Material.IRON_INGOT);
+            inv.setItem(47,write(
+                    iron,
+                    "Linked Dialog",
+                    toList(linkedDialog)
+            ));
+            inv.setItem(48,write(
+                    iron,
+                    "Linked SubDialog",
+                    toList(linkedSubDialog)
+            ));
+            inv.setItem(49,write(
+                    iron,
+                    "Linked QnA",
+                    toList(linkedQnA)
+            ));
+            inv.setItem(50,write(
+                    iron,
+                    "Linked Present",
+                    toList(linkedPresent)
+            ));
+            inv.setItem(51,write(
+                    iron,
+                    "Linked Action",
+                    toList(linkedAction)
+            ));
+        }
+        private <T> List<T> toList(T[] array) {
+            return (array != null) ? Arrays.asList(array) : null;
+        }
+        @Override
+        public GuiExecutor getMainExecutor() {
+            if (inv == null) {
+                inv = InvUtil.getInstance().create(invName, 6);
+                resetInv();
+            }
+            setupPage();
+            return new GuiAdapter(player,inv) {
+                @Override
+                public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
+                    if (isPlayerInventory) return;
+                    if (item.getType() == Material.BOOK) {
+                        int i = slot - 9;
+                        switch (button) {
+                            case LEFT:
+                                talk[i].open();
+                                break;
+                            case LEFT_WITH_SHIFT:
+                                extend(i);
+                                resetInv();
+                                break;
+                            case RIGHT_WITH_SHIFT:
+                                reduce(i);
+                                resetInv();
+                                break;
+                        }
+                    } else {
+                        switch (slot) {
+                            case 46:
+                                page = Math.max(page - 1, 1);
+                                setupPage();
+                                resetInv();
+                                break;
+                            case 47:
+                                signTask(
+                                        button,
+                                        "write the Dialog's name!",
+                                        s -> {
+                                            if (!QuestData.DIALOG_MAP.containsKey(s[0])) {
+                                                CutsceneMaker.send(player,"The Dialog named \"" + s[0] + "\" doesn't exist!");
+                                            } else linkedDialog = QuestUtil.getInstance().plusElement(linkedDialog,s[0]);
+                                        },
+                                        () -> linkedDialog = QuestUtil.getInstance().deleteLast(linkedAction)
+                                );
+                                break;
+                            case 48:
+                                signTask(
+                                        button,
+                                        "write the Dialog's name!",
+                                        s -> {
+                                            if (!QuestData.DIALOG_MAP.containsKey(s[0])) {
+                                                CutsceneMaker.send(player,"The Dialog named \"" + s[0] + "\" doesn't exist!");
+                                            } else linkedSubDialog = QuestUtil.getInstance().plusElement(linkedSubDialog,s[0]);
+                                        },
+                                        () -> linkedSubDialog = QuestUtil.getInstance().deleteLast(linkedSubDialog)
+                                );
+                                break;
+                            case 49:
+                                signTask(
+                                        button,
+                                        "write the QnA's name!",
+                                        s -> {
+                                            if (!QuestData.QNA_MAP.containsKey(s[0])) {
+                                                CutsceneMaker.send(player,"The QnA named \"" + s[0] + "\" doesn't exist!");
+                                            } else linkedQnA = QuestUtil.getInstance().plusElement(linkedQnA,s[0]);
+                                        },
+                                        () -> linkedQnA = QuestUtil.getInstance().deleteLast(linkedQnA)
+                                );
+                                break;
+                            case 50:
+                                signTask(
+                                        button,
+                                        "write the Present's name!",
+                                        s -> {
+                                            if (!QuestData.PRESENT_MAP.containsKey(s[0])) {
+                                                CutsceneMaker.send(player,"The Present named \"" + s[0] + "\" doesn't exist!");
+                                            } else linkedPresent = QuestUtil.getInstance().plusElement(linkedPresent,s[0]);
+                                        },
+                                        () -> linkedPresent = QuestUtil.getInstance().deleteLast(linkedPresent)
+                                );
+                                break;
+                            case 51:
+                                signTask(
+                                        button,
+                                        "write the Action's name!",
+                                        s -> linkedAction = QuestUtil.getInstance().plusElement(linkedAction,s[0]),
+                                        () -> linkedAction = QuestUtil.getInstance().deleteLast(linkedAction)
+                                );
+                                break;
+                            case 52:
+                                page = Math.min(page + 1,totalPage);
+                                setupPage();
+                                resetInv();
+                                break;
+                        }
+                    }
+                }
+            };
+        }
+        private void signTask(MouseButton button, String msg, Consumer<String[]> callback, Runnable resizeArray) {
+            switch (button) {
+                case LEFT:
+                    CallbackManager.openSign(
+                            player,
+                            new String[] {"",msg,"",""},
+                            s -> {
+                                if (s[0].equals("")) {
+                                    CutsceneMaker.send(player,"value cannot be empty string!");
+                                } else {
+                                    callback.accept(s);
+                                }
+                                dialogUpdate();
+                            }
+                    );
+                    break;
+                case RIGHT:
+                    resizeArray.run();
+                    resetInv();
+                    break;
+            }
+        }
+
+        @Override
+        public ConfigurationSection getSaveData() {
+            resource.set("Talk", Arrays.stream(talk).map(t -> t.talk).toArray(String[]::new));
+
+            //Talk Configuration
+            ConfigurationSection sounds = new MemoryConfiguration();
+            ConfigurationSection interfaces = new MemoryConfiguration();
+            ConfigurationSection talker = new MemoryConfiguration();
+            ConfigurationSection items = new MemoryConfiguration();
+            int i = 0;
+            for (TalkEditor editor : talk) {
+                String key = Integer.toString(++i);
+                talker.set(key,editor.talker);
+                sounds.set(key,editor.sound);
+                interfaces.set(key,editor.typing);
+                items.set(key,editor.item);
+            }
+            resource.set("Sound",sounds);
+            resource.set("Interface",interfaces);
+            resource.set("Talker",talker);
+            resource.set("Item",items);
+
+            //Linked Source Configuration
+            resource.set("Dialog",linkedDialog);
+            resource.set("SubDialog",linkedSubDialog);
+            resource.set("QnA",linkedQnA);
+            resource.set("Present",linkedPresent);
+            resource.set("Action",linkedAction);
+            return resource;
+        }
     }
 }

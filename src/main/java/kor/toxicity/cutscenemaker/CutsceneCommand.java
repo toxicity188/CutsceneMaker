@@ -9,6 +9,7 @@ import kor.toxicity.cutscenemaker.data.ActionData;
 import kor.toxicity.cutscenemaker.data.CutsceneData;
 import kor.toxicity.cutscenemaker.events.ActionReloadEndEvent;
 import kor.toxicity.cutscenemaker.events.ActionReloadStartEvent;
+import kor.toxicity.cutscenemaker.quests.AbstractEditorSupplier;
 import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.util.blockanims.BlockAnimation;
 import kor.toxicity.cutscenemaker.util.databases.CutsceneDB;
@@ -312,6 +313,12 @@ public final class CutsceneCommand implements TabExecutor, Listener {
                         break;
                 }
             }
+            @CommandHandler(length = 2, aliases = "p",description = "open gui editor.", usage = "cutscene project <dialog> <name>", sender = SenderType.PLAYER)
+            public void project(CommandPacket pkg) {
+                if (!AbstractEditorSupplier.openEditor((Player) pkg.getSender(),pkg.getArgs()[1],pkg.getArgs()[2])) {
+                    send(pkg.getSender(),"fail to open editor.");
+                }
+            }
 
             private void showVars(CommandSender sender, Map<String,Vars> varsMap) {
                 List<String> vars = new ArrayList<>();
@@ -392,7 +399,7 @@ public final class CutsceneCommand implements TabExecutor, Listener {
     }
 
     private static void send(CommandSender sender, String m) {
-        sender.sendMessage(ChatColor.AQUA + "[CutsceneMaker] " + ChatColor.WHITE + m);
+        CutsceneMaker.send(sender,m);
     }
 
     private static class CommandRecord {

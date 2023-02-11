@@ -9,16 +9,17 @@ import kor.toxicity.cutscenemaker.util.vars.Vars;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.MemoryConfiguration;
+import org.bukkit.configuration.MemorySection;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class QuestUtil {
@@ -128,5 +129,36 @@ public final class QuestUtil {
                     return null;
                 }
         }
+    }
+
+    ConfigurationSection copy(ConfigurationSection section) {
+        ConfigurationSection ret = new MemoryConfiguration();
+        section.getKeys(true).forEach(k -> {
+            if (section.get(k).getClass() == MemorySection.class) {
+                ret.createSection(k);
+            } else {
+                ret.set(k, section.get(k));
+            }
+        });
+        return ret;
+    }
+
+    String[] deleteLast(String[] array) {
+        if (array == null) return null;
+        if (array.length <= 1) return null;
+        String[] newArray = new String[array.length - 1];
+        System.arraycopy(array, 0, newArray, 0, array.length - 1);
+        return newArray;
+    }
+    String[] plusElement(String[] array, String element) {
+        String[] newArray;
+        if (array != null) {
+            newArray = new String[array.length + 1];
+            System.arraycopy(array, 0, newArray, 0, array.length);
+        } else {
+            newArray = new String[1];
+        }
+        newArray[newArray.length - 1] = element;
+        return newArray;
     }
 }

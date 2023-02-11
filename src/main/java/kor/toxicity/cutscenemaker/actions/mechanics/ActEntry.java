@@ -20,6 +20,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -56,6 +57,10 @@ public class ActEntry extends CutsceneAction {
                 }
                 @EventHandler
                 public void quit(PlayerQuitEvent e) {
+                    if (e.getPlayer().equals(p)) kill();
+                }
+                @EventHandler
+                public void kick(PlayerKickEvent e) {
                     if (e.getPlayer().equals(p)) kill();
                 }
 

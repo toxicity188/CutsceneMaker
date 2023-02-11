@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 
 public final class ConditionBuilder<T> {
 
-    private static final Pattern FUNCTION_PATTERN = Pattern.compile("(?<name>\\w+)(?<argument>\\[((\\w|,|\\s|\")*)])", Pattern.UNICODE_CHARACTER_CLASS);
+    private static final Pattern FUNCTION_PATTERN = Pattern.compile("(?<name>\\w+)(?<argument>\\[((\\w|,|.|\\s|\")*)])", Pattern.UNICODE_CHARACTER_CLASS);
     private static final JsonParser PARSER = new JsonParser();
     public static final ConditionBuilder<LivingEntity> LIVING_ENTITY = new ConditionBuilder<>();
     private final Set<ConditionContainer<?>> types = new LinkedHashSet<>();
@@ -182,6 +182,18 @@ public final class ConditionBuilder<T> {
             public Boolean apply(LivingEntity entity, JsonArray array) {
                 if (!(entity instanceof Player)) return false;
                 return CutsceneMaker.getVars((Player) entity,array.get(0).getAsString()).getAsBool();
+            }
+        });
+        LIVING_ENTITY.BOOL.addFunction("set", new CheckableFunction<LivingEntity, Boolean>() {
+            @Override
+            public boolean check(JsonArray array) {
+                return array.size() > 0;
+            }
+
+            @Override
+            public Boolean apply(LivingEntity entity, JsonArray array) {
+                if (!(entity instanceof Player)) return false;
+                return CutsceneMaker.isSet((Player) entity, array.get(0).getAsString());
             }
         });
         LIVING_ENTITY.STRING.addFunction("str", new CheckableFunction<LivingEntity, String>() {
