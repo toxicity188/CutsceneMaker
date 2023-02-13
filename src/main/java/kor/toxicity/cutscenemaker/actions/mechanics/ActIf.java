@@ -28,11 +28,9 @@ public class ActIf extends CutsceneAction {
     public FunctionPrinter not;
 
     private Consumer<Player> apply;
-    private final CutsceneManager manager;
 
     public ActIf(CutsceneManager pl) {
         super(pl);
-        manager = pl;
     }
 
     @Override

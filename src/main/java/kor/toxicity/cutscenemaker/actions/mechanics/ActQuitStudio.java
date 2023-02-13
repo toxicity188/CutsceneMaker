@@ -2,25 +2,25 @@ package kor.toxicity.cutscenemaker.actions.mechanics;
 
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
+import kor.toxicity.cutscenemaker.util.LocationStudio;
 import kor.toxicity.cutscenemaker.util.reflect.DataField;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
-public class ActDeleteVariable extends CutsceneAction {
+public class ActQuitStudio extends CutsceneAction {
 
-    @DataField(aliases = "n", throwable = true)
-    public String name;
+    @DataField(aliases = "b")
+    public boolean back;
 
-    public ActDeleteVariable(CutsceneManager pl) {
+    public ActQuitStudio(CutsceneManager pl) {
         super(pl);
     }
 
-
     @Override
-    public void apply(LivingEntity entity) {
+    protected void apply(LivingEntity entity) {
         if (entity instanceof Player) {
-            manager.getVars((Player) entity).remove(name);
-
+            if (back) LocationStudio.quit((Player) entity);
+            else LocationStudio.quitWithoutBack((Player) entity);
         }
     }
 }

@@ -2,6 +2,7 @@ package kor.toxicity.cutscenemaker.handlers.types;
 
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.handlers.ActionHandler;
+import kor.toxicity.cutscenemaker.handlers.DelayedHandler;
 import kor.toxicity.cutscenemaker.handlers.enums.EventClickType;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.reflect.DataField;
@@ -9,17 +10,15 @@ import kor.toxicity.cutscenemaker.util.TextUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Predicate;
 
-public class HandlerBlockClick extends ActionHandler {
+public class HandlerBlockClick extends ActionHandler implements DelayedHandler {
 
     @DataField
     public String type;
@@ -34,7 +33,12 @@ public class HandlerBlockClick extends ActionHandler {
     @DataField(aliases = "s")
     public boolean sneaking = false;
 
-    private Predicate<PlayerInteractEvent> check = PlayerInteractEvent::hasBlock;
+    private final Map<Player,Long> time = new WeakHashMap<>();
+    private Predicate<PlayerInteractEvent> check = e -> {
+        if (!e.hasBlock()) return false;
+        Long d = time.put(e.getPlayer(), System.currentTimeMillis());
+        return ((d == null ? - 200 : d) + 200 <= System.currentTimeMillis());
+    };
 
     public HandlerBlockClick(ActionContainer container) {
         super(container);
@@ -95,5 +99,10 @@ public class HandlerBlockClick extends ActionHandler {
             if (cancel) e.setCancelled(true);
             apply(e.getPlayer());
         }
+    }
+
+    @Override
+    public Map<Player, Long> getTimeMap() {
+        return time;
     }
 }

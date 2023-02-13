@@ -1,15 +1,13 @@
 package kor.toxicity.cutscenemaker;
 
-import com.opencsv.CSVReader;
 import kor.toxicity.cutscenemaker.commands.CommandHandler;
 import kor.toxicity.cutscenemaker.commands.CommandListener;
 import kor.toxicity.cutscenemaker.commands.CommandPacket;
 import kor.toxicity.cutscenemaker.commands.SenderType;
 import kor.toxicity.cutscenemaker.data.ActionData;
-import kor.toxicity.cutscenemaker.data.CutsceneData;
 import kor.toxicity.cutscenemaker.events.ActionReloadEndEvent;
 import kor.toxicity.cutscenemaker.events.ActionReloadStartEvent;
-import kor.toxicity.cutscenemaker.quests.AbstractEditorSupplier;
+import kor.toxicity.cutscenemaker.quests.EditorSupplier;
 import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.util.blockanims.BlockAnimation;
 import kor.toxicity.cutscenemaker.util.databases.CutsceneDB;
@@ -33,7 +31,6 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import java.io.FileReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -315,7 +312,7 @@ public final class CutsceneCommand implements TabExecutor, Listener {
             }
             @CommandHandler(length = 2, aliases = "p",description = "open gui editor.", usage = "cutscene project <dialog> <name>", sender = SenderType.PLAYER)
             public void project(CommandPacket pkg) {
-                if (!AbstractEditorSupplier.openEditor((Player) pkg.getSender(),pkg.getArgs()[1],pkg.getArgs()[2])) {
+                if (!EditorSupplier.openEditor((Player) pkg.getSender(),pkg.getArgs()[1],pkg.getArgs()[2])) {
                     send(pkg.getSender(),"fail to open editor.");
                 }
             }

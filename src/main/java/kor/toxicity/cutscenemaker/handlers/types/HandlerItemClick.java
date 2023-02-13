@@ -2,14 +2,19 @@ package kor.toxicity.cutscenemaker.handlers.types;
 
 import kor.toxicity.cutscenemaker.data.ItemData;
 import kor.toxicity.cutscenemaker.handlers.ActionHandler;
+import kor.toxicity.cutscenemaker.handlers.DelayedHandler;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.ItemBuilder;
 import kor.toxicity.cutscenemaker.util.reflect.DataField;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
-public class HandlerItemClick extends ActionHandler {
+import java.util.Map;
+import java.util.WeakHashMap;
+
+public class HandlerItemClick extends ActionHandler implements DelayedHandler {
 
     @DataField(aliases = "i",throwable = true)
     public String item;
@@ -37,9 +42,12 @@ public class HandlerItemClick extends ActionHandler {
         if (consumeAmount < 0) consumeAmount = required;
     }
 
+    private final Map<Player,Long> time = new WeakHashMap<>();
     @EventHandler
     public void onClick(PlayerInteractEvent e) {
         if (e.hasItem()) {
+            Long d = time.put(e.getPlayer(), System.currentTimeMillis());
+            if ((d == null ? - 200 : d) + 200 > System.currentTimeMillis()) return;
             ItemStack stack = e.getItem();
             ItemStack compare = builder.getItem();
             int a;
@@ -49,5 +57,10 @@ public class HandlerItemClick extends ActionHandler {
             }
             e.setCancelled(cancel);
         }
+    }
+
+    @Override
+    public Map<Player, Long> getTimeMap() {
+        return time;
     }
 }

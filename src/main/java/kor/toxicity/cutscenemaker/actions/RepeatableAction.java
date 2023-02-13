@@ -18,11 +18,9 @@ public abstract class RepeatableAction extends CutsceneAction{
     public boolean asynchronous = false;
 
     private final Map<LivingEntity, RepeatableRun> tasks = new WeakHashMap<>();
-    private final CutsceneManager manager;
 
     public RepeatableAction(CutsceneManager pl) {
         super(pl);
-        manager = pl;
     }
 
     @Override

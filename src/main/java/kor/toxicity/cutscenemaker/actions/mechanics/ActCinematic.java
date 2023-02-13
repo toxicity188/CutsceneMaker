@@ -24,7 +24,6 @@ public class ActCinematic extends RepeatableAction {
     public String node;
 
     private final Map<LivingEntity,Integer> loops = new WeakHashMap<>();
-    private final CutsceneManager manager;
     private Location first;
     private Location last;
 
@@ -36,7 +35,6 @@ public class ActCinematic extends RepeatableAction {
 
     public ActCinematic(CutsceneManager pl) {
         super(pl);
-        manager = pl;
     }
 
     @Override

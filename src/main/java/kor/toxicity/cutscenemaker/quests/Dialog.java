@@ -52,7 +52,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public final class Dialog extends AbstractEditorSupplier {
+public final class Dialog extends EditorSupplier {
 
     private static final TypingManager DEFAULT_TYPING_EXECUTOR = current -> {
         if (current.inventory == null) current.inventory = InvUtil.create(current.talker + "'s dialog",CutsceneConfig.getInstance().getDefaultDialogRows());
@@ -565,16 +565,16 @@ public final class Dialog extends AbstractEditorSupplier {
 
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class ConfigMapReader<T> {
-        private final BiFunction<ConfigurationSection,String,T> getter;
-        private final Map<String, BiConsumer<DialogRecord,T>> taskMap = new HashMap<>();
+        private final BiFunction<ConfigurationSection,String,? extends T> getter;
+        private final Map<String, BiConsumer<DialogRecord,? super T>> taskMap = new HashMap<>();
 
         private void apply(Dialog dialog, ConfigurationSection section) {
             taskMap.forEach((s,c) -> forEach(dialog,section,s,c));
         }
-        public void add(String name, BiConsumer<DialogRecord,T> action) {
+        public void add(String name, BiConsumer<DialogRecord,? super T> action) {
             taskMap.putIfAbsent(name,action);
         }
-        private void forEach(Dialog dialog, ConfigurationSection section, String key, BiConsumer<DialogRecord,T> consumer) {
+        private void forEach(Dialog dialog, ConfigurationSection section, String key, BiConsumer<DialogRecord,? super T> consumer) {
             if (!section.isSet(key)) return;
             if (!section.isConfigurationSection(key)) {
                 dialog.warn("Invalid syntax: " + key);
@@ -676,7 +676,7 @@ public final class Dialog extends AbstractEditorSupplier {
     public Editor getEditor(Player player) {
         return new DialogEditor(player);
     }
-    private class DialogEditor extends AbstractEditor {
+    private class DialogEditor extends Editor {
         private final ConfigurationSection resource = QuestUtil.copy(section);
         private TalkEditor[] talk;
 
@@ -695,6 +695,29 @@ public final class Dialog extends AbstractEditorSupplier {
 
         private int page = 1;
         private int totalPage = 1;
+
+        private boolean exception = resource.getBoolean("Exception",false);
+
+        private final ItemStack exceptionDisabled = write(
+                new ItemStack(Material.EMERALD_BLOCK),
+                "Exception",
+                Arrays.asList(
+                        "",
+                        ChatColor.YELLOW + "Exception: " + ChatColor.GREEN + "Disabled",
+                        "",
+                        ChatColor.GRAY + "(Click: toggle Exception)"
+                )
+        );
+        private final ItemStack exceptionEnabled = write(
+                new ItemStack(Material.REDSTONE_BLOCK),
+                "Exception",
+                Arrays.asList(
+                        "",
+                        ChatColor.YELLOW + "Exception: " + ChatColor.RED + "Enabled",
+                        "",
+                        ChatColor.GRAY + "(Click: toggle Exception)"
+                )
+        );
 
         private String[] getStringArray(String... key) {
             return getStringList(resource,key).map(s -> s.toArray(new String[0])).orElse(null);
@@ -777,12 +800,12 @@ public final class Dialog extends AbstractEditorSupplier {
         private ItemStack write(ItemStack target, String name, List<String> lore) {
             ItemMeta meta = target.getItemMeta();
             meta.setDisplayName(ChatColor.WHITE + name);
-            meta.setLore(write(lore));
+            if (lore != null) meta.setLore(write(lore));
             target.setItemMeta(meta);
             return target;
         }
         private List<String> write(List<String> target) {
-            return (target != null) ? target
+            return (!target.isEmpty()) ? target
                     .stream()
                     .map(s -> ChatColor.GRAY + " - " + ChatColor.WHITE + TextUtil.colored(s))
                     .collect(Collectors.toList()) : Collections.singletonList(ChatColor.GRAY + "<none>");
@@ -804,7 +827,7 @@ public final class Dialog extends AbstractEditorSupplier {
                             if (builder != null) return l + ": " + TextUtil.getItemName(builder.get(player));
                             else return ChatColor.YELLOW + "<error!>";
                         })
-                        .collect(Collectors.toList()) : null;
+                        .collect(Collectors.toList()) : Collections.emptyList();
             }
             private void open() {
                 Inventory sub = InvUtil.create(invName + ": Talk",3);
@@ -812,7 +835,11 @@ public final class Dialog extends AbstractEditorSupplier {
                 sub.setItem(11,getItem(Material.PAPER,"Talker",talker));
                 sub.setItem(13,getItem(Material.NOTE_BLOCK,"Sound",sound));
                 sub.setItem(15,getItem(WrappedMaterial.getWrapper().getCommandBlock(),"Interface",typing));
-                sub.setItem(26,new ItemStack(Material.STONE_BUTTON));
+                sub.setItem(26,write(
+                        new ItemStack(Material.STONE_BUTTON),
+                        "Back",
+                        null
+                ));
                 sub.setItem(17,write(
                         new ItemStack(Material.CHEST),
                         "Item",
@@ -926,7 +953,7 @@ public final class Dialog extends AbstractEditorSupplier {
                 return write(
                         new ItemStack(material),
                         name,
-                        (target != null) ? Collections.singletonList(talk) : null
+                        (target != null) ? Collections.singletonList(talk) : Collections.emptyList()
                 );
             }
         }
@@ -1007,8 +1034,15 @@ public final class Dialog extends AbstractEditorSupplier {
                     toList(setVars)
             ));
         }
+        private void toggleException() {
+            exception = !exception;
+            setupException();
+        }
+        private void setupException() {
+            inv.setItem(8,(exception) ? exceptionEnabled : exceptionDisabled);
+        }
         private <T> List<T> toList(T[] array) {
-            return (array != null) ? Arrays.asList(array) : null;
+            return (array != null) ? Arrays.asList(array) : Collections.emptyList();
         }
         @Override
         public GuiExecutor getMainExecutor() {
@@ -1016,6 +1050,7 @@ public final class Dialog extends AbstractEditorSupplier {
                 inv = InvUtil.create(invName, 6);
                 resetInv();
             }
+            setupException();
             setupPage();
             return new GuiAdapter(player,inv) {
                 @Override
@@ -1043,6 +1078,9 @@ public final class Dialog extends AbstractEditorSupplier {
                                 setupPage();
                                 resetInv();
                                 break;
+                            case 8:
+                                toggleException();
+                                break;
                             case 0:
                                 signTask(
                                         button,
@@ -1054,7 +1092,7 @@ public final class Dialog extends AbstractEditorSupplier {
                                         },
                                         s -> {
                                             if (s[1].equals("")) s[1] = "complete";
-                                            if (getQuestSet(s[0]) == null) {
+                                            if (!QuestData.QUEST_SET_MAP.containsKey(s[0])) {
                                                 CutsceneMaker.send(player,"The QuestSet named \"" + s[0] + "\" doesn't exist!");
                                             } else checkQuest = QuestUtil.plusElement(checkQuest,s[0] + " " + s[1]);
                                         },
@@ -1072,7 +1110,7 @@ public final class Dialog extends AbstractEditorSupplier {
                                         },
                                         s -> {
                                             if (s[1].equals("")) s[1] = "complete";
-                                            if (getQuestSet(s[0]) == null) {
+                                            if (!QuestData.QUEST_SET_MAP.containsKey(s[0])) {
                                                 CutsceneMaker.send(player,"The QuestSet named \"" + s[0] + "\" doesn't exist!");
                                             } else setQuest = QuestUtil.plusElement(setQuest,s[0] + " " + s[1]);
                                         },
@@ -1084,7 +1122,7 @@ public final class Dialog extends AbstractEditorSupplier {
                                         button,
                                         new String[] {
                                                 "",
-                                                "format) <fun/value> <operator> <//>",
+                                                "<fun> <operator> <fun>",
                                                 "ex) name[] == toxicity",
                                                 "ex2) health[] > num[_var]"
                                         },
@@ -1102,7 +1140,7 @@ public final class Dialog extends AbstractEditorSupplier {
                                         button,
                                         new String[] {
                                                 "",
-                                                "format) <name> <operator> <fun/value>",
+                                                "<name> <operator> <fun/value>",
                                                 "ex) _var + randomInt[1,100]",
                                                 "ex2) _var del"
                                         },
@@ -1243,6 +1281,7 @@ public final class Dialog extends AbstractEditorSupplier {
             //Quest Configuration
             resource.set("CheckQuest",checkQuest);
             resource.set("SetQuest",setQuest);
+            resource.set("Exception",(exception) ? true : null);
             return resource;
         }
     }

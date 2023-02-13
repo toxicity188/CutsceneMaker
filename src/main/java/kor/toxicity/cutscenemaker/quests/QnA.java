@@ -22,7 +22,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-final class QnA extends AbstractEditorSupplier {
+final class QnA extends EditorSupplier {
     private final FunctionPrinter name;
     private final int slot;
     private final int center;
@@ -81,7 +81,7 @@ final class QnA extends AbstractEditorSupplier {
         return new QnAEditor(player);
     }
 
-    private class QnAEditor extends AbstractEditor {
+    private class QnAEditor extends Editor {
         private final ConfigurationSection resources = QuestUtil.copy(section);
         private final Map<Integer,ConfigurationSection> sectionMap = new HashMap<>();
         private String name = getString(resources,"Name").orElse(null);
@@ -162,7 +162,7 @@ final class QnA extends AbstractEditorSupplier {
         private ItemStack addLore(ItemStack stack, List<String> lore) {
             ItemMeta meta = stack.getItemMeta();
             List<String> l = meta.getLore();
-            if (l.size() > 1) l.add("");
+            if (l == null) l = new ArrayList<>();
             l.addAll(lore);
             meta.setLore(l);
             stack.setItemMeta(meta);

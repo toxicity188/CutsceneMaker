@@ -128,12 +128,10 @@ public class ActEntry extends CutsceneAction {
     @DataField
     public String fail;
 
-    private final CutsceneManager manager;
     private BiConsumer<Player,ActEntry> apply;
 
     public ActEntry(CutsceneManager pl) {
         super(pl);
-        manager = pl;
     }
 
     @Override

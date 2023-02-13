@@ -88,7 +88,7 @@ public class ActionContainer {
     }
 
     public void setCoolDown(int coolDown) {
-        this.record = Math.max(coolDown * 20,4);
+        this.record = Math.max(coolDown * 20,0);
     }
 
     public boolean run(LivingEntity entity) {
@@ -96,7 +96,7 @@ public class ActionContainer {
     }
     public synchronized boolean run(LivingEntity entity, Map<String,String> localVariables) {
         if ((conditions != null && !conditions.test(entity)) || delay.containsKey(entity)) return false;
-        delay.put(entity,Bukkit.getScheduler().runTaskLater(pl,() -> delay.remove(entity), record));
+        if (record > 0) delay.put(entity,Bukkit.getScheduler().runTaskLater(pl,() -> delay.remove(entity), record));
         run.accept(entity,localVariables);
         return true;
     }

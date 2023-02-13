@@ -26,7 +26,7 @@ public abstract class CutsceneAction {
 
     private Consumer<LivingEntity> invoke;
 
-    private final CutsceneManager manager;
+    protected final CutsceneManager manager;
     public CutsceneAction(CutsceneManager pl) {
         manager = pl;
     }

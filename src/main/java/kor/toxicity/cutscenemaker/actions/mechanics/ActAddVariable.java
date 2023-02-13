@@ -13,17 +13,15 @@ public class ActAddVariable extends CutsceneAction {
     @DataField(aliases = "v", throwable = true)
     public double value;
 
-    private final CutsceneManager pl;
 
     public ActAddVariable(CutsceneManager pl) {
         super(pl);
-        this.pl = pl;
     }
 
     @Override
     public void apply(LivingEntity entity) {
         if (entity instanceof Player) {
-            Vars v = pl.getVars((Player) entity,name);
+            Vars v = manager.getVars((Player) entity,name);
             if (v != null) v.setVar(Double.toString(v.getAsNum(0D).doubleValue() + value));
 
         }

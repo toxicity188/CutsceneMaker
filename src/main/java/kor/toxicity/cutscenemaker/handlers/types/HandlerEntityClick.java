@@ -2,16 +2,20 @@ package kor.toxicity.cutscenemaker.handlers.types;
 
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.handlers.ActionHandler;
+import kor.toxicity.cutscenemaker.handlers.DelayedHandler;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.reflect.DataField;
 import kor.toxicity.cutscenemaker.util.TextUtil;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.function.Predicate;
 
-public class HandlerEntityClick extends ActionHandler {
+public class HandlerEntityClick extends ActionHandler implements DelayedHandler {
 
     @DataField(aliases = "t")
     public String type;
@@ -20,7 +24,11 @@ public class HandlerEntityClick extends ActionHandler {
     @DataField(aliases = "c")
     public boolean cancel = false;
 
-    private Predicate<PlayerInteractAtEntityEvent> check;
+    private final Map<Player,Long> time = new WeakHashMap<>();
+    private Predicate<PlayerInteractAtEntityEvent> check = p -> {
+        Long d = time.put(p.getPlayer(), System.currentTimeMillis());
+        return ((d == null ? - 200 : d) + 200 <= System.currentTimeMillis());
+    };
 
     public HandlerEntityClick(ActionContainer container) {
         super(container);
@@ -54,5 +62,10 @@ public class HandlerEntityClick extends ActionHandler {
             apply(e.getPlayer());
             e.setCancelled(cancel);
         }
+    }
+
+    @Override
+    public Map<Player, Long> getTimeMap() {
+        return time;
     }
 }

@@ -7,6 +7,7 @@ import kor.toxicity.cutscenemaker.events.UserDataLoadEvent;
 import kor.toxicity.cutscenemaker.shaded.mewin.WGRegionEvents.WGRegionEventsListener;
 import kor.toxicity.cutscenemaker.util.DataContainer;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
+import kor.toxicity.cutscenemaker.util.LocationStudio;
 import kor.toxicity.cutscenemaker.util.blockanims.BlockAnimation;
 import kor.toxicity.cutscenemaker.util.databases.CutsceneDB;
 import kor.toxicity.cutscenemaker.util.managers.ListenerManager;
@@ -45,6 +46,9 @@ public final class CutsceneManager {
 
     @Getter
     private final DataContainer<Location> locations = new DataContainer<>();
+    @Getter
+    private final Map<String, LocationStudio> studioMap = new HashMap<>();
+
     @Getter
     private final Map<String, BlockAnimation> animationMap = new HashMap<>();
 

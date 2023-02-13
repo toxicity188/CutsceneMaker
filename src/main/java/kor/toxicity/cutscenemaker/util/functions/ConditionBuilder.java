@@ -196,6 +196,18 @@ public final class ConditionBuilder<T> {
                 return CutsceneMaker.isSet((Player) entity, array.get(0).getAsString());
             }
         });
+        LIVING_ENTITY.BOOL.addFunction("inStudio",new CheckableFunction<LivingEntity, Boolean>() {
+            @Override
+            public boolean check(JsonArray array) {
+                return array.size() > 0;
+            }
+            @Override
+            public Boolean apply(LivingEntity entity, JsonArray array) {
+                if (!(entity instanceof Player)) return false;
+                String name = LocationStudio.getPlayerRecord((Player) entity).map(LocationStudio.PlayerRecord::getName).orElse(null);
+                return (name != null && name.equals(array.get(0).getAsString()));
+            }
+        });
         LIVING_ENTITY.STRING.addFunction("str", new CheckableFunction<LivingEntity, String>() {
             @Override
             public boolean check(JsonArray array) {

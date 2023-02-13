@@ -8,9 +8,9 @@ import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.events.PacketListener;
 import com.comphenix.protocol.wrappers.BlockPosition;
-import com.comphenix.protocol.wrappers.WrappedBlockData;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.data.Reloadable;
+import kor.toxicity.cutscenemaker.material.WrappedMaterial;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
@@ -33,7 +33,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public final class CallbackManager implements Reloadable, Listener {
-    private static final WrappedBlockData SIGN_DATA = WrappedBlockData.createData(Material.SIGN_POST);
     private static final ProtocolManager manager = ProtocolLibrary.getProtocolManager();
 
     private static final Map<Player, CallbackData> CALLBACK_MAP = new ConcurrentHashMap<>();
@@ -126,7 +125,7 @@ public final class CallbackManager implements Reloadable, Listener {
         );
 
         PacketContainer block = manager.createPacket(PacketType.Play.Server.BLOCK_CHANGE);
-        block.getBlockData().write(0,SIGN_DATA);
+        block.getBlockData().write(0, WrappedMaterial.getSignData());
         block.getBlockPositionModifier().write(0,position);
 
         PacketContainer create = manager.createPacket(PacketType.Play.Server.OPEN_SIGN_EDITOR);

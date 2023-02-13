@@ -2,7 +2,7 @@ package kor.toxicity.cutscenemaker.quests;
 
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
-import kor.toxicity.cutscenemaker.quests.editor.EditorSupplier;
+import kor.toxicity.cutscenemaker.util.ConfigUtil;
 import kor.toxicity.cutscenemaker.util.gui.GuiAdapter;
 import kor.toxicity.cutscenemaker.util.gui.GuiExecutor;
 import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
@@ -25,8 +25,8 @@ import java.io.IOException;
 import java.util.*;
 
 @RequiredArgsConstructor(access = AccessLevel.MODULE)
-public abstract class AbstractEditorSupplier implements EditorSupplier {
-    private static final Map<String,Map<String,? extends AbstractEditorSupplier>> EDITOR_MAP = new HashMap<>();
+public abstract class EditorSupplier {
+    private static final Map<String,Map<String,? extends EditorSupplier>> EDITOR_MAP = new HashMap<>();
 
     private static final ItemStack SAVE_BUTTON = setDisplayName(
             new ItemStack(Material.BEACON),
@@ -53,39 +53,41 @@ public abstract class AbstractEditorSupplier implements EditorSupplier {
     final CutsceneManager manager;
     final ConfigurationSection section;
 
+    abstract Editor getEditor(Player player);
     public static boolean openEditor(@NotNull Player player, @NotNull String type, @NotNull String name) {
-        Map<String,? extends AbstractEditorSupplier> mapper = EDITOR_MAP.get(Objects.requireNonNull(type).toLowerCase());
+        Map<String,? extends EditorSupplier> mapper = EDITOR_MAP.get(Objects.requireNonNull(type).toLowerCase());
         if (mapper == null) return false;
-        AbstractEditorSupplier abstractEditor = mapper.get(name);
+        EditorSupplier abstractEditor = mapper.get(Objects.requireNonNull(name));
         if (abstractEditor == null) return false;
-        abstractEditor.getEditor(player).updateGui();
+        abstractEditor.getEditor(Objects.requireNonNull(player)).updateGui();
         return true;
     }
-    abstract class AbstractEditor implements EditorSupplier.Editor {
+    abstract class Editor {
         final Player player;
         final String srcName;
         final String invName;
 
-        AbstractEditor(Player player, String srcName) {
+        Editor(Player player, String srcName) {
             this.player = player;
             this.srcName = srcName;
             invName = ChatColor.GOLD.toString() + ChatColor.BOLD + ChatColor.ITALIC + srcName + ": "
                     + ChatColor.YELLOW + fileName + ": "
                     + ChatColor.WHITE + name;
         }
-        final Optional<ConfigurationSection> getConfig(ConfigurationSection section, String... key) {
-            return Arrays.stream(key).filter(k -> section.isSet(k) && section.isConfigurationSection(k)).findFirst().map(section::getConfigurationSection);
+        protected final Optional<ConfigurationSection> getConfig(ConfigurationSection section, String... key) {
+            return ConfigUtil.getConfig(section, key);
         }
-        final Optional<List<String>> getStringList(ConfigurationSection section, String... key) {
-            return Arrays.stream(key).filter(k -> section.isSet(k) && section.isList(k)).findFirst().map(section::getStringList);
+        protected final Optional<List<String>> getStringList(ConfigurationSection section, String... key) {
+            return ConfigUtil.getStringList(section,key);
         }
-        final Optional<String> getString(ConfigurationSection section, String... key) {
-            return Arrays.stream(key).filter(k -> section.isSet(k) && section.isString(k)).findFirst().map(section::getString);
+        protected final Optional<String> getString(ConfigurationSection section, String... key) {
+            return ConfigUtil.getString(section,key);
         }
-        final Optional<Integer> getInt(ConfigurationSection section, String... key) {
-            return Arrays.stream(key).filter(k -> section.isSet(k) && section.isInt(k)).findFirst().map(section::getInt);
+        protected final Optional<Integer> getInt(ConfigurationSection section, String... key) {
+            return ConfigUtil.getInt(section,key);
         }
-
+        abstract GuiExecutor getMainExecutor();
+        abstract ConfigurationSection getSaveData();
 
         public final void updateGui() {
             GuiExecutor executor = getMainExecutor();
