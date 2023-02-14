@@ -26,6 +26,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -34,7 +35,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public final class QuestSet {
+public final class QuestSet implements Comparable<QuestSet> {
 
     private static final List<BiConsumer<Player,Double>> EXP_GETTER = new ArrayList<>();
     static final NavigableSet<String> TYPE_LIST = new TreeSet<>();
@@ -46,6 +47,8 @@ public final class QuestSet {
     private final FunctionPrinter title;
     @Getter
     private final String type;
+    @Getter
+    private final int priority;
     @Getter
     private final String name;
     private final String completeAction;
@@ -71,6 +74,7 @@ public final class QuestSet {
         type = section.getString("Type",null);
         if (type != null) TYPE_LIST.add(type);
         title = getFunctionPrinter(section);
+        priority = section.getInt("Priority",-1);
         completeAction = getString(section);
         cancellable = section.getBoolean("Cancellable",false);
 
@@ -81,8 +85,8 @@ public final class QuestSet {
         exp = section.getDouble("Exp",0);
 
 
-        giveItem = getArray(section, "RewardItem", l -> QuestUtil.getItemBuilders(l));
-        takeItem = getArray(section, "TakeItem", l -> QuestUtil.getItemBuilders(l));
+        giveItem = getArray(section, "RewardItem", QuestUtil::getItemBuilders);
+        takeItem = getArray(section, "TakeItem", QuestUtil::getItemBuilders);
 
         getConfig(section,"Events").ifPresent(events -> {
             listeners = new ArrayList<>();
@@ -221,6 +225,12 @@ public final class QuestSet {
     }
     public boolean isCompleted(Player player) {
         return listeners != null && listeners.stream().allMatch(e -> e.isCompleted(player));
+    }
+
+    @Override
+    public int compareTo(@NotNull QuestSet o) {
+        int p = (priority >= 0 && o.priority >= 0) ? Integer.compare(priority,o.priority) : 0;
+        return ((p != 0) ? p : title.compareTo(o.title));
     }
 
 

@@ -41,7 +41,7 @@ public class InventorySupplier {
         this.name = name;
         this.row = row;
         this.builderMap = builderMap;
-        sameInventory = !name.ANY_MATCH && (builderMap == null || builderMap.values().stream().allMatch(ItemBuilder::isSameItem));
+        sameInventory = !name.anyMatch() && (builderMap == null || builderMap.values().stream().allMatch(ItemBuilder::isSameItem));
     }
     public Inventory getInventory() {
         return (sameInventory) ? getInventory(null) : null;

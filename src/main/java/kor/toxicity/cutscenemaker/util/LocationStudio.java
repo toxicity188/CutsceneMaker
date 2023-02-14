@@ -155,8 +155,7 @@ public class LocationStudio {
 
         @Override
         public int compareTo(@NotNull CurrentRecord o) {
-            Integer i = players.size();
-            return i.compareTo(o.players.size());
+            return Integer.compare(players.size(),o.players.size());
         }
     }
 

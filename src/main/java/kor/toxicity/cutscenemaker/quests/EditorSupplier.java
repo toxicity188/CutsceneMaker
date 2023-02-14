@@ -118,9 +118,9 @@ public abstract class EditorSupplier {
                                 configuration.load(file);
                                 configuration.set(name,getSaveData());
                                 configuration.save(file);
-                                player.sendMessage(ChatColor.AQUA + CutsceneMaker.NAME + ChatColor.WHITE + " The " + srcName + " " + name + " successfully saved.");
+                                CutsceneMaker.send(player,"The " + srcName + " " + name + " successfully saved.");
                             } catch (IOException | InvalidConfigurationException e) {
-                                player.sendMessage(ChatColor.AQUA + CutsceneMaker.NAME + ChatColor.WHITE + " unable to save the " + srcName + " " + name);
+                                CutsceneMaker.send(player,"Unable to save the " + srcName + " " + name);
                             }
                             manager.runTask(player::closeInventory);
                         });

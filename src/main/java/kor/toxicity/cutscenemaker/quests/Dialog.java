@@ -52,7 +52,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public final class Dialog extends EditorSupplier {
+public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
 
     private static final TypingManager DEFAULT_TYPING_EXECUTOR = current -> {
         if (current.inventory == null) current.inventory = InvUtil.create(current.talker + "'s dialog",CutsceneConfig.getInstance().getDefaultDialogRows());
@@ -441,6 +441,11 @@ public final class Dialog extends EditorSupplier {
     }
     private List<String> getStringList(ConfigurationSection section, String key) {
         return (section.isSet(key)) ? section.getStringList(key) : null;
+    }
+
+    @Override
+    public int compareTo(@NotNull Dialog o) {
+        return name.compareTo(o.name);
     }
 
     private class DialogRun implements Runnable {

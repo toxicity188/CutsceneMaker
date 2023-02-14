@@ -101,7 +101,7 @@ public final class QuestData extends CutsceneData {
 
                     int loop = first;
                     List<QuestSet> sub = questList.subList(0, Math.min(questList.size(), 9));
-                    sub.sort(Comparator.comparing(QuestSet::getName));
+                    sub.sort(Comparator.naturalOrder());
                     for (QuestSet questSet : sub) {
                         inventory.setItem(loop, ItemUtil.setInternalTag(questSet.getIcon(p),INTERNAL_NAME_KEY,questSet.getName()));
                         loop++;
@@ -209,7 +209,7 @@ public final class QuestData extends CutsceneData {
                             int i = first;
                             List<QuestSet> questSets = (current.getType() != null && current.getSorted() != null) ? current.getSorted() : questList;
                             List<QuestSet> subList = questSets.subList(k, Math.min(k + 9, questSets.size()));
-                            subList.sort(Comparator.comparing(QuestSet::getName));
+                            subList.sort(Comparator.naturalOrder());
                             for (QuestSet questSet : subList) {
                                 inventory.setItem(i++, ItemUtil.setInternalTag(questSet.getIcon(p),INTERNAL_NAME_KEY,questSet.getName()));
                             }
