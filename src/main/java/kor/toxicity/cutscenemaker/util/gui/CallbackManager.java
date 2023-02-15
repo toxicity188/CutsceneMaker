@@ -97,8 +97,8 @@ public final class CallbackManager implements Reloadable, Listener {
                     ItemStack stack = contents[i];
                     if (stack != null && stack.getType() != Material.AIR && stack.getType() != Material.BARRIER) stackMap.put(i,stack);
                 }
-                data.itemMap.accept(stackMap);
                 CALLBACK_MAP.remove(p);
+                data.itemMap.accept(stackMap);
             }
         }
     }
