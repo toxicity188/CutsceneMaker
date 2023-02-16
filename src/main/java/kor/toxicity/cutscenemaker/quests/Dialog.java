@@ -87,7 +87,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
     public static final ConfigMapReader<String> TALK_READER_STRING = new ConfigMapReader<>(ConfigurationSection::getString);
     public static final ConfigMapReader<ConfigurationSection> TALK_READER_CONFIGURATION = new ConfigMapReader<>((c, k) -> (c.isConfigurationSection(k)) ? c.getConfigurationSection(k) : null);
 
-    private static final Map<String, Function<String,? extends DialogAddonSupplier>> ADDON_MAP = new HashMap<>();
+    private static final Map<String, Function<String,? extends DialogAddon>> ADDON_MAP = new HashMap<>();
 
     private static final Map<String,TypingManager> TYPING_MANAGER_MAP = new HashMap<>();
     private static final Map<Player,DialogRun> CURRENT_TASK = new ConcurrentHashMap<>();
@@ -96,7 +96,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
     private static void addLazyTask(Runnable runnable) {
         LAZY_TASK.add(runnable);
     }
-    public static void addDialogAddon(String[] keys, Function<String,? extends DialogAddonSupplier> function) {
+    public static void addDialogAddon(String[] keys, Function<String,? extends DialogAddon> function) {
         addValue(
                 ADDON_MAP,
                 function,
@@ -331,16 +331,13 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
             TALK_READER_STRING.apply(this,section);
             TALK_READER_CONFIGURATION.apply(this,section);
 
-            Iterator<Map.Entry<String,Function<String,? extends DialogAddonSupplier>>> addonEntry = ADDON_MAP.entrySet().iterator();
+            Iterator<Map.Entry<String,Function<String,? extends DialogAddon>>> addonEntry = ADDON_MAP.entrySet().iterator();
             while (addonEntry.hasNext()) {
-                Map.Entry<String,Function<String,? extends DialogAddonSupplier>> entry = addonEntry.next();
+                Map.Entry<String,Function<String,? extends DialogAddon>> entry = addonEntry.next();
                 ConfigUtil.getStringList(section,entry.getKey()).ifPresent(l -> l.forEach(s -> addLazyTask(() -> {
                     try {
-                        DialogAddonSupplier supplier = entry.getValue().apply(s);
-                        if (supplier != null) {
-                            DialogAddon addon = supplier.getDialogAddon();
-                            if (addon != null) addonList.add(addon);
-                        }
+                        DialogAddon addon = entry.getValue().apply(s);
+                        if (addon != null) addonList.add(addon);
                     } catch (Exception e) {
                         e.printStackTrace();
                         addonEntry.remove();
@@ -616,7 +613,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
             }
         }
     }
-    static class DialogCurrent {
+    public static class DialogCurrent {
         @Getter
         final Player player;
         @Getter

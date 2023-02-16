@@ -24,7 +24,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-final class Present implements DialogAddonSupplier {
+final class Present implements DialogAddon {
 
     private static final FunctionPrinter DEFAULT_TITLE = new FunctionPrinter("Click your item you want to present!");
     private static final ItemSupplier DEFAULT_ITEM_SUPPLIER;
@@ -65,65 +65,56 @@ final class Present implements DialogAddonSupplier {
         if (presentKeys.size() == 0) throw new RuntimeException("This Present is empty!");
         supplier = (section.isSet("Confirm")) ? InvUtil.fromConfig(section,"Confirm") : DEFAULT_ITEM_SUPPLIER;
     }
-    private final DialogAddon presentAddon = new PresentAddon();
 
-    private class PresentAddon implements DialogAddon {
-
-        @Override
-        public boolean isGui() {
-            return true;
-        }
-
-        @Override
-        public void run(Dialog.DialogCurrent current) {
-            Inventory inv = InvUtil.create(name.print(current.player),3);
-            inv.setItem(13,current.inventory.getItem(CutsceneConfig.getInstance().getDefaultDialogCenter()));
-            inv.setItem(15, supplier.get(current.player));
-
-            Map<PresentKey,ItemStack> map = presentKeys.stream().collect(Collectors.toMap(k -> k, k -> k.builder.get(current.player)));
-            GuiRegister.registerNewGui(new GuiAdapter(current.player,inv) {
-                private PresentKey stack;
-                @Override
-                public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
-                    if (isPlayerInventory) {
-                        Map.Entry<PresentKey,ItemStack> entry = map.entrySet().stream().filter(e -> e.getValue().isSimilar(item)).findFirst().orElse(null);
-                        if (entry != null) {
-                            if (item.getAmount() < entry.getValue().getAmount()) {
-                                sendMessage(LESS_ITEM_AMOUNT_MESSAGE);
-                                return;
-                            }
-                            inv.setItem(11,entry.getValue());
-                            stack = entry.getKey();
-                            soundPlay.accept(current.player);
-                            current.player.updateInventory();
-                        } else sendMessage(NO_ITEM_FOUND_MESSAGE);
-                    } else if (slot == 15) {
-                        if (stack == null) {
-                            sendMessage(NO_ITEM_PRESENTED_MESSAGE);
-                            return;
-                        }
-                        manager.runTask(() -> {
-                            if (!stack.random().run(current)) {
-                                current.player.closeInventory();
-                            } else if (take) current.addTakeItem(stack.builder);
-                        });
-
-                    }
-                }
-                private void sendMessage(String msg) {
-                    MessageSender sender = QuestData.QUEST_MESSAGE_MAP.get(msg);
-                    if (sender != null) sender.send(current.player);
-                }
-            });
-        }
-    }
-    private Optional<ConfigurationSection> getSection(ConfigurationSection section, String key) {
-        return (section.isSet(key) && section.isConfigurationSection(key)) ? Optional.of(section.getConfigurationSection(key)) : Optional.empty();
+    @Override
+    public boolean isGui() {
+        return true;
     }
 
     @Override
-    public DialogAddon getDialogAddon() {
-        return presentAddon;
+    public void run(Dialog.DialogCurrent current) {
+        Inventory inv = InvUtil.create(name.print(current.player),3);
+        inv.setItem(13,current.inventory.getItem(CutsceneConfig.getInstance().getDefaultDialogCenter()));
+        inv.setItem(15, supplier.get(current.player));
+
+        Map<PresentKey,ItemStack> map = presentKeys.stream().collect(Collectors.toMap(k -> k, k -> k.builder.get(current.player)));
+        GuiRegister.registerNewGui(new GuiAdapter(current.player,inv) {
+            private PresentKey stack;
+            @Override
+            public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
+                if (isPlayerInventory) {
+                    Map.Entry<PresentKey,ItemStack> entry = map.entrySet().stream().filter(e -> e.getValue().isSimilar(item)).findFirst().orElse(null);
+                    if (entry != null) {
+                        if (item.getAmount() < entry.getValue().getAmount()) {
+                            sendMessage(LESS_ITEM_AMOUNT_MESSAGE);
+                            return;
+                        }
+                        inv.setItem(11,entry.getValue());
+                        stack = entry.getKey();
+                        soundPlay.accept(current.player);
+                        current.player.updateInventory();
+                    } else sendMessage(NO_ITEM_FOUND_MESSAGE);
+                } else if (slot == 15) {
+                    if (stack == null) {
+                        sendMessage(NO_ITEM_PRESENTED_MESSAGE);
+                        return;
+                    }
+                    manager.runTask(() -> {
+                        if (!stack.random().run(current)) {
+                            current.player.closeInventory();
+                        } else if (take) current.addTakeItem(stack.builder);
+                    });
+
+                }
+            }
+            private void sendMessage(String msg) {
+                MessageSender sender = QuestData.QUEST_MESSAGE_MAP.get(msg);
+                if (sender != null) sender.send(current.player);
+            }
+        });
+    }
+    private Optional<ConfigurationSection> getSection(ConfigurationSection section, String key) {
+        return (section.isSet(key) && section.isConfigurationSection(key)) ? Optional.of(section.getConfigurationSection(key)) : Optional.empty();
     }
 
     @EqualsAndHashCode

@@ -22,7 +22,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-final class QnA extends EditorSupplier implements DialogAddonSupplier {
+final class QnA extends EditorSupplier implements DialogAddon {
     private final FunctionPrinter name;
     private final int slot;
     private final int center;
@@ -47,41 +47,31 @@ final class QnA extends EditorSupplier implements DialogAddonSupplier {
             });
         } else throw new IllegalStateException("Invalid statement.");
     }
-    private final DialogAddon qnaAddon = new QnAAddon();
+    @Override
+    public boolean isGui() {
+        return true;
+    }
+    @Override
+    public void run(Dialog.DialogCurrent current) {
 
-    private class QnAAddon implements DialogAddon {
-
-        @Override
-        public boolean isGui() {
-            return true;
-        }
-        @Override
-        public void run(Dialog.DialogCurrent current) {
-
-            Inventory inventory = InvUtil.create((name != null) ? name.print(current.player) : (current.inventory != null ? current.inventory.getTitle() : current.talker + "'s question"),slot);
-            ItemStack itemStack = current.inventory.getItem(CutsceneConfig.getInstance().getDefaultDialogCenter());
-            buttonMap.forEach((i,b) -> inventory.setItem(i,b.builder.get(current.player)));
-            if (itemStack != null) inventory.setItem(center,itemStack);
-            GuiRegister.registerNewGui(new GuiAdapter(current.player, inventory) {
-                @Override
-                public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
-                    Button button1 = buttonMap.get(slot);
-                    if (button1 != null) {
-                        manager.runTask(() -> {
-                            if (button1.dialogs == null || !random(button1.dialogs).run(current)) current.player.closeInventory();
-                        });
-                    }
+        Inventory inventory = InvUtil.create((name != null) ? name.print(current.player) : (current.inventory != null ? current.inventory.getTitle() : current.talker + "'s question"),slot);
+        ItemStack itemStack = current.inventory.getItem(CutsceneConfig.getInstance().getDefaultDialogCenter());
+        buttonMap.forEach((i,b) -> inventory.setItem(i,b.builder.get(current.player)));
+        if (itemStack != null) inventory.setItem(center,itemStack);
+        GuiRegister.registerNewGui(new GuiAdapter(current.player, inventory) {
+            @Override
+            public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
+                Button button1 = buttonMap.get(slot);
+                if (button1 != null) {
+                    manager.runTask(() -> {
+                        if (button1.dialogs == null || !random(button1.dialogs).run(current)) current.player.closeInventory();
+                    });
                 }
-            });
-        }
+            }
+        });
     }
     private <T> T random(T[] dialogs) {
         return dialogs[ThreadLocalRandom.current().nextInt(0,dialogs.length)];
-    }
-
-    @Override
-    public DialogAddon getDialogAddon() {
-        return qnaAddon;
     }
 
 
@@ -99,7 +89,7 @@ final class QnA extends EditorSupplier implements DialogAddonSupplier {
     private class QnAEditor extends Editor {
         private final ConfigurationSection resources = QuestUtil.copy(section);
         private final Map<Integer,ConfigurationSection> sectionMap = new HashMap<>();
-        private String name = getString(resources,"Name").orElse(null);
+        private final String name = getString(resources,"Name").orElse(null);
         private int slot = getInt(resources,"Slot").orElse(3);
 
         private int newCenter = Math.floorDiv(slot+1,2)*9-5;
@@ -159,7 +149,7 @@ final class QnA extends EditorSupplier implements DialogAddonSupplier {
             sub.setItem(13,defItem);
             GuiRegister.registerNewGui(new GuiAdapter(player,sub) {
                 private ItemStack stack = defItem;
-                private String[] dialogs = getStringList(button,"Dialog").map(l -> l.toArray(new String[0])).orElse(null);
+                private final String[] dialogs = getStringList(button,"Dialog").map(l -> l.toArray(new String[0])).orElse(null);
                 @Override
                 public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
                     if (item.getType() == Material.AIR) return;
