@@ -37,7 +37,7 @@ public final class QuestUtil {
     static Dialog getDialog(String s) {
         return getFromMap(s,QuestData.DIALOG_MAP,"Dialog");
     }
-    private static <V> V getFromMap(String s, Map<String,V> targetMap, String name) {
+    static <V> V getFromMap(String s, Map<String,V> targetMap, String name) {
         V v = targetMap.get(s);
         if (v == null) CutsceneMaker.warn("the " + name + " named \"" + s + "\" doesn't exist!");
         return v;

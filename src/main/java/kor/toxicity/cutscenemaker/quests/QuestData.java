@@ -335,8 +335,8 @@ public final class QuestData extends CutsceneData {
                 CutsceneMaker.warn("Error: " + e.getMessage() + " (Present " + s + ")");
             }
         });
-        Dialog.LATE_CHECK.forEach(Runnable::run);
-        Dialog.LATE_CHECK.clear();
+        Dialog.LAZY_TASK.forEach(Runnable::run);
+        Dialog.LAZY_TASK.clear();
         ConfigLoad npc = getPlugin().read("NPC");
         npc.getAllFiles().forEach(s -> {
             ConfigurationSection section = npc.getConfigurationSection(s);

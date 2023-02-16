@@ -22,7 +22,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-final class QnA extends EditorSupplier {
+final class QnA extends EditorSupplier implements DialogAddonSupplier {
     private final FunctionPrinter name;
     private final int slot;
     private final int center;
@@ -47,27 +47,42 @@ final class QnA extends EditorSupplier {
             });
         } else throw new IllegalStateException("Invalid statement.");
     }
-    void run(Dialog.DialogCurrent current) {
-        Inventory inventory = InvUtil.create((name != null) ? name.print(current.player) : (current.inventory != null ? current.inventory.getTitle() : current.talker + "'s question"),slot);
-        ItemStack itemStack = current.inventory.getItem(CutsceneConfig.getInstance().getDefaultDialogCenter());
-        buttonMap.forEach((i,b) -> inventory.setItem(i,b.builder.get(current.player)));
-        if (itemStack != null) inventory.setItem(center,itemStack);
-        GuiRegister.registerNewGui(new GuiAdapter(current.player, inventory) {
-            @Override
-            public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
-                Button button1 = buttonMap.get(slot);
-                if (button1 != null) {
-                    manager.runTask(() -> {
-                        if (button1.dialogs == null || !random(button1.dialogs).run(current)) current.player.closeInventory();
-                    });
+    private final DialogAddon qnaAddon = new QnAAddon();
+
+    private class QnAAddon implements DialogAddon {
+
+        @Override
+        public boolean isGui() {
+            return true;
+        }
+        @Override
+        public void run(Dialog.DialogCurrent current) {
+
+            Inventory inventory = InvUtil.create((name != null) ? name.print(current.player) : (current.inventory != null ? current.inventory.getTitle() : current.talker + "'s question"),slot);
+            ItemStack itemStack = current.inventory.getItem(CutsceneConfig.getInstance().getDefaultDialogCenter());
+            buttonMap.forEach((i,b) -> inventory.setItem(i,b.builder.get(current.player)));
+            if (itemStack != null) inventory.setItem(center,itemStack);
+            GuiRegister.registerNewGui(new GuiAdapter(current.player, inventory) {
+                @Override
+                public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
+                    Button button1 = buttonMap.get(slot);
+                    if (button1 != null) {
+                        manager.runTask(() -> {
+                            if (button1.dialogs == null || !random(button1.dialogs).run(current)) current.player.closeInventory();
+                        });
+                    }
                 }
-            }
-        });
+            });
+        }
     }
     private <T> T random(T[] dialogs) {
         return dialogs[ThreadLocalRandom.current().nextInt(0,dialogs.length)];
     }
 
+    @Override
+    public DialogAddon getDialogAddon() {
+        return qnaAddon;
+    }
 
 
     @RequiredArgsConstructor

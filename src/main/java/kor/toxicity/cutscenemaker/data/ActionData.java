@@ -67,6 +67,7 @@ public final class ActionData extends CutsceneData {
         actions.put("animation", ActAnimation.class);
         actions.put("studio", ActStudio.class);
         actions.put("quitstudio", ActQuitStudio.class);
+        actions.put("stopsound", ActStopSound.class);
 
         if (Bukkit.getPluginManager().isPluginEnabled("Skript")) {
             actions.put("skript", ActSetSkriptVar.class);

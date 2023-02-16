@@ -7,15 +7,13 @@ import kor.toxicity.cutscenemaker.data.ActionData;
 import kor.toxicity.cutscenemaker.events.DialogEndEvent;
 import kor.toxicity.cutscenemaker.events.DialogStartEvent;
 import kor.toxicity.cutscenemaker.material.WrappedMaterial;
-import kor.toxicity.cutscenemaker.util.EvtUtil;
-import kor.toxicity.cutscenemaker.util.InvUtil;
-import kor.toxicity.cutscenemaker.util.ItemBuilder;
-import kor.toxicity.cutscenemaker.util.TextUtil;
+import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.util.functions.ActionPredicate;
 import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import kor.toxicity.cutscenemaker.util.gui.*;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -44,10 +42,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
+import java.util.function.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -89,12 +84,25 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
     };
 
     private static final Pattern TALK_PATTERN = Pattern.compile("(((?<talker>(\\w|\\W)+):)?)(\\s?)(?<content>(\\w|\\W)+)",Pattern.UNICODE_CHARACTER_CLASS);
-    public static final ConfigMapReader<String> READER_STRING = new ConfigMapReader<>(ConfigurationSection::getString);
-    public static final ConfigMapReader<ConfigurationSection> READER_CONFIGURATION = new ConfigMapReader<>((c, k) -> (c.isConfigurationSection(k)) ? c.getConfigurationSection(k) : null);
+    public static final ConfigMapReader<String> TALK_READER_STRING = new ConfigMapReader<>(ConfigurationSection::getString);
+    public static final ConfigMapReader<ConfigurationSection> TALK_READER_CONFIGURATION = new ConfigMapReader<>((c, k) -> (c.isConfigurationSection(k)) ? c.getConfigurationSection(k) : null);
+
+    private static final Map<String, Function<String,? extends DialogAddonSupplier>> ADDON_MAP = new HashMap<>();
 
     private static final Map<String,TypingManager> TYPING_MANAGER_MAP = new HashMap<>();
     private static final Map<Player,DialogRun> CURRENT_TASK = new ConcurrentHashMap<>();
-    static final List<Runnable> LATE_CHECK = new ArrayList<>();
+    static final List<Runnable> LAZY_TASK = new ArrayList<>();
+
+    private static void addLazyTask(Runnable runnable) {
+        LAZY_TASK.add(runnable);
+    }
+    public static void addDialogAddon(String[] keys, Function<String,? extends DialogAddonSupplier> function) {
+        addValue(
+                ADDON_MAP,
+                function,
+                keys
+        );
+    }
 
     private static final Map<String,BiConsumer<Dialog,List<String>>> STRING_LIST_PARSER = new HashMap<>();
     static void stopAll(CutsceneMaker plugin) {
@@ -133,13 +141,13 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                 }
             };
         });
-        READER_STRING.add("Talker",(d,s) -> d.talker = new FunctionPrinter(s));
-        READER_STRING.add("Interface",(d,s) -> {
+        TALK_READER_STRING.add("Talker",(d, s) -> d.talker = new FunctionPrinter(s));
+        TALK_READER_STRING.add("Interface",(d, s) -> {
             d.typingManager = TYPING_MANAGER_MAP.get(s);
             if (d.typingManager == null) CutsceneMaker.warn("The Interface named \"" + s + "\" doesn't exist!");
         });
-        READER_STRING.add("Sound",(d,s) -> d.addConsumer(QuestUtil.getSoundPlay(s)));
-        READER_CONFIGURATION.add("Item",(d,c) -> c.getKeys(false).forEach(s -> {
+        TALK_READER_STRING.add("Sound",(d, s) -> d.addConsumer(QuestUtil.getSoundPlay(s)));
+        TALK_READER_CONFIGURATION.add("Item",(d, c) -> c.getKeys(false).forEach(s -> {
             try {
                 int i = Integer.parseInt(s);
                 CutsceneConfig config = CutsceneConfig.getInstance();
@@ -151,7 +159,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                 CutsceneMaker.warn("fail to load the item data: " + s);
             }
         }));
-        STRING_LIST_PARSER.put("Condition",(q,t) -> LATE_CHECK.add(() -> t.forEach(s -> {
+        STRING_LIST_PARSER.put("Condition",(q,t) -> addLazyTask(() -> t.forEach(s -> {
             String[] cond = TextUtil.split(s," ");
             ActionPredicate<LivingEntity> check = (cond.length >= 3) ? ConditionBuilder.LIVING_ENTITY.find(cond) : null;
             if (check != null) {
@@ -161,7 +169,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                 } else q.addPredicate(d -> check.test(d.player));
             }
         })));
-        STRING_LIST_PARSER.put("CheckQuest",(q,t) -> LATE_CHECK.add(() -> t.forEach(s -> {
+        STRING_LIST_PARSER.put("CheckQuest",(q,t) -> addLazyTask(() -> t.forEach(s -> {
             String[] args = TextUtil.split(s," ");
             ActionPredicate<Player> predicate = q.getQuestChecker(args[0],(args.length > 1) ? args[1].toLowerCase() : "complete");
             if (predicate != null) {
@@ -173,12 +181,12 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
         })));
         addValue(
                 STRING_LIST_PARSER,
-                (q,t) -> LATE_CHECK.add(() -> q.endDialog = QuestUtil.getDialog(t)),
+                (q,t) -> addLazyTask(() -> q.endDialog = QuestUtil.getDialog(t)),
                 "LinkedDialog","Dialog"
         );
         addValue(
                 STRING_LIST_PARSER,
-                (q,t) -> LATE_CHECK.add(() -> q.subDialog = QuestUtil.getDialog(t)),
+                (q,t) -> addLazyTask(() -> q.subDialog = QuestUtil.getDialog(t)),
                 "LinkedSubDialog","SubDialog"
         );
         addValue(
@@ -186,16 +194,15 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                 (q,t) -> q.actions = t.toArray(new String[0]),
                 "LinkedAction","Action"
         );
-        addValue(
-                STRING_LIST_PARSER,
-                (q,t) -> LATE_CHECK.add(() -> q.endQnA = QuestUtil.getQnA(t)),
-                "LinkedQnA","QnA"
+        addDialogAddon(
+                new String[] {"LinkedQnA","QnA"},
+                s -> QuestUtil.getFromMap(s,QuestData.QNA_MAP,"QnA")
         );
-        addValue(
-                STRING_LIST_PARSER,
-                (q,t) -> LATE_CHECK.add(() -> q.endPresent = QuestUtil.getPresent(t)),
-                "LinkedPresent","Present"
+        addDialogAddon(
+                new String[] {"LinkedPresent","Present"},
+                s -> QuestUtil.getFromMap(s,QuestData.PRESENT_MAP,"Present")
         );
+
         addValue(
                 STRING_LIST_PARSER,
                 (q,t) -> q.takeItem = QuestUtil.getItemBuilders(t),
@@ -224,8 +231,8 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
     private final DialogRecord[] records;
     private Dialog[] subDialog, endDialog;
     private String[] actions;
-    private QnA[] endQnA;
-    private Present[] endPresent;
+
+    private final List<DialogAddon> addonList = new ArrayList<>();
 
     private ItemBuilder[] takeItem, giveItem;
 
@@ -321,26 +328,36 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
             }).filter(Objects::nonNull).toArray(DialogRecord[]::new);
             exception = section.getBoolean("Exception",false);
 
-            READER_STRING.apply(this,section);
-            READER_CONFIGURATION.apply(this,section);
+            TALK_READER_STRING.apply(this,section);
+            TALK_READER_CONFIGURATION.apply(this,section);
 
-            if (section.isSet("TypingSound") && section.isConfigurationSection("TypingSound")) {
-                ConfigurationSection typing = section.getConfigurationSection("TypingSound");
-                typingSounds = typing.getKeys(false).stream().collect(Collectors.toMap(s -> s.replace("_"," "), s -> QuestUtil.getSoundPlay(typing.getString(s))));
-            }
-            if (section.isSet("Option") && section.isConfigurationSection("Option")) {
-                ConfigurationSection option = section.getConfigurationSection("Option");
-                option.getKeys(false).forEach(s -> {
-                    switch (s.toLowerCase()) {
-                        case "damage":
-                            cancelDamage = option.getBoolean(s);
-                            break;
-                        case "pickup":
-                            cancelPickup = option.getBoolean(s);
-                            break;
+            Iterator<Map.Entry<String,Function<String,? extends DialogAddonSupplier>>> addonEntry = ADDON_MAP.entrySet().iterator();
+            while (addonEntry.hasNext()) {
+                Map.Entry<String,Function<String,? extends DialogAddonSupplier>> entry = addonEntry.next();
+                ConfigUtil.getStringList(section,entry.getKey()).ifPresent(l -> l.forEach(s -> addLazyTask(() -> {
+                    try {
+                        DialogAddonSupplier supplier = entry.getValue().apply(s);
+                        if (supplier != null) {
+                            DialogAddon addon = supplier.getDialogAddon();
+                            if (addon != null) addonList.add(addon);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        addonEntry.remove();
                     }
-                });
+                })));
             }
+            ConfigUtil.getConfig(section,"TypingSound").ifPresent(c -> typingSounds = c.getKeys(false).stream().collect(Collectors.toMap(s -> s.replace("_"," "), s -> QuestUtil.getSoundPlay(c.getString(s)))));
+            ConfigUtil.getConfig(section,"Option").ifPresent(c -> c.getKeys(false).forEach(s -> {
+                switch (s.toLowerCase()) {
+                    case "damage":
+                        cancelDamage = c.getBoolean(s);
+                        break;
+                    case "pickup":
+                        cancelPickup = c.getBoolean(s);
+                        break;
+                }
+            }));
             STRING_LIST_PARSER.forEach((k,d) -> {
                 List<String> list = getStringList(section,k);
                 if (list != null) d.accept(this,list);
@@ -392,6 +409,9 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
         QuestSet questSet = QuestData.QUEST_SET_MAP.get(key);
         if (questSet == null) warn("The QuestSet named \"" + key + "\" doesn't exist!");
         return questSet;
+    }
+    private <T> T random(List<T> list) {
+        return list.get(ThreadLocalRandom.current().nextInt(0,list.size()));
     }
     private <T> T random(T[] dialogs) {
         return dialogs[ThreadLocalRandom.current().nextInt(0,dialogs.length)];
@@ -461,15 +481,10 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
             stop();
             if (setQuest != null) setQuest.accept(current.player);
             if (endDialog == null || !random(endDialog).run(current)) {
-                if (endQnA != null) {
-                    random(endQnA).run(current);
-                    current.isOpened = false;
-                    return;
-                }
-                if (endPresent != null) {
-                    random(endPresent).run(current);
-                    current.isOpened = false;
-                    return;
+                if (!addonList.isEmpty()) {
+                    DialogAddon addon = random(addonList);
+                    current.isOpened = !addon.isGui();
+                    addon.run(current);
                 }
                 if (current.isOpened) {
                     current.player.closeInventory();
@@ -601,8 +616,10 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
             }
         }
     }
-    static final class DialogCurrent {
+    static class DialogCurrent {
+        @Getter
         final Player player;
+        @Getter
         final String talker;
         Inventory inventory;
         final Map<String ,Consumer<Player>> typingSound;
