@@ -154,9 +154,7 @@ public final class CutsceneCommand implements TabExecutor, Listener {
             }
             @CommandHandler(aliases = {"re","rd","리로드"}, length = 0, description = "reload this plugin.", usage = "/cutscene reload", sender = {SenderType.CONSOLE, SenderType.PLAYER})
             public void reload(CommandPacket pkg) {
-                EvtUtil.call(new ActionReloadStartEvent());
                 pl.load(t -> send(pkg.getSender(),"load finished. (" + t + "ms)"));
-                EvtUtil.call(new ActionReloadEndEvent());
             }
             @CommandHandler(aliases = {"실행","r"}, length = 1,description = "run Action.",usage = "/cutscene run <name>",sender = {SenderType.ENTITY})
             public void run(CommandPacket pkg) {

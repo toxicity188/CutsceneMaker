@@ -2,8 +2,11 @@ package kor.toxicity.cutscenemaker;
 
 import kor.toxicity.cutscenemaker.data.*;
 import kor.toxicity.cutscenemaker.entities.EntityManager;
+import kor.toxicity.cutscenemaker.events.ActionReloadEndEvent;
+import kor.toxicity.cutscenemaker.events.ActionReloadStartEvent;
 import kor.toxicity.cutscenemaker.quests.QuestData;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
+import kor.toxicity.cutscenemaker.util.EvtUtil;
 import kor.toxicity.cutscenemaker.util.databases.CutsceneDB;
 import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
 import kor.toxicity.cutscenemaker.util.gui.CallbackManager;
@@ -91,13 +94,18 @@ public final class CutsceneMaker extends JavaPlugin {
     }
 
     void load(Consumer<Long> callback) {
+        EvtUtil.call(new ActionReloadStartEvent());
         Bukkit.getScheduler().runTaskAsynchronously(this,() -> {
             try {
                 long time = System.currentTimeMillis();
                 reload.forEach(Reloadable::reload);
                 LATE_CHECK.forEach(Runnable::run);
                 LATE_CHECK.clear();
-                if (callback != null) callback.accept(System.currentTimeMillis() - time);
+                long time2 = System.currentTimeMillis() - time;
+                Bukkit.getScheduler().runTask(this,() -> {
+                    if (callback != null) callback.accept(time2);
+                    EvtUtil.call(new ActionReloadEndEvent());
+                });
             } catch (Exception e) {
                 warn("Error has occurred while reloading: " + e.getMessage());
             }
