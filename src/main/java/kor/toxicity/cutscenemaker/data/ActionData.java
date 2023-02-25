@@ -68,6 +68,7 @@ public final class ActionData extends CutsceneData {
         actions.put("particle", ActParticle.class);
         actions.put("lazywarp", ActLazyWarp.class);
         actions.put("cooldown", ActCoolTime.class);
+        actions.put("opentemp", ActOpenTemp.class);
 
         if (Bukkit.getPluginManager().isPluginEnabled("Skript")) {
             actions.put("skript", ActSetSkriptVar.class);

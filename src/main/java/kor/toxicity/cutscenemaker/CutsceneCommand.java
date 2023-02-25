@@ -34,6 +34,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -218,7 +219,7 @@ public final class CutsceneCommand implements TabExecutor, Listener {
                     send(pkg.getSender(), "cannot save location.");
                 }
             }
-            @CommandHandler(aliases = {"tp"}, length = 1, description = "teleport to a registered location.", usage = "/cutscene teleport <name>", sender = SenderType.ENTITY)
+            @CommandHandler(aliases = {"tp","텔포"}, length = 1, description = "teleport to a registered location.", usage = "/cutscene teleport <name>", sender = SenderType.ENTITY)
             public void teleport(CommandPacket pkg) {
                 String name = pkg.getArgs()[1];
                 Location loc = pl.getManager().getLocations().getValue(name);
@@ -254,7 +255,7 @@ public final class CutsceneCommand implements TabExecutor, Listener {
                     send(pkg.getSender(), "this item's material is: " + item.getType());
                 }
             }
-            @CommandHandler(length = 1, description = "show the variable list of specific player.", usage = "/cutscene log", sender = {SenderType.CONSOLE, SenderType.PLAYER})
+            @CommandHandler(length = 1, description = "show the variable list of specific player.", usage = "/cutscene log <player>", sender = {SenderType.CONSOLE, SenderType.PLAYER})
             public void log(CommandPacket pkg) {
                 String name = pkg.getArgs()[1];
                 Player player = Bukkit.getPlayer(name);
@@ -276,6 +277,90 @@ public final class CutsceneCommand implements TabExecutor, Listener {
                     }
                     showVars(pkg.getSender(),container.getVars());
                 }
+            }
+            @CommandHandler(length = 1, description = "put your item in specific player's temp storage.", usage = "/cut temp <player>", sender = SenderType.PLAYER)
+            public void temp(CommandPacket pkg) {
+                Player sender = (Player) pkg.getSender();
+                int count;
+                if (pkg.getArgs().length > 2) {
+                    try {
+                        count = Integer.parseInt(pkg.getArgs()[2]);
+                    } catch (Exception e) {
+                        send(pkg.getSender(),"usage : /cut temp <player> <day(int)>");
+                        return;
+                    }
+                } else count = -1;
+
+                ItemStack stack = sender.getInventory().getItemInMainHand();
+                if (stack == null || stack.getType() == Material.AIR) {
+                    send(pkg.getSender(),"hold the item you want to put.");
+                    return;
+                }
+                String name = pkg.getArgs()[1];
+                switch (name) {
+                    case "*":
+                        pl.getManager().runTaskAsynchronously(() -> {
+                            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                                tempOnlineSave(onlinePlayer,stack,count);
+                            }
+                            for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+                                if (!offlinePlayer.isOnline()) tempSave(offlinePlayer,stack,count);
+                            }
+                        });
+                        send(pkg.getSender(),"successfully putted.");
+                        return;
+                    case "*online":
+                        pl.getManager().runTaskAsynchronously(() -> {
+                            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                                tempOnlineSave(onlinePlayer,stack,count);
+                            }
+                        });
+                        send(pkg.getSender(),"successfully putted.");
+                        return;
+                    case "*offline":
+                        pl.getManager().runTaskAsynchronously(() -> {
+                            for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+                                if (!offlinePlayer.isOnline()) tempSave(offlinePlayer,stack,count);
+                            }
+                        });
+                        send(pkg.getSender(),"successfully putted.");
+                        return;
+                }
+                Player player = Bukkit.getPlayer(name);
+                if (player == null) {
+                    OfflinePlayer offlinePlayer = Arrays.stream(Bukkit.getOfflinePlayers()).filter(o -> o.getName().equals(name)).findFirst().orElse(null);
+                    if (offlinePlayer != null) {
+                        pl.getManager().runTaskAsynchronously(() -> {
+                            tempSave(offlinePlayer,stack,count);
+                            send(pkg.getSender(),"successfully putted.");
+                        });
+                    } else send(pkg.getSender(),"player not found.");
+                } else {
+                    tempOnlineSave(player,stack,count);
+                    send(pkg.getSender(),"successfully putted.");
+                }
+            }
+            private void tempOnlineSave(Player player, ItemStack stack, int count) {
+                pl.getManager().getVars(player).getTempStorage().add(new StorageItem(
+                        stack,
+                        LocalDate.now().getYear(),
+                        LocalDate.now().getMonthValue(),
+                        LocalDate.now().getDayOfMonth(),
+                        count,
+                        count > 0
+                ));
+            }
+            private void tempSave(OfflinePlayer player, ItemStack item, int count) {
+                VarsContainer container = CutsceneDB.read(player,pl);
+                container.getTempStorage().add(new StorageItem(
+                        item,
+                        LocalDate.now().getYear(),
+                        LocalDate.now().getMonthValue(),
+                        LocalDate.now().getDayOfMonth(),
+                        count,
+                        count > 0
+                ));
+                CutsceneDB.save(player,pl,container);
             }
             @CommandHandler(length = 0, description = "get the wand.", usage = "/cutscene wand",sender = SenderType.PLAYER)
             public void wand(CommandPacket pkg) {
@@ -322,13 +407,13 @@ public final class CutsceneCommand implements TabExecutor, Listener {
                         break;
                 }
             }
-            @CommandHandler(length = 2, aliases = "p",description = "open gui editor.", usage = "/cutscene project <dialog> <name>", sender = SenderType.PLAYER)
+            @CommandHandler(length = 2, aliases = {"p","프로젝트"},description = "open gui editor.", usage = "/cutscene project <dialog> <name>", sender = SenderType.PLAYER)
             public void project(CommandPacket pkg) {
                 if (!EditorSupplier.openEditor((Player) pkg.getSender(),pkg.getArgs()[1],pkg.getArgs()[2])) {
                     send(pkg.getSender(),"fail to open editor.");
                 }
             }
-            @CommandHandler(length = 3,aliases = "c",description = "create new editor.",usage = "/cutscene create <dialog> <file> <name>", sender = SenderType.PLAYER)
+            @CommandHandler(length = 3,aliases = {"c","생성"},description = "create new editor.",usage = "/cutscene create <dialog> <file> <name>", sender = SenderType.PLAYER)
             public void create(CommandPacket pkg) {
                 String[] arg = pkg.getArgs();
                 if (!EditorSupplier.createEditor((Player) pkg.getSender(),pl.getManager(),arg[1],arg[2],arg[3])) {

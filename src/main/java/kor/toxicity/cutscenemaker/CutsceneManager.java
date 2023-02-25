@@ -1,6 +1,5 @@
 package kor.toxicity.cutscenemaker;
 
-import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import de.slikey.effectlib.EffectManager;
@@ -139,7 +138,14 @@ public final class CutsceneManager {
         }
         private void load(Player player) {
             Bukkit.getScheduler().runTaskAsynchronously(plugin,() -> {
-                container.put(player, CutsceneDB.load(player,plugin));
+                VarsContainer container1 = CutsceneDB.load(player,plugin);
+                container1.addTask(runTaskTimer(() -> {
+                    if (container1.getTempStorage().size() > 0) {
+                        String str = CutsceneConfig.getInstance().getTempStorageMessage().print(player);
+                        if (!"".equals(str)) player.sendMessage(str);
+                    }
+                },60,60 * 20));
+                container.put(player, container1);
                 Bukkit.getScheduler().runTask(plugin,() -> EvtUtil.call(new UserDataLoadEvent(player)));
             });
         }
@@ -153,5 +159,9 @@ public final class CutsceneManager {
                 }
             });
         }
+    }
+
+    public void openTempStorage(Player player) {
+        plugin.tempStorage(player);
     }
 }

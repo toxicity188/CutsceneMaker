@@ -2,6 +2,7 @@ package kor.toxicity.cutscenemaker;
 
 import kor.toxicity.cutscenemaker.quests.QuestUtil;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
+import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import lombok.Getter;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -22,6 +23,9 @@ public class CutsceneConfig {
     private GameMode defaultGameMode;
     @Getter
     private boolean changeGameMode, debug;
+
+    @Getter
+    private FunctionPrinter tempStorageMessage, tempStorageName;
     @Getter
     private int autoSaveTime;
     @Getter
@@ -51,6 +55,9 @@ public class CutsceneConfig {
             });
 
             dialogReader = getMaterial(load.getString("default-dialog-reader","BOOK"));
+
+            tempStorageMessage = new FunctionPrinter(load.getString("temp-storage-message",""));
+            tempStorageName = new FunctionPrinter(load.getString("temp-storage-name",""));
 
             changeGameMode = load.getBoolean("change-game-mode",true);
             debug = load.getBoolean("debug",false);

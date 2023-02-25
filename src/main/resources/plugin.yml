@@ -23,3 +23,7 @@ commands:
       description: Cutscene quest
       usage: /<command>
       aliases: [q,퀘스트,퀘]
+  temp:
+      description: Cutscene temp storage
+      usage: /<command>
+      aliases: [보관함]

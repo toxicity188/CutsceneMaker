@@ -159,16 +159,6 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                 d.warn("fail to load the item data: " + s);
             }
         }));
-        STRING_LIST_PARSER.put("Condition",(q,t) -> addLazyTask(() -> t.forEach(s -> {
-            String[] cond = TextUtil.split(s," ");
-            ActionPredicate<LivingEntity> check = (cond.length >= 3) ? ConditionBuilder.LIVING_ENTITY.find(cond) : null;
-            if (check != null) {
-                if (cond.length > 3) {
-                    Dialog dialog = QuestUtil.getDialog(cond[3]);
-                    if (dialog != null) q.addPredicate(d -> check.castInstead(p -> dialog.run(d)).test(d.player));
-                } else q.addPredicate(d -> check.test(d.player));
-            }
-        })));
         STRING_LIST_PARSER.put("CheckQuest",(q,t) -> addLazyTask(() -> t.forEach(s -> {
             String[] args = TextUtil.split(s," ");
             ActionPredicate<Player> predicate = q.getQuestChecker(args[0],(args.length > 1) ? args[1].toLowerCase() : "complete");
@@ -177,6 +167,16 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                     Dialog dialog = QuestUtil.getDialog(args[2]);
                     if (dialog != null) q.addPredicate(d -> predicate.castInstead(p -> dialog.run(d)).test(d.player));
                 } else q.addPredicate(d -> predicate.test(d.player));
+            }
+        })));
+        STRING_LIST_PARSER.put("Condition",(q,t) -> addLazyTask(() -> t.forEach(s -> {
+            String[] cond = TextUtil.split(s," ");
+            ActionPredicate<LivingEntity> check = (cond.length >= 3) ? ConditionBuilder.LIVING_ENTITY.find(cond) : null;
+            if (check != null) {
+                if (cond.length > 3) {
+                    Dialog dialog = QuestUtil.getDialog(cond[3]);
+                    if (dialog != null) q.addPredicate(d -> check.castInstead(p -> dialog.run(d)).test(d.player));
+                } else q.addPredicate(d -> check.test(d.player));
             }
         })));
         addValue(

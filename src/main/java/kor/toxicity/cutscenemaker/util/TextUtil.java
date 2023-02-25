@@ -9,6 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.text.DecimalFormat;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
@@ -19,6 +20,35 @@ public final class TextUtil {
     }
     public static final String COMMA = ",";
 
+    private static final int[] MONTH_DAY = new int[] {
+            31,
+            28,
+            31,
+            30,
+            31,
+            30,
+            31,
+            31,
+            30,
+            31,
+            30,
+            31
+    };
+    private static int monthCal(int month) {
+        int local = LocalDate.now().getMonthValue();
+        int compare = Integer.compare(month,local);
+        if (compare == 0) return 0;
+        int min = Math.min(month,local) - 1;
+        int ret = 0;
+        for (int i = 0; i < Math.abs(local - month); i++) {
+            ret += MONTH_DAY[min + i];
+        }
+        return compare * ret;
+    }
+    public static int calculateDay(int year, int month, int day) {
+        LocalDate date = LocalDate.now();
+        return ((year - date.getYear())*365 + monthCal(month) + (day - date.getDayOfMonth()));
+    }
 
     public static String toSimpleLoc(Location loc) {
         return loc.getBlockX() + COMMA + loc.getBlockY() + COMMA + loc.getBlockZ();

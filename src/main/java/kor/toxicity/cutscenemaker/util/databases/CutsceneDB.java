@@ -2,7 +2,11 @@ package kor.toxicity.cutscenemaker.util.databases;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
+import kor.toxicity.cutscenemaker.CutsceneConfig;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
+import kor.toxicity.cutscenemaker.util.ItemUtil;
+import kor.toxicity.cutscenemaker.util.StorageItem;
+import kor.toxicity.cutscenemaker.util.TextUtil;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import kor.toxicity.cutscenemaker.util.vars.VarsContainer;
 import lombok.AccessLevel;
@@ -12,28 +16,38 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.*;
+import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CutsceneDB  {
     private static final UserDB CSV_DB = new UserDB() {
+        @SuppressWarnings("ResultOfMethodCallIgnored")
         @Override
         public VarsContainer read(OfflinePlayer player, JavaPlugin plugin) {
             VarsContainer container = new VarsContainer();
-            String name = plugin.getDataFolder().getAbsolutePath() + "\\User\\" + player.getUniqueId().toString() + ".csv";
-            File create = new File(name);
+            File create = new File(new File(plugin.getDataFolder(),"User"), player.getUniqueId().toString() + ".csv");
             if (!create.exists()) {
                 try {
                     create.createNewFile();
                     CutsceneMaker.debug("unable to find " + player.getName() + "'s data file. so create a new data file.");
                 } catch (IOException ignored) {}
             }
-            try (FileReader file = new FileReader(name); CSVReader reader = new CSVReader(file)) {
+            try (FileReader file = new FileReader(create); CSVReader reader = new CSVReader(file)) {
+                List<StorageItem> decodedItems = container.getTempStorage();
                 reader.forEach(t -> {
-                    if (t.length >= 2) container.getVars().put(t[0],new Vars(t[1]));
+                    if (t.length >= 2) {
+                        if (t[0].startsWith("temp.")) {
+                            StorageItem decodedItem = ItemUtil.decode(t[1]);
+                            if (decodedItem != null) decodedItems.add(decodedItem);
+                        }
+                        else container.getVars().put(t[0],new Vars(t[1]));
+                    }
                 });
                 CutsceneMaker.debug(player.getName() + "'s data loaded.");
             } catch (Exception e) {
@@ -45,13 +59,16 @@ public class CutsceneDB  {
 
         @Override
         public void save(OfflinePlayer player, JavaPlugin plugin, VarsContainer container) {
-            String name = plugin.getDataFolder().getAbsolutePath() + "\\User\\" + player.getUniqueId().toString() + ".csv";
-            try (FileWriter file = new FileWriter(name); CSVWriter writer = new CSVWriter(file)) {
-                writer.writeAll(
-                        container.getVars().entrySet().stream()
+            File create = new File(new File(plugin.getDataFolder(),"User"), player.getUniqueId().toString() + ".csv");
+            try (FileWriter file = new FileWriter(create); CSVWriter writer = new CSVWriter(file)) {
+                container.getVars().entrySet().stream()
                         .filter(e -> e.getKey().charAt(0) != '_' && !e.getValue().getVar().equals("<none>"))
                         .map(e -> new String[] {e.getKey(),e.getValue().getVar()})
-                        .collect(Collectors.toList()));
+                        .forEach(writer::writeNext);
+                int i = 0;
+                for (StorageItem decodedItem : container.getTempStorage()) {
+                    writer.writeNext(new String[] {"temp." + (++i), ItemUtil.encode(decodedItem)});
+                }
                 CutsceneMaker.debug(player.getName() + "'s user data saved.");
             } catch (Exception e) {
                 e.printStackTrace();
@@ -65,7 +82,7 @@ public class CutsceneDB  {
         private MySqlDB(String host, String database, String name, String password) {
             try {
                 Class.forName("com.mysql.jdbc.Driver");
-                con = DriverManager.getConnection("jdbc:mysql://" + host + "/" + database + "?useSSL=false", name, password);
+                con = DriverManager.getConnection("jdbc:mysql://" + host + "/" + database + "?autoReconnect=true&useSSL=false", name, password);
             } catch (Exception e) {
                 e.printStackTrace();
                 throw new RuntimeException();
@@ -77,11 +94,20 @@ public class CutsceneDB  {
             VarsContainer container = new VarsContainer();
             String name = player.getUniqueId().toString().replace('-','_');
             try (Statement create = con.createStatement()) {
-                create.execute("CREATE TABLE IF NOT EXISTS " + name + " (k VARCHAR(256) UNIQUE NOT NULL,v VARCHAR(256) NOT NULL);");
+                create.execute("CREATE TABLE IF NOT EXISTS " + name + " (k VARCHAR(256) UNIQUE NOT NULL,v TEXT NOT NULL);");
             } catch (SQLException ignored) {}
             try (PreparedStatement getter = con.prepareStatement("SELECT * FROM " + name + ";")) {
                 ResultSet set = getter.executeQuery();
-                while (set.next()) container.getVars().put(set.getString("k"), new Vars(set.getString("v")));
+                while (set.next()) {
+                    String key = set.getString("k");
+                    String value = set.getString("v");
+                    List<StorageItem> items = container.getTempStorage();
+                    if (key.startsWith("temp.")) {
+                        StorageItem item = ItemUtil.decode(value);
+                        if (item != null) items.add(item);
+                    }
+                    else container.getVars().put(key, new Vars(value));
+                }
             } catch (SQLException ignored) {}
             return container;
         }
@@ -101,6 +127,15 @@ public class CutsceneDB  {
                     } catch (SQLException ignored) {}
                 }
             });
+            int i = 0;
+            for (StorageItem storageItem : container.getTempStorage()) {
+                try (PreparedStatement statement = con.prepareStatement("INSERT INTO " + name + " VALUES(?,?);")) {
+                    statement.setString(1, "temp." + (++i));
+                    statement.setString(2, ItemUtil.encode(storageItem));
+                    statement.executeUpdate();
+                } catch (SQLException ignored) {}
+            }
+
         }
 
         @Override
@@ -156,11 +191,18 @@ public class CutsceneDB  {
 
         default VarsContainer load(OfflinePlayer player, JavaPlugin plugin) {
             VarsContainer container = read(player,plugin);
+            int autoSave = CutsceneConfig.getInstance().getAutoSaveTime() * 20;
             container.addTask(Bukkit.getScheduler().runTaskTimerAsynchronously(
                     plugin,
                     () -> save(player,plugin,container),
-                    300,
-                    300
+                    autoSave,
+                    autoSave
+            ));
+            container.addTask(Bukkit.getScheduler().runTaskTimerAsynchronously(
+                    plugin,
+                    () -> container.getTempStorage().removeIf(item -> item.isTemp() && item.getLeft() - TextUtil.calculateDay(item.getYear(), item.getMonth(), item.getDay()) < 0),
+                    60 * 20,
+                    60 * 20
             ));
             return container;
         }

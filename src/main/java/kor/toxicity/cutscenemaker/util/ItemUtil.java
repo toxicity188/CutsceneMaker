@@ -2,12 +2,14 @@ package kor.toxicity.cutscenemaker.util;
 
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -106,12 +108,17 @@ public final class ItemUtil {
 			return null;
 		}
 	}
-	public static String encode(ItemStack itemStack) {
+	public static String encode(StorageItem itemStack) {
 		YamlConfiguration config = new YamlConfiguration();
-		config.set("i", itemStack);
+		config.set("i", itemStack.getStack());
+		config.set("y", itemStack.getYear());
+		config.set("m", itemStack.getMonth());
+		config.set("d", itemStack.getDay());
+		config.set("l", itemStack.getLeft());
+		config.set("t", itemStack.isTemp());
 		return Base64.getEncoder().encodeToString(config.saveToString().getBytes(StandardCharsets.UTF_8));
 	}
-	public static ItemStack decode(String string) {
+	public static StorageItem decode(String string) {
 		YamlConfiguration config = new YamlConfiguration();
 		try {
 			config.loadFromString(new String(Base64.getDecoder().decode(string), StandardCharsets.UTF_8));
@@ -119,7 +126,20 @@ public final class ItemUtil {
 			e.printStackTrace();
 			return null;
 		}
-		return config.getItemStack("i", null);
+		ItemStack stack = config.getItemStack("i", null);
+		int year = config.getInt("y",-1);
+		int month = config.getInt("m",-1);
+		int day = config.getInt("d",-1);
+		boolean temp = config.getBoolean("t",false);
+		int left = config.getInt("l",-1) + TextUtil.calculateDay(year,month,day);
+		return (stack != null && stack.getType() != Material.AIR && (!temp || left >= 0)) ? new StorageItem(
+				stack,
+				year,
+				month,
+				day,
+				left,
+				temp
+				) : null;
 	}
 
 }

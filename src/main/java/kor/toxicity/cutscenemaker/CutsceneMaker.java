@@ -7,24 +7,29 @@ import kor.toxicity.cutscenemaker.events.ActionReloadStartEvent;
 import kor.toxicity.cutscenemaker.quests.QuestData;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
+import kor.toxicity.cutscenemaker.util.InvUtil;
+import kor.toxicity.cutscenemaker.util.StorageItem;
 import kor.toxicity.cutscenemaker.util.databases.CutsceneDB;
-import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
 import kor.toxicity.cutscenemaker.util.gui.CallbackManager;
+import kor.toxicity.cutscenemaker.util.gui.GuiAdapter;
+import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
+import kor.toxicity.cutscenemaker.util.gui.MouseButton;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import kor.toxicity.cutscenemaker.util.vars.VarsContainer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 
 public final class CutsceneMaker extends JavaPlugin {
@@ -60,11 +65,71 @@ public final class CutsceneMaker extends JavaPlugin {
         reload.add(new LocationData(this));
         reload.add(new QuestData(this));
         reload.add(new ActionData(this));
+
+        //setup command
         getCommand("cutscene").setExecutor(command);
+        getCommand("temp").setExecutor((sender, command1, label, args) -> {
+            if (sender instanceof Player) {
+                tempStorage((Player) sender);
+            } else send(sender,"this command is player only.");
+            return true;
+        });
 
         EntityManager.getInstance().setExecutor(this);
 
         load(t -> send("Plugin enabled."));
+    }
+
+    void tempStorage(Player player) {
+        Inventory inv = InvUtil.create(CutsceneConfig.getInstance().getTempStorageName().print(player),6);
+        List<StorageItem> tempStorage = manager.getVars(player).getTempStorage();
+        GuiRegister.registerNewGui(new GuiAdapter(player,inv) {
+            @Override
+            public void initialize() {
+                for (int i = 0; i < 53; i++) {
+                    ItemStack stack;
+                    if (i < tempStorage.size()) {
+                        StorageItem storageItem = tempStorage.get(i);
+                        stack = storageItem.getStack().clone();
+                        ItemMeta meta = stack.getItemMeta();
+
+                        int year = storageItem.getYear();
+                        int month = storageItem.getMonth();
+                        int day = storageItem.getDay();
+
+                        String timeStr = ChatColor.GOLD + ChatColor.ITALIC.toString() + "Day: " + ((year > 0 && month > 0 && day > 0) ? (ChatColor.YELLOW.toString() + year + "-" + month + "-" + day) : (ChatColor.GRAY + "<unknown>"));
+                        List<String> time = (storageItem.isTemp()) ? Arrays.asList(
+                                timeStr,
+                                ChatColor.GOLD + ChatColor.ITALIC.toString() + "Left: " + ChatColor.YELLOW + storageItem.getLeft() + "D"
+                        ) : Collections.singletonList(timeStr);
+
+                        List<String> lore = meta.getLore();
+                        if (lore != null) {
+                            lore.add("");
+                            lore.addAll(time);
+                        } else lore = time;
+                        meta.setLore(lore);
+                        stack.setItemMeta(meta);
+                    } else stack = null;
+
+                    inv.setItem(i,stack);
+                }
+            }
+
+            @Override
+            public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
+                if (isPlayerInventory || item.getType() == Material.AIR) return;
+                StorageItem t = tempStorage.get(slot);
+                ItemStack stack = t.getStack();
+                if (InvUtil.storage(player,stack) < stack.getAmount()) {
+                    return;
+                }
+                InvUtil.give(player,stack);
+                tempStorage.remove(t);
+                initialize();
+                player.updateInventory();
+            }
+        });
     }
     private void setupDB() {
         ConfigLoad load = readResourceFile("database");
