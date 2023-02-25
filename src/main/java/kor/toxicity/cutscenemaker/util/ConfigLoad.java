@@ -13,6 +13,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.MemorySection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class ConfigLoad {
@@ -74,6 +75,9 @@ public class ConfigLoad {
 	public Object get(String key) {
 		if (!this.main.contains(key)) return null;
 		return this.main.get(key);
+	}
+	public ItemStack getItemStack(String key) {
+		return (main.isSet(key) && main.isItemStack(key)) ? main.getItemStack(key) : null;
 	}
 	public Set<String> getKeys(String key) {
 		if (!this.main.contains(key) && !this.main.isConfigurationSection(key)) return null;

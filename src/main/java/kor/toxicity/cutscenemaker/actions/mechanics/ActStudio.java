@@ -17,9 +17,9 @@ public class ActStudio extends CutsceneAction {
     @DataField(aliases = "loc", throwable = true)
     public String location;
 
-    @DataField(aliases = "s",throwable = true)
+    @DataField(aliases = "s", throwable = true)
     public FunctionPrinter success;
-    @DataField(aliases = "f",throwable = true)
+    @DataField(aliases = "f", throwable = true)
     public FunctionPrinter fail;
 
 
@@ -39,8 +39,10 @@ public class ActStudio extends CutsceneAction {
     @Override
     protected void apply(LivingEntity entity) {
         if (studio != null && entity instanceof Player) {
-            if (!studio.join((Player) entity,location)) ActionData.start(fail.print(entity),entity);
-            else ActionData.start(success.print(entity),entity);
+            if (!studio.join((Player) entity,location)) {
+                if (fail != null) ActionData.start(fail.print(entity),entity);
+            }
+            else if (success != null) ActionData.start(success.print(entity),entity);
         }
     }
 }

@@ -271,6 +271,30 @@ public final class QuestData extends CutsceneData {
         }
     }
     private InventorySupplier supplier;
+
+    private final ConfigFunction questSetFunction = getFunction("QuestSet",(c,f,s) -> {
+        QuestSet questSet = new QuestSet(getPlugin(),s,c);
+        QUEST_SET_MAP.put(questSet.getName(),questSet);
+    });
+    private final ConfigFunction dialogFunction = getFunction("Dialog",(c,f,s) -> DIALOG_MAP.put(s,new Dialog(f,s,getPlugin().getManager(),c)));
+    private final ConfigFunction qnaFunction = getFunction("QnA",(c,f,s) -> QNA_MAP.put(s,new QnA(f,s,getPlugin().getManager(),c)));
+    private final ConfigFunction presentFunction = getFunction("Present",(c,f,s) -> PRESENT_MAP.put(s,new Present(getPlugin().getManager(),c)));
+    private final ConfigFunction npcFunction = getFunction("NPC",(c,f,s) -> {
+        if (c.isSet("Dialog")) {
+            Consumer<Player> typingSound = null;
+            if (c.isSet("TypingSound") && c.isString("TypingSound"))
+                typingSound = QuestUtil.getSoundPlay(c.getString("TypingSound"));
+            NPCData data = new NPCData(
+                    c.getString("Vars", null),
+                    QuestUtil.getDialog(c.getStringList("Dialog")),
+                    typingSound,
+                    (c.isSet("Inventory")) ? (c.isConfigurationSection("Inventory") ? new InventorySupplier(c.getConfigurationSection("Inventory")) : ItemData.getGui(c.getString("Inventory"))) : null
+            );
+            if (data.dialogs != null) NPC_MAP.put(c.getString("Name", s), data);
+        }
+    });
+    private static final List<Runnable> PRE_DIALOG_TASK = new ArrayList<>();
+    private static final List<Runnable> POST_DIALOG_TASK = new ArrayList<>();
     @Override
     public void reload() {
         Dialog.stopAll(getPlugin());
@@ -302,56 +326,16 @@ public final class QuestData extends CutsceneData {
             });
         }
 
-        ConfigLoad quest = getPlugin().read("QuestSet");
-        quest.getAllFiles().forEach(s -> {
-            try {
-                QuestSet questSet = new QuestSet(getPlugin(),s,quest.getConfigurationSection(s));
-                QUEST_SET_MAP.put(questSet.getName(),questSet);
-            } catch (Exception e) {
-                CutsceneMaker.warn("Error: " + e.getMessage() + " (QuestSet " + s + ")");
-            }
-        });
-        ConfigLoad dialog = getPlugin().read("Dialog");
-        dialog.forEach((file,key) -> key.forEach(s -> {
-            try {
-                DIALOG_MAP.put(s,new Dialog(file,s,getPlugin().getManager(),dialog.getConfigurationSection(s)));
-            } catch (Exception e) {
-                CutsceneMaker.warn("Error: " + e.getMessage() + " (Dialog " + s + ")");
-            }
-        }));
-        ConfigLoad qna = getPlugin().read("QnA");
-        qna.forEach((file,key) -> key.forEach(s -> {
-            try {
-                QNA_MAP.put(s,new QnA(file,s,getPlugin().getManager(),qna.getConfigurationSection(s)));
-            } catch (Exception e) {
-                CutsceneMaker.warn("Error: " + e.getMessage() + " (QnA " + s + ")");
-            }
-        }));
-        ConfigLoad present = getPlugin().read("Present");
-        present.getAllFiles().forEach(s -> {
-            try {
-                PRESENT_MAP.put(s,new Present(getPlugin().getManager(),present.getConfigurationSection(s)));
-            } catch (Exception e) {
-                CutsceneMaker.warn("Error: " + e.getMessage() + " (Present " + s + ")");
-            }
-        });
-        Dialog.LAZY_TASK.forEach(Runnable::run);
-        Dialog.LAZY_TASK.clear();
-        ConfigLoad npc = getPlugin().read("NPC");
-        npc.getAllFiles().forEach(s -> {
-            ConfigurationSection section = npc.getConfigurationSection(s);
-            if (section != null && section.isSet("Dialog")) {
-               Consumer<Player> typingSound = null;
-               if (section.isSet("TypingSound") && section.isString("TypingSound")) typingSound = QuestUtil.getSoundPlay(section.getString("TypingSound"));
-               NPCData data = new NPCData(
-                       section.getString("Vars",null),
-                       QuestUtil.getDialog(section.getStringList("Dialog")),
-                       typingSound,
-                       (section.isSet("Inventory")) ? (section.isConfigurationSection("Inventory") ? new InventorySupplier(section.getConfigurationSection("Inventory")) : ItemData.getGui(section.getString("Inventory"))) : null
-               );
-               if (data.dialogs != null) NPC_MAP.put(section.getString("Name",s),data);
-            }
-        });
+
+
+        tryParse("QuestSet",switchFunction(questSetFunction));
+        tryParse("Dialog",switchFunction(dialogFunction));
+        tryParse("QnA",switchFunction(qnaFunction));
+        tryParse("Present",switchFunction(presentFunction));
+        runAll(PRE_DIALOG_TASK);
+        runAll(Dialog.LAZY_TASK);
+        runAll(POST_DIALOG_TASK);
+        tryParse("NPC",switchFunction(npcFunction));
         Navigator.reload();
         QuestSet.EVENT_MAP.clear();
         send(QUEST_SET_MAP.size(),"QuestSets");
@@ -360,8 +344,58 @@ public final class QuestData extends CutsceneData {
         send(PRESENT_MAP.size(),"Presents");
         send(NPC_MAP.size(),"NPCs");
     }
+    private static void runAll(List<Runnable> list) {
+        list.forEach(r -> {
+            try {
+                r.run();
+            } catch (Exception ignored) {}
+        });
+        list.clear();
+    }
+    private ConfigFunction switchFunction(ConfigFunction function) {
+        return (c,f,s) -> {
+            String clazz = c.getString("Class",null);
+            if (clazz != null) switch (clazz.toLowerCase()) {
+                case "qna":
+                    PRE_DIALOG_TASK.add(() -> qnaFunction.accept(c,f,s));
+                    return;
+                case "present":
+                    PRE_DIALOG_TASK.add(() -> presentFunction.accept(c,f,s));
+                    return;
+                case "npc":
+                    POST_DIALOG_TASK.add(() -> npcFunction.accept(c,f,s));
+                    return;
+                case "questset":
+                    questSetFunction.accept(c,f,s);
+                    return;
+                case "dialog":
+                    dialogFunction.accept(c,f,s);
+            }
+            else function.accept(c,f,s);
+        };
+    }
     private void send(int i, String s) {
         CutsceneMaker.send(ChatColor.GREEN + Integer.toString(i) + " "+ s + " successfully loaded.");
+    }
+    private void tryParse(String name, ConfigFunction consumer) {
+        ConfigLoad load = getPlugin().read(name);
+        load.forEach((f,k) -> k.forEach(s -> consumer.accept(load.getConfigurationSection(s),f,s)));
+    }
+    private static ConfigFunction getFunction(String name, ConfigFunction function) {
+        return (c,f,s) -> {
+            if (c == null) {
+                CutsceneMaker.warn("Syntax error: this is not a section! (" + name + " " + s + " in file \"" + f + ".yml\")");
+                return;
+            }
+            try {
+                function.accept(c,f,s);
+            } catch (Exception e) {
+                CutsceneMaker.warn("Error: " + e.getMessage() + " (" + name + " " + s + " in file \"" + f + ".yml\")");
+            }
+        };
+    }
+    private interface ConfigFunction {
+        void accept(ConfigurationSection load, String file, String key);
     }
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     private static class NPCData {

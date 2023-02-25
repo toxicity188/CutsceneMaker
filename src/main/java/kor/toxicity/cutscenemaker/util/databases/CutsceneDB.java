@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -157,7 +156,7 @@ public class CutsceneDB  {
 
         default VarsContainer load(OfflinePlayer player, JavaPlugin plugin) {
             VarsContainer container = read(player,plugin);
-            container.setTask(Bukkit.getScheduler().runTaskTimerAsynchronously(
+            container.addTask(Bukkit.getScheduler().runTaskTimerAsynchronously(
                     plugin,
                     () -> save(player,plugin,container),
                     300,
@@ -167,8 +166,7 @@ public class CutsceneDB  {
         }
         default void stop(OfflinePlayer player, JavaPlugin plugin, VarsContainer container) {
             save(player,plugin,container);
-            BukkitTask task = container.getTask();
-            if (task != null) task.cancel();
+            container.stopTask();
         }
     }
 

@@ -1,5 +1,6 @@
 package kor.toxicity.cutscenemaker.actions.mechanics;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.slikey.effectlib.EffectManager;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
@@ -31,12 +32,21 @@ public class ActEffectLib extends CutsceneAction {
     public void initialize() {
         super.initialize();
         section = new MemoryConfiguration();
-        parameters.entrySet().forEach(e -> section.set(e.getKey(),e.getValue().getAsString().replaceAll("PI",Double.toString(Math.PI))));
-    }
+        parameters.entrySet().forEach(e -> {
+            JsonElement element = e.getValue();
+            try {
+                section.set(e.getKey(),element.getAsDouble());
+            } catch (Exception t) {
+                section.set(e.getKey(),element.getAsString());
+            }
+        });
 
+    }
     @Override
     public void apply(LivingEntity entity) {
-        if (manager != null) manager.start(effectClass,section,entity.getLocation(),(follow) ? entity : null);
+        if (manager != null) {
+            manager.start(effectClass,section,entity.getLocation(),(follow) ? entity : null);
+        }
         else CutsceneMaker.warn("EffectLib doesn't exists.");
     }
 }

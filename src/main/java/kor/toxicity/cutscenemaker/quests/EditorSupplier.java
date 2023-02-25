@@ -13,20 +13,56 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.util.*;
 
 @RequiredArgsConstructor(access = AccessLevel.MODULE)
 public abstract class EditorSupplier {
     private static final Map<String,Map<String,? extends EditorSupplier>> EDITOR_MAP = new HashMap<>();
+
+    private static final Map<String,EditorConfiguration> CONFIGURATION_MAP = new HashMap<>();
+
+
+    private static class EditorConfiguration {
+        private final Class<? extends EditorSupplier> clazz;
+        private final ConfigurationSection section = new MemoryConfiguration();
+        private EditorConfiguration(Class<? extends EditorSupplier> clazz) {
+            this.clazz = clazz;
+        }
+        private EditorConfiguration set(String key, Object obj) {
+            section.set(key,obj);
+            return this;
+        }
+
+        private EditorSupplier getInstance(CutsceneManager manager, String file, String key) {
+            try {
+                Constructor<? extends EditorSupplier> constructor = clazz.getDeclaredConstructor(
+                        String.class,
+                        String.class,
+                        CutsceneManager.class,
+                        ConfigurationSection.class
+                );
+                constructor.setAccessible(true);
+                EditorSupplier supplier = constructor.newInstance(file,key,manager,section);
+                constructor.setAccessible(false);
+                return supplier;
+            } catch (Exception e) {
+                return null;
+            }
+        }
+    }
+
 
     private static final ItemStack SAVE_BUTTON = setDisplayName(
             new ItemStack(Material.BEACON),
@@ -40,6 +76,15 @@ public abstract class EditorSupplier {
     static  {
         EDITOR_MAP.put("dialog", QuestData.DIALOG_MAP);
         EDITOR_MAP.put("qna", QuestData.QNA_MAP);
+
+        CONFIGURATION_MAP.put("dialog",new EditorConfiguration(Dialog.class).set("Talk",new String[] {"a new talk"}));
+    }
+    public static @NotNull List<String> getEditorList() {
+        return new ArrayList<>(EDITOR_MAP.keySet());
+    }
+    public static @Nullable List<String> getEditableObjects(String key) {
+        Map<String,? extends EditorSupplier> supplierMap;
+        return ((supplierMap = EDITOR_MAP.get(key)) == null) ? null : new ArrayList<>(supplierMap.keySet());
     }
     private static ItemStack setDisplayName(ItemStack stack, String name) {
         ItemMeta meta = stack.getItemMeta();
@@ -60,6 +105,18 @@ public abstract class EditorSupplier {
         EditorSupplier abstractEditor = mapper.get(Objects.requireNonNull(name));
         if (abstractEditor == null) return false;
         abstractEditor.getEditor(Objects.requireNonNull(player)).updateGui();
+        return true;
+    }
+    public static boolean createEditor(@NotNull Player player, @NotNull CutsceneManager manager, @NotNull String type, @NotNull String file, @NotNull String name) {
+        EditorConfiguration configuration = CONFIGURATION_MAP.get(Objects.requireNonNull(type));
+        if (configuration == null) return false;
+        EditorSupplier supplier = configuration.getInstance(
+                Objects.requireNonNull(manager),
+                Objects.requireNonNull(file),
+                Objects.requireNonNull(name)
+        );
+        if (supplier == null) return false;
+        supplier.getEditor(Objects.requireNonNull(player)).updateGui();
         return true;
     }
     abstract class Editor {
@@ -106,6 +163,7 @@ public abstract class EditorSupplier {
                     executor.onEnd();
                 }
 
+                @SuppressWarnings("ResultOfMethodCallIgnored")
                 @Override
                 public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
                     if (SAVE_BUTTON.equals(item)) {
@@ -113,8 +171,9 @@ public abstract class EditorSupplier {
                             File file = new File(
                                     manager.getPlugin().getDataFolder().getAbsolutePath() + "\\" + srcName + "\\" + fileName + ".yml"
                             );
-                            YamlConfiguration configuration = new YamlConfiguration();
                             try {
+                                if (!file.exists()) file.createNewFile();
+                                YamlConfiguration configuration = new YamlConfiguration();
                                 configuration.load(file);
                                 configuration.set(name,getSaveData());
                                 configuration.save(file);

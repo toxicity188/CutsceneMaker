@@ -25,9 +25,6 @@ public class ActSpawn extends CutsceneAction {
 
     @DataField(aliases = "loc", throwable = true)
     public String location;
-    @DataField(aliases = "s")
-    public String studio;
-
     @DataField(aliases = "mm")
     public boolean mythicMobs = false;
 
@@ -47,7 +44,7 @@ public class ActSpawn extends CutsceneAction {
         if (loc == null) {
             CutsceneMaker.warn("location not found.");
         } else {
-            Function<Player,Location> supplier = (studio != null) ? p -> LocationStudio.getPlayerRecord(p).map(r -> r.getLocation(studio)).orElse(loc) : p -> loc;
+            Function<Player,Location> supplier = p -> LocationStudio.getPlayerRecord(p).map(r -> r.getLocation(location)).orElse(loc);
             if (mythicMobs) {
                 consumer = (bound) ? p -> manager1.createMythicMob(p, key, type, supplier.apply(p)) : p -> manager1.createMythicMob(key, type, supplier.apply(p));
             } else {

@@ -15,6 +15,10 @@ repositories {
             includeGroup 'org.spigotmc'
         }
     }
+    maven {
+        name = "github"
+        url = "https://maven.pkg.github.com/Slikey/EffectLib"
+    }
     maven { url "https://repo.dmulloy2.net/repository/public/" }
     maven { url = 'https://oss.sonatype.org/content/repositories/snapshots' }
     maven { url = 'https://oss.sonatype.org/content/repositories/central' }
@@ -27,9 +31,12 @@ repositories {
         name = 'citizens-repo'
         url = 'https://maven.citizensnpcs.co/repo'
     }
+
+
 }
 
 dependencies {
+    implementation 'com.elmakers.mine.bukkit:EffectLib:9.4'
     compileOnly 'org.projectlombok:lombok:1.18.24'
     compileOnly 'com.github.SkriptLang:Skript:dev37c'
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
@@ -39,7 +46,6 @@ dependencies {
 
     implementation group: 'com.opencsv', name: 'opencsv', version: '4.6'
     implementation group: 'org.codemc.worldguardwrapper', name: 'worldguardwrapper', version: '1.2.0-SNAPSHOT'
-    implementation group: "com.github.Chronoken", name: "EffectLib", version: "1be5ee7fd7"
 
     compileOnly 'com.sk89q.worldguard:worldguard-legacy:6.2'
     compileOnly 'com.sk89q.worldedit:worldedit-bukkit:6.1.4-SNAPSHOT'
@@ -67,7 +73,14 @@ shadowJar {
     setArchivesBaseName("CutsceneMaker")
     relocate("io.chazza.advancementapi","kor.toxicity.cutscenemaker.shaded.io.chazza.advancementapi")
     relocate("com.opencsv","kor.toxicity.cutscenemaker.shaded.opencsv")
-    relocate("org.apache","kor.toxicity.cutscenemaker.shaded.apache")
+
+    relocate("org.apache.commons.beanutils","kor.toxicity.cutscenemaker.shaded.apache.commons.beanutils")
+    relocate("org.apache.commons.collections","kor.toxicity.cutscenemaker.shaded.apache.commons.collections")
+    relocate("org.apache.commons.collections4","kor.toxicity.cutscenemaker.shaded.apache.commons.collections4")
+    relocate("org.apache.commons.lang3","kor.toxicity.cutscenemaker.shaded.apache.commons.lang3")
+    relocate("org.apache.commons.logging","kor.toxicity.cutscenemaker.shaded.apache.commons.logging")
+    relocate("org.apache.commons.text","kor.toxicity.cutscenemaker.shaded.apache.commons.text")
+
     relocate("org.codemc","kor.toxicity.cutscenemaker.shaded.codemc")
     relocate("de.slikey","kor.toxicity.cutscenemaker.shaded.slikey")
     exclude("*.properties")

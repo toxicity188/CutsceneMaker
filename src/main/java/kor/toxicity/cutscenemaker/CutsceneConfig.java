@@ -36,6 +36,8 @@ public class CutsceneConfig {
     private int defaultTypingDelay;
     @Getter
     private ItemStack defaultQuestIcon;
+    @Getter
+    private boolean enableTagging;
 
     void load(CutsceneMaker pl) {
         try {
@@ -62,6 +64,8 @@ public class CutsceneConfig {
             defaultDialogCenter = getValue(load.getInt("default-dialog-center", 22),0,defaultDialogRows*9-1);
 
             defaultQuestIcon = getItemStack(load.getString("default-quest-icon", "BOOK"),(short) load.getInt("default-quest-durability",0));
+
+            enableTagging = load.getBoolean("enable-tagging",true);
 
         } catch (IOException | InvalidConfigurationException e) {
             throw new RuntimeException(e);

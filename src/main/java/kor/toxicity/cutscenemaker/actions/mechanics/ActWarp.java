@@ -15,8 +15,6 @@ public class ActWarp extends CutsceneAction {
 
     @DataField(aliases = {"loc","l"},throwable = true)
     public String location;
-    @DataField(aliases = "s")
-    public String studio;
 
     private Function<LivingEntity,Location> function;
     private final CutsceneManager manager;
@@ -30,15 +28,15 @@ public class ActWarp extends CutsceneAction {
         super.initialize();
         Location loc = manager.getLocations().getValue(location);
         if (loc == null) CutsceneMaker.warn("unable to find a location named \"" + location + "\"");
-        else function = (studio != null) ? p -> {
+        else function = p -> {
             if (p instanceof Player) {
-                return LocationStudio.getPlayerRecord((Player) p).map(r -> r.getLocation(studio)).orElse(loc);
+                return LocationStudio.getPlayerRecord((Player) p).map(r -> r.getLocation(location)).orElse(loc);
             } return loc;
-        } : p -> loc;
+        };
     }
 
     @Override
     protected void apply(LivingEntity entity) {
-        entity.teleport(function.apply(entity));
+        if (function != null) entity.teleport(function.apply(entity));
     }
 }

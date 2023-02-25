@@ -144,7 +144,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
         TALK_READER_STRING.add("Talker",(d, s) -> d.talker = new FunctionPrinter(s));
         TALK_READER_STRING.add("Interface",(d, s) -> {
             d.typingManager = TYPING_MANAGER_MAP.get(s);
-            if (d.typingManager == null) CutsceneMaker.warn("The Interface named \"" + s + "\" doesn't exist!");
+            if (d.typingManager == null) d.warn("The Interface named \"" + s + "\" doesn't exist!");
         });
         TALK_READER_STRING.add("Sound",(d, s) -> d.addConsumer(QuestUtil.getSoundPlay(s)));
         TALK_READER_CONFIGURATION.add("Item",(d, c) -> c.getKeys(false).forEach(s -> {
@@ -156,7 +156,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                     if (builder != null) d.stacks.put(i, builder);
                 }
             } catch (Exception e) {
-                CutsceneMaker.warn("fail to load the item data: " + s);
+                d.warn("fail to load the item data: " + s);
             }
         }));
         STRING_LIST_PARSER.put("Condition",(q,t) -> addLazyTask(() -> t.forEach(s -> {
@@ -196,11 +196,11 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
         );
         addDialogAddon(
                 new String[] {"LinkedQnA","QnA"},
-                s -> QuestUtil.getFromMap(s,QuestData.QNA_MAP,"QnA")
+                QuestData.QNA_MAP::get
         );
         addDialogAddon(
                 new String[] {"LinkedPresent","Present"},
-                s -> QuestUtil.getFromMap(s,QuestData.PRESENT_MAP,"Present")
+                QuestData.PRESENT_MAP::get
         );
 
         addValue(
@@ -213,10 +213,10 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                 (q,t) -> q.giveItem = QuestUtil.getItemBuilders(t),
                 "GiveItem","Give"
         );
-        STRING_LIST_PARSER.put("SetQuest",(q,t) -> t.stream().map(s -> {
+        STRING_LIST_PARSER.put("SetQuest",(q,t) -> addLazyTask(() -> t.stream().map(s -> {
             String[] a = TextUtil.split(s," ");
             return q.getQuestConsumer(a[0],(a.length > 1) ? a[1].toLowerCase() : "give");
-        }).filter(Objects::nonNull).forEach(c -> q.setQuest = q.setQuest.andThen(c)));
+        }).filter(Objects::nonNull).forEach(c -> q.setQuest = q.setQuest.andThen(c))));
         STRING_LIST_PARSER.put("SetVars",(q,t) -> t.stream().map(s -> {
             String[] a = TextUtil.split(s," ");
             Consumer<Player> vars;
@@ -338,6 +338,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                     try {
                         DialogAddon addon = entry.getValue().apply(s);
                         if (addon != null) addonList.add(addon);
+                        else warn("The " + entry.getKey() + " named \"" + s + "\" doesn't exist!");
                     } catch (Exception e) {
                         e.printStackTrace();
                         addonEntry.remove();
@@ -362,7 +363,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
         } else throw new IllegalStateException("Invalid statement.");
     }
     private void warn(String msg) {
-        CutsceneMaker.warn(msg + " (Dialog " + name + ")");
+        CutsceneMaker.warn(msg + " (Dialog " + name + " in file \"" + fileName + ".yml\")");
     }
     private ActionPredicate<Player> getQuestChecker(String name, String action) {
         QuestSet questSet = getQuestSet(name);
@@ -657,13 +658,16 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
         }
     }
 
-    public static final class DialogRecord {
+    public class DialogRecord {
         private Consumer<Player> consumer;
         private final FunctionPrinter printer;
         private FunctionPrinter talker;
         private final Map<Integer, ItemBuilder> stacks = new HashMap<>();
 
         private TypingManager typingManager;
+        public void warn(String s) {
+            Dialog.this.warn(s);
+        }
 
         private DialogRecord(String printer) {
             Matcher matcher = TALK_PATTERN.matcher(printer);
@@ -768,6 +772,11 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                     editor.item = (items != null) ? getConfig(items,key).orElse(null) : null;
                     talk[i++] = editor;
                 }
+            } else {
+                talk = new TalkEditor[1];
+                TalkEditor e = new TalkEditor();
+                e.talk = "a new talk";
+                talk[0] = e;
             }
         }
         private void extend(int index) {
@@ -789,6 +798,10 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
             setupPage();
         }
         private void reduce(int index) {
+            if (index == 0) {
+                talk[0].talk = "skip";
+                return;
+            }
             talk[index] = null;
             talk = Arrays.stream(talk).filter(Objects::nonNull).toArray(TalkEditor[]::new);
             setupPage();
@@ -1052,6 +1065,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                     "Set Vars",
                     toList(setVars)
             ));
+            setupException();
         }
         private void toggleException() {
             exception = !exception;
@@ -1069,7 +1083,6 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                 inv = InvUtil.create(invName, 6);
                 resetInv();
             }
-            setupException();
             setupPage();
             return new GuiAdapter(player,inv) {
                 @Override
@@ -1281,10 +1294,10 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                 interfaces.set(key,editor.typing);
                 items.set(key,editor.item);
             }
-            resource.set("Sound",sounds);
-            resource.set("Interface",interfaces);
-            resource.set("Talker",talker);
-            resource.set("Item",items);
+            resource.set("Sound", (sounds.getKeys(false).isEmpty()) ? null : sounds);
+            resource.set("Interface",(interfaces.getKeys(false).isEmpty()) ? null : interfaces);
+            resource.set("Talker",(talker.getKeys(false).isEmpty()) ? null : talker);
+            resource.set("Item",(items.getKeys(false).isEmpty()) ? null : items);
 
             //Linked Source Configuration
             resource.set("Dialog",linkedDialog);

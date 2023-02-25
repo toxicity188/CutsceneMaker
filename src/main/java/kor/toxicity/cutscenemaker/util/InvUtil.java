@@ -11,6 +11,7 @@ import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
@@ -68,6 +69,8 @@ public final class InvUtil {
                 ItemStack itemStack = new ItemStack(material);
                 itemStack.setDurability(Short.parseShort(matcher.group("data")));
                 ItemMeta meta = itemStack.getItemMeta();
+                meta.setUnbreakable(true);
+                meta.addItemFlags(ItemFlag.values());
                 meta.setDisplayName(ChatColor.WHITE + TextUtil.colored(matcher.group("name")));
                 itemStack.setItemMeta(meta);
                 return new ItemBuilder(itemStack);

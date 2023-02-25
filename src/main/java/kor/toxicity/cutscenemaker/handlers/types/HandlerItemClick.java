@@ -52,10 +52,9 @@ public class HandlerItemClick extends ActionHandler implements DelayedHandler {
             ItemStack compare = builder.getItem();
             int a;
             if ((a = stack.getAmount()) >= required && compare.isSimilar(stack)) {
-                apply(e.getPlayer());
-                if (consume) stack.setAmount(Math.max(a - consumeAmount, 0));
+                if (apply(e.getPlayer()) && consume) stack.setAmount(Math.max(a - consumeAmount, 0));
+                e.setCancelled(cancel);
             }
-            e.setCancelled(cancel);
         }
     }
 

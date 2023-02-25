@@ -56,7 +56,7 @@ public class WGRegionEventsListener implements Listener
     public void onPlayerMove(PlayerMoveEvent e)
     {
         long after;
-        if (DELAY.getOrDefault(e.getPlayer(),-500L) + 500 <= (after = System.currentTimeMillis())) {
+        if (DELAY.getOrDefault(e.getPlayer(),-200L) + 200 <= (after = System.currentTimeMillis())) {
             DELAY.put(e.getPlayer(),after);
             updateRegions(e.getPlayer(), MovementWay.MOVE, e.getTo(), e);
         }

@@ -5,8 +5,7 @@ import kor.toxicity.cutscenemaker.commands.CommandListener;
 import kor.toxicity.cutscenemaker.commands.CommandPacket;
 import kor.toxicity.cutscenemaker.commands.SenderType;
 import kor.toxicity.cutscenemaker.data.ActionData;
-import kor.toxicity.cutscenemaker.events.ActionReloadEndEvent;
-import kor.toxicity.cutscenemaker.events.ActionReloadStartEvent;
+import kor.toxicity.cutscenemaker.data.ItemData;
 import kor.toxicity.cutscenemaker.quests.EditorSupplier;
 import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.util.blockanims.BlockAnimation;
@@ -169,7 +168,10 @@ public final class CutsceneCommand implements TabExecutor, Listener {
                 ItemStack item = player.getInventory().getItemInMainHand();
                 try {
                     YamlConfiguration config = new YamlConfiguration();
-                    File dir = new File(pl.getDataFolder().getAbsolutePath() + "\\Items\\" + args[2] + ".yml");
+                    File dir = new File(
+                            new File(pl.getDataFolder(),"Items"),
+                            args[2] + ".yml"
+                    );
                     if (!dir.exists()) dir.createNewFile();
                     config.load(dir);
                     switch (args[1]) {
@@ -178,7 +180,10 @@ public final class CutsceneCommand implements TabExecutor, Listener {
                             break;
                         case "get":
                             if (config.isSet(args[3]) && config.isItemStack(args[3])) {
-                                player.getInventory().addItem(new ItemBuilder(config.getItemStack(args[3])).get(player));
+                                ItemStack stack = config.getItemStack(args[3]);
+                                player.getInventory().addItem(
+                                        new ItemBuilder(CutsceneConfig.getInstance().isEnableTagging() ? ItemUtil.setInternalTag(stack, ItemData.ITEM_KEY,args[3]) : stack).get(player)
+                                );
                                 send(player, "successfully got.");
                             } else send(player, "item not found.");
                             break;
@@ -200,7 +205,12 @@ public final class CutsceneCommand implements TabExecutor, Listener {
             public void location(CommandPacket pkg) {
                 String[] args = pkg.getArgs();
                 try {
-                    ConfigWriter writer = new ConfigWriter(new File(pl.getDataFolder().getAbsolutePath() + "\\Locations\\" + args[1] + ".yml"));
+                    ConfigWriter writer = new ConfigWriter(
+                            new File(
+                                    new File(pl.getDataFolder() , "Locations"),
+                                    args[1] + ".yml"
+                            )
+                    );
                     writer.setLocation(args[2],((Player) pkg.getSender()).getLocation());
                     writer.save();
                     send(pkg.getSender(), "successfully saved.");
@@ -289,7 +299,11 @@ public final class CutsceneCommand implements TabExecutor, Listener {
 
                         animation = BlockAnimation.get(world,data.pos1.toVector(),data.pos2.toVector());
                         pl.getManager().getAnimationMap().put(args[2],animation);
-                        animation.write(new File(pl.getDataFolder().getAbsolutePath() + "\\Animation\\" + world.getName() + "\\" + args[2] + ".anim"));
+                        animation.write(
+                                new File(
+                                        new File(new File(pl.getDataFolder(),"Animation"),world.getName())
+                                        ,args[2] + ".anim")
+                        );
                         send(pkg.getSender(),"successfully saved.");
                         break;
                     case "load":
@@ -308,13 +322,19 @@ public final class CutsceneCommand implements TabExecutor, Listener {
                         break;
                 }
             }
-            @CommandHandler(length = 2, aliases = "p",description = "open gui editor.", usage = "cutscene project <dialog> <name>", sender = SenderType.PLAYER)
+            @CommandHandler(length = 2, aliases = "p",description = "open gui editor.", usage = "/cutscene project <dialog> <name>", sender = SenderType.PLAYER)
             public void project(CommandPacket pkg) {
                 if (!EditorSupplier.openEditor((Player) pkg.getSender(),pkg.getArgs()[1],pkg.getArgs()[2])) {
                     send(pkg.getSender(),"fail to open editor.");
                 }
             }
-
+            @CommandHandler(length = 3,aliases = "c",description = "create new editor.",usage = "/cutscene create <dialog> <file> <name>", sender = SenderType.PLAYER)
+            public void create(CommandPacket pkg) {
+                String[] arg = pkg.getArgs();
+                if (!EditorSupplier.createEditor((Player) pkg.getSender(),pl.getManager(),arg[1],arg[2],arg[3])) {
+                    send(pkg.getSender(),"fail to create editor.");
+                }
+            }
             private void showVars(CommandSender sender, Map<String,Vars> varsMap) {
                 List<String> vars = new ArrayList<>();
                 List<String> quests = new ArrayList<>();
@@ -374,12 +394,46 @@ public final class CutsceneCommand implements TabExecutor, Listener {
 
     @Override
     public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] strings) {
-        if (strings.length == 1) {
+        if (!commandSender.isOp()) return null;
+        int len = strings.length;
+        if (len == 1) {
             List<String> t = new ArrayList<>();
             listeners.values().forEach(b -> t.addAll(b.methods.keySet().stream().map(Method::getName).collect(Collectors.toList())));
-            return t;
+            return prefix(t,strings[0]);
+        } else if (len > 1) {
+            switch (strings[0]) {
+                case "p":
+                case "project":
+                    switch (len) {
+                        case 2:
+                            return prefix(EditorSupplier.getEditorList(),strings[1]);
+                        case 3:
+                            return prefix(EditorSupplier.getEditableObjects(strings[1]),strings[2]);
+                    }
+            }
         }
         return null;
+    }
+    private static List<String> prefix(List<String> target, String t) {
+        if (!"".equals(t)) {
+            List<String> newList = new ArrayList<>();
+            char[] c = t.toCharArray();
+            char[] c2;
+            search: for (String s : target) {
+                c2 = s.toCharArray();
+                if (c.length > c2.length) continue;
+                for (int i = 0; i < c.length; i++) {
+                    if (c[i] != c2[i]) continue search;
+                }
+               newList.add(s);
+            }
+            return sort((newList.isEmpty()) ? target : newList);
+        }
+        return sort(target);
+    }
+    private static List<String> sort(List<String> target) {
+        if (target != null) target.sort(Comparator.naturalOrder());
+        return target;
     }
 
     public static void register(JavaPlugin plugin, CommandListener listener) {

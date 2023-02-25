@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -63,6 +64,7 @@ public class LocationStudio {
     private final CutsceneManager manager;
     private final String name;
     private final ArrangeStrategy strategy;
+    private final Map<String,Location> locationMap = new HashMap<>();
     private LocationStudio(String name, CutsceneManager manager, ConfigurationSection section) {
         this.name = name;
         this.manager = manager;
@@ -71,6 +73,13 @@ public class LocationStudio {
                 ConfigUtil.getInt(section,"Max").orElse(1),
                 1
         );
+        List<String> loc = ConfigUtil.getStringList(section,"Locations").orElseThrow(() -> new NullPointerException("Syntax error: unable to find the section \"Locations\""));
+        loc.forEach(s -> {
+            Location t = manager.getLocations().getValue(s);
+            if (t == null) CutsceneMaker.warn("The Location named \"" +s + "\" doesn't exist!");
+            else locationMap.put(s,t);
+        });
+
         ConfigurationSection rec = ConfigUtil.getConfig(section,"Records").orElseThrow(() -> new NullPointerException("Syntax error: unable to find the section \"Records\""));
         int i = 0;
         for (String c : rec.getKeys(false)) {
@@ -87,7 +96,7 @@ public class LocationStudio {
 
     @EqualsAndHashCode
     private class CurrentRecord implements Comparable<CurrentRecord> {
-        private final Map<String, Location> locationMap = new HashMap<>();
+        private final Map<String, Location> recordLocation = new HashMap<>();
         @EqualsAndHashCode.Exclude
         private final IWrappedRegion region;
         @EqualsAndHashCode.Exclude
@@ -95,23 +104,23 @@ public class LocationStudio {
         private final int num;
         private CurrentRecord(int num, ConfigurationSection section) {
             this.num = num;
-            String world = ConfigUtil.getString(section,"World").orElseThrow(() -> new NullPointerException("World value cannot be null!"));
+            String worldName = ConfigUtil.getString(section,"World").orElseThrow(() -> new NullPointerException("World value cannot be null!"));
+            World world = Objects.requireNonNull(
+                            Bukkit.getWorld(worldName),
+                            "The world named \"" + worldName + "\" doesn't exist!"
+            );
             String reg = ConfigUtil.getString(section,"Region").orElseThrow(() -> new NullPointerException("Region value cannot be null!"));
             region = Objects.requireNonNull(
                     WorldGuardWrapper
                             .getInstance()
-                            .getRegions(
-                                    Objects.requireNonNull(
-                                            Bukkit.getWorld(world),
-                                            "The world named \"" + world + "\" doesn't exist!"
-                                    ))
+                            .getRegions(world)
                             .get(reg),
                     "The Region named \"" + reg + "\" doesn't exist!"
             );
-            ConfigurationSection loc = ConfigUtil.getConfig(section,"Locations").orElseThrow(() -> new NullPointerException("Location value cannot be null!"));
-            loc.getKeys(false).forEach(c -> {
-                Location location = manager.getLocations().getValue(loc.getString(c));
-                if (location != null) locationMap.put(c,location);
+            locationMap.forEach((k,v) -> {
+                Location loc = v.clone();
+                loc.setWorld(world);
+                recordLocation.put(k,loc);
             });
 
         }

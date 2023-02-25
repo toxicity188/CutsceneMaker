@@ -94,10 +94,12 @@ public final class CutsceneMaker extends JavaPlugin {
     }
 
     void load(Consumer<Long> callback) {
-        EvtUtil.call(new ActionReloadStartEvent());
+        ActionReloadStartEvent event = new ActionReloadStartEvent();
+        EvtUtil.call(event);
         Bukkit.getScheduler().runTaskAsynchronously(this,() -> {
             try {
                 long time = System.currentTimeMillis();
+                event.run();
                 reload.forEach(Reloadable::reload);
                 LATE_CHECK.forEach(Runnable::run);
                 LATE_CHECK.clear();
@@ -131,14 +133,14 @@ public final class CutsceneMaker extends JavaPlugin {
 
     public ConfigLoad readResourceFile(String file) {
         try {
-            if (!new File(getDataFolder().getAbsolutePath() + "\\" + file + ".yml").exists()) saveResource(file + ".yml",false);
+            if (!new File(getDataFolder(), file + ".yml").exists()) saveResource(file + ".yml",false);
             return new ConfigLoad(this,file + ".yml","");
         } catch (IOException | InvalidConfigurationException e) {
             throw new RuntimeException(e);
         }
     }
     public ConfigLoad read(String dict) {
-        return new ConfigLoad(new File(this.getDataFolder().getAbsolutePath() + "\\" + dict),"");
+        return new ConfigLoad(new File(getDataFolder(), dict),"");
     }
     public static void removeVars(Player player, String key) {
         manager.getVars(player).remove(key);

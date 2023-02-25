@@ -71,10 +71,10 @@ public final class LocationData extends CutsceneData implements Listener {
         });
 
         //Block Animation
-        String path = getPlugin().getDataFolder().getAbsolutePath();
-        new File(path + "\\Animation").mkdir();
+        File path = new File(getPlugin().getDataFolder() , "Animation");
+        path.mkdir();
         Bukkit.getWorlds().forEach(w -> {
-            File dir = new File(path + "\\Animation\\" + w.getName());
+            File dir = new File(path ,w.getName());
             dir.mkdir();
             File[] files = dir.listFiles();
             if (files != null) {

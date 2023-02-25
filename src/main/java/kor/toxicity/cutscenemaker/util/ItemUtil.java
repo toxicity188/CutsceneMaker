@@ -2,9 +2,13 @@ package kor.toxicity.cutscenemaker.util;
 
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -102,4 +106,20 @@ public final class ItemUtil {
 			return null;
 		}
 	}
+	public static String encode(ItemStack itemStack) {
+		YamlConfiguration config = new YamlConfiguration();
+		config.set("i", itemStack);
+		return Base64.getEncoder().encodeToString(config.saveToString().getBytes(StandardCharsets.UTF_8));
+	}
+	public static ItemStack decode(String string) {
+		YamlConfiguration config = new YamlConfiguration();
+		try {
+			config.loadFromString(new String(Base64.getDecoder().decode(string), StandardCharsets.UTF_8));
+		} catch (IllegalArgumentException | InvalidConfigurationException e) {
+			e.printStackTrace();
+			return null;
+		}
+		return config.getItemStack("i", null);
+	}
+
 }

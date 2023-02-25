@@ -35,6 +35,8 @@ public abstract class ActionHandler implements Listener {
         handlers.put("custom", HandlerCustom.class);
         handlers.put("worldchange", HandlerChangeWorld.class);
         handlers.put("itemclick", HandlerItemClick.class);
+        handlers.put("process", HandlerProcess.class);
+        handlers.put("swap", HandlerItemSwap.class);
         if (Bukkit.getPluginManager().isPluginEnabled("WorldGuard")) {
             handlers.put("enter", HandlerRegionEnter.class);
             handlers.put("exit", HandlerRegionExit.class);
@@ -42,13 +44,14 @@ public abstract class ActionHandler implements Listener {
     }
 
     private final ActionContainer container;
-    protected final void apply(final LivingEntity entity) {
-        apply(entity,null);
+    protected final boolean apply(final LivingEntity entity) {
+        return apply(entity,null);
     }
-    protected final void apply(final LivingEntity entity, Map<String,String> localVariables) {
+    protected final boolean apply(final LivingEntity entity, Map<String,String> localVariables) {
         ActionStartEvent event = new ActionStartEvent(entity,container);
         EvtUtil.call(event);
-        if (!event.isCancelled()) container.run(entity,localVariables);
+        if (!event.isCancelled()) return container.run(entity,localVariables);
+        else return false;
     }
 
     protected abstract void initialize();

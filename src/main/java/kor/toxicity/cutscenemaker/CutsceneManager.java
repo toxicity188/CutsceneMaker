@@ -1,5 +1,6 @@
 package kor.toxicity.cutscenemaker;
 
+import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import de.slikey.effectlib.EffectManager;
@@ -24,7 +25,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -40,9 +40,9 @@ public final class CutsceneManager {
     private final CutsceneMaker plugin;
     private final CutsceneUser user;
     @Getter
-    private final EffectManager EffectLib;
+    private final EffectManager effectLib;
     @Getter
-    private final ProtocolManager ProtocolLib;
+    private final ProtocolManager protocolLib;
 
     @Getter
     private final DataContainer<Location> locations = new DataContainer<>();
@@ -70,8 +70,8 @@ public final class CutsceneManager {
             } else return false;
         };
 
-        ProtocolLib = ProtocolLibrary.getProtocolManager();
-        EffectLib = new EffectManager(plugin);
+        protocolLib = ProtocolLibrary.getProtocolManager();
+        effectLib = new EffectManager(plugin);
 
         if (Bukkit.getPluginManager().isPluginEnabled("WorldGuard")) {
             EvtUtil.register(plugin,new WGRegionEventsListener(plugin));
@@ -132,6 +132,7 @@ public final class CutsceneManager {
                 GameMode mode = CutsceneConfig.getInstance().getDefaultGameMode();
                 if (!player.isOp() && player.getGameMode() != mode) {
                     player.setGameMode(mode);
+                    player.setHealth(0);
                 }
             }
             load(player);

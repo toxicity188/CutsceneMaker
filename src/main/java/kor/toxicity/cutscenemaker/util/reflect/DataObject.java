@@ -86,6 +86,7 @@ public class DataObject {
         INTEGER(Integer.TYPE,"int",JsonElement::getAsInt),
         DOUBLE(Double.TYPE, "double",JsonElement::getAsDouble),
         FLOAT(Float.TYPE, "float",JsonElement::getAsFloat),
+        LONG(Long.TYPE, "long",JsonElement::getAsLong),
         BOOLEAN(Boolean.TYPE, "boolean",JsonElement::getAsBoolean),
         STRING(String.class, "string",JsonElement::getAsString),
         JSON_OBJECT(JsonObject.class, "{object}",JsonElement::getAsJsonObject),

@@ -67,6 +67,9 @@ public final class QuestSet implements Comparable<QuestSet> {
     @Getter
     private final LocationSet locationSet;
 
+
+    private final Consumer<Player> onRemove, onComplete, onGive;
+
     QuestSet(CutsceneMaker plugin, String node, ConfigurationSection section) {
         this.plugin = plugin;
 
@@ -94,12 +97,17 @@ public final class QuestSet implements Comparable<QuestSet> {
                 try {
                     listeners.add(new QuestListener(key));
                 } catch (Exception e) {
-                    CutsceneMaker.warn("unable to read the quest event: "  + s + " (QuestSet " + name + ")");
+                    warn("unable to read the quest event: "  + s);
                 }
             }));
             if (listeners.isEmpty()) listeners = null;
         });
         LocationSet set = new LocationSet();
+
+        onGive = getVarsConsumer(section,"OnGive");
+        onComplete = getVarsConsumer(section,"OnComplete");
+        onRemove = getVarsConsumer(section,"OnRemove");
+
         getConfig(section,"Locations").ifPresent(loc -> loc.getKeys(false).forEach(s -> getConfig(loc,s).ifPresent(t -> {
             if (!t.isSet("Location")) return;
             String n = t.getString("Location");
@@ -108,9 +116,28 @@ public final class QuestSet implements Comparable<QuestSet> {
                     TextUtil.colored(t.getString("Name","Unknown Name")),
                     l
             ));
-            else CutsceneMaker.warn("The Location named \"" + n + "\" doesn't exist!");
+            else warn("The Location named \"" + n + "\" doesn't exist!");
         })));
         locationSet = (!set.isEmpty()) ? set.build(section.getString("Navigator","click the location you want go to!")) : null;
+    }
+    private static Consumer<Player> getVarsConsumer(ConfigurationSection section, String key) {
+        return ConfigUtil.getStringList(section,key).map(l -> {
+            Consumer<Player> consumer = null;
+            for (String s : l) {
+                String[] t = TextUtil.split(s," ");
+
+                Consumer<Player> t2 = QuestUtil.getVarsConsumer(t[0],t[2],t[1]);
+                if (t2 == null) continue;
+
+                if (consumer == null) consumer = t2;
+                else consumer = consumer.andThen(t2);
+            }
+            return consumer;
+        }).orElse(null);
+    }
+
+    public void warn(String s) {
+        CutsceneMaker.warn(s + " (QuestSet " + name + ")");
     }
     public ItemStack getIcon(Player player) {
         ItemStack stack = CutsceneConfig.getInstance().getDefaultQuestIcon().clone();
@@ -170,11 +197,8 @@ public final class QuestSet implements Comparable<QuestSet> {
     }
     private List<String> getStringList(ConfigurationSection section, String key, boolean nonNull) {
         if (section.isSet(key)) {
-            try {
-                return section.getStringList(key);
-            } catch (Exception e) {
-                CutsceneMaker.warn("unable to read the string list: "  + key + " (QuestSet " + name + ")");
-            }
+            if (section.isList(key) )return section.getStringList(key);
+            else warn("unable to read the string list: "  + key);
         }
         return (nonNull) ? Collections.emptyList() : null;
     }
@@ -190,6 +214,7 @@ public final class QuestSet implements Comparable<QuestSet> {
         MessageSender sender = QuestData.QUEST_MESSAGE_MAP.get("quest-give");
         if (sender != null) sender.send(player,title.print(player));
         plugin.getManager().getVars(player).get("quest." +name).setVar("true");
+        if (onGive != null) onGive.accept(player);
     }
     public boolean has(Player player) {
         return plugin.getManager().getVars(player).contains("quest." +name);
@@ -213,15 +238,17 @@ public final class QuestSet implements Comparable<QuestSet> {
         MoneyUtil.addMoney(player,money);
         EXP_GETTER.forEach(b -> b.accept(player,exp));
         remove(player);
+        if (onComplete != null) onComplete.accept(player);
         if (completeAction != null) ActionData.start(completeAction,player);
     }
 
     public void remove(Player player) {
         plugin.getManager().getVars(player).remove("quest." +name);
+        if (onRemove != null) onRemove.accept(player);
     }
 
     private Optional<ConfigurationSection> getConfig(ConfigurationSection section, String key) {
-        return (section.isSet(key) && section.isConfigurationSection(key)) ? Optional.of(section.getConfigurationSection(key)) : Optional.empty();
+        return ConfigUtil.getConfig(section,key);
     }
     public boolean isCompleted(Player player) {
         return listeners != null && listeners.stream().allMatch(e -> e.isCompleted(player));
@@ -261,34 +288,36 @@ public final class QuestSet implements Comparable<QuestSet> {
                 if (t.length >= 3) condition = ConditionBuilder.LIVING_ENTITY.find(t);
                 else condition = null;
             } else condition = null;
-            if (stringSet(section,"Event")) {
+            if (section.isSet("Event") && (section.isList("Event") || section.isString("Event"))) {
                 if (stringSet(section,"Variable")) {
                     String vars = section.getString("Variable");
-                    String parameter = section.getString("Event");
+                    List<String> parameters = (section.isString("Event")) ? Collections.singletonList(section.getString("Event")) : section.getStringList("Event");
 
-                    ActionContainer container = new ActionContainer(plugin);
-                    VarsAdder variable = new VarsAdder(plugin.getManager());
-                    Predicate<LivingEntity> check;
-                    if (condition != null) {
-                        check = e -> {
-                            Player p = (Player) e;
-                            return has(p) && !condition.test(p);
-                        };
-                    } else {
-                        check = e -> has((Player) e);
-                    }
-                    if (!EVENT_MAP.containsKey(vars)) {
-                        variable.name = vars;
-                        variable.initialize();
-                        container.add(variable);
+                    for (String parameter : parameters) {
+                        ActionContainer container = new ActionContainer(plugin);
+                        VarsAdder variable = new VarsAdder(plugin.getManager());
+                        Predicate<LivingEntity> check;
+                        if (condition != null) {
+                            check = e -> {
+                                Player p = (Player) e;
+                                return has(p) && !condition.test(p);
+                            };
+                        } else {
+                            check = e -> has((Player) e);
+                        }
+                        if (!EVENT_MAP.containsKey(vars)) {
+                            variable.name = vars;
+                            variable.initialize();
+                            container.add(variable);
 
-                        container.confirm();
-                        if (ActionData.addHandler(parameter, container))
-                            EVENT_MAP.put(vars,new QuestEvent(check,container,parameter));
-                    } else {
-                        QuestEvent event = EVENT_MAP.get(vars);
-                        event.or(check);
-                        if (!event.parameter.equals(parameter)) ActionData.addHandler(parameter, event.container);
+                            container.confirm();
+                            if (ActionData.addHandler(parameter, container))
+                                EVENT_MAP.put(vars,new QuestEvent(check,container,parameter));
+                        } else {
+                            QuestEvent event = EVENT_MAP.get(vars);
+                            event.or(check);
+                            if (!event.parameter.equals(parameter)) ActionData.addHandler(parameter, event.container);
+                        }
                     }
 
                 } else throw new RuntimeException("variable value not found.");

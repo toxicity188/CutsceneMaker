@@ -9,7 +9,6 @@ import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.actions.mechanics.*;
 import kor.toxicity.cutscenemaker.exceptions.NoActionFoundException;
 import kor.toxicity.cutscenemaker.exceptions.NoValueFoundException;
-import kor.toxicity.cutscenemaker.handlers.ActionHandler;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
 import kor.toxicity.cutscenemaker.util.reflect.DataObject;
@@ -21,7 +20,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.LivingEntity;
 
 import java.util.*;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,7 +34,6 @@ public final class ActionData extends CutsceneData {
         actions.put("teleport", ActTeleport.class);
         actions.put("dummy", ActDummy.class);
         actions.put("effectlib", ActEffectLib.class);
-        actions.put("particle", ActParticle.class);
         actions.put("message", ActMessage.class);
         actions.put("item", ActItem.class);
         actions.put("sound", ActSound.class);
@@ -68,6 +65,9 @@ public final class ActionData extends CutsceneData {
         actions.put("studio", ActStudio.class);
         actions.put("quitstudio", ActQuitStudio.class);
         actions.put("stopsound", ActStopSound.class);
+        actions.put("particle", ActParticle.class);
+        actions.put("lazywarp", ActLazyWarp.class);
+        actions.put("cooldown", ActCoolTime.class);
 
         if (Bukkit.getPluginManager().isPluginEnabled("Skript")) {
             actions.put("skript", ActSetSkriptVar.class);

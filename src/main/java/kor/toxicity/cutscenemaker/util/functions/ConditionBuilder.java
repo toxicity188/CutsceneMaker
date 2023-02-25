@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
+import kor.toxicity.cutscenemaker.actions.mechanics.ActCoolTime;
 import kor.toxicity.cutscenemaker.data.ItemData;
 import kor.toxicity.cutscenemaker.util.*;
 import lombok.Setter;
@@ -14,6 +15,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
@@ -47,8 +49,23 @@ public final class ConditionBuilder<T> {
             }
             return 0;
         });
+        LIVING_ENTITY.NUMBER.addFunction("year", (e,j) -> LocalDate.now().getYear());
+        LIVING_ENTITY.NUMBER.addFunction("month", (e,j) -> LocalDate.now().getMonthValue());
+        LIVING_ENTITY.NUMBER.addFunction("day", (e,j) -> LocalDate.now().getDayOfMonth());
         LIVING_ENTITY.NUMBER.addFunction("healthpercentage",(e,j) -> e.getHealth()/e.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
         LIVING_ENTITY.NUMBER.addFunction("health",(e,j) -> e.getHealth());
+        LIVING_ENTITY.NUMBER.addFunction("cooldown", new CheckableFunction<LivingEntity, Number>() {
+            @Override
+            public boolean check(JsonArray array) {
+                return array.size() > 0;
+            }
+            @Override
+            public Number apply(LivingEntity entity, JsonArray array) {
+                if (entity instanceof Player) {
+                    return ActCoolTime.getCoolTime((Player) entity, array.get(0).getAsString());
+                } else return 0;
+            }
+        });
         LIVING_ENTITY.NUMBER.addFunction("random",new CheckableFunction<LivingEntity, Number>() {
             private final ThreadLocalRandom random = ThreadLocalRandom.current();
             @Override

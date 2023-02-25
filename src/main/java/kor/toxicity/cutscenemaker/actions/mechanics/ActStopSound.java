@@ -24,6 +24,7 @@ public class ActStopSound extends CutsceneAction {
 
     @Override
     public void initialize() {
+        super.initialize();
         if (category != null) {
             SoundCategory ct = tryCategory();
             stopSound = p -> p.stopSound(sound,ct);

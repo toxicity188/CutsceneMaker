@@ -129,13 +129,7 @@ public final class QuestUtil {
 
     static ConfigurationSection copy(ConfigurationSection section) {
         ConfigurationSection ret = new MemoryConfiguration();
-        section.getKeys(true).forEach(k -> {
-            if (section.get(k).getClass() == MemorySection.class) {
-                ret.createSection(k);
-            } else {
-                ret.set(k, section.get(k));
-            }
-        });
+        section.getKeys(false).forEach(k -> ret.set(k,section.get(k)));
         return ret;
     }
 
