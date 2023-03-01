@@ -47,8 +47,8 @@ public final class CutsceneMaker extends JavaPlugin {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
     public void onEnable() {
-        this.getDataFolder().mkdir();
-        new File(this.getDataFolder().getAbsolutePath() + "\\User").mkdir();
+        getDataFolder().mkdir();
+        new File(getDataFolder(),"User").mkdir();
         setupDB();
 
         CutsceneCommand command = new CutsceneCommand(this);
