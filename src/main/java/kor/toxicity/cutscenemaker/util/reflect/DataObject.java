@@ -81,16 +81,17 @@ public class DataObject {
 
     @RequiredArgsConstructor
     private enum DataType {
-        BYTE(Byte.TYPE,"byte",JsonElement::getAsByte),
-        SHORT(Short.TYPE,"short",JsonElement::getAsShort),
-        INTEGER(Integer.TYPE,"int",JsonElement::getAsInt),
-        DOUBLE(Double.TYPE, "double",JsonElement::getAsDouble),
-        FLOAT(Float.TYPE, "float",JsonElement::getAsFloat),
-        LONG(Long.TYPE, "long",JsonElement::getAsLong),
-        BOOLEAN(Boolean.TYPE, "boolean",JsonElement::getAsBoolean),
-        STRING(String.class, "string",JsonElement::getAsString),
-        JSON_OBJECT(JsonObject.class, "{object}",JsonElement::getAsJsonObject),
-        JSON_ARRAY(JsonArray.class, "[array]",j -> {
+        BYTE(new Class[] {Byte.TYPE, Byte.class},"byte",JsonElement::getAsByte),
+        SHORT(new Class[] {Short.TYPE, Short.class},"short",JsonElement::getAsShort),
+        INTEGER(new Class[] {Integer.TYPE, Integer.class},"int",JsonElement::getAsInt),
+        DOUBLE(new Class[] {Double.TYPE, Double.class}, "double",JsonElement::getAsDouble),
+        FLOAT(new Class[] {Float.TYPE, Float.class}, "float",JsonElement::getAsFloat),
+        LONG(new Class[] {Long.TYPE, Long.class}, "long",JsonElement::getAsLong),
+        BOOLEAN(new Class[] {Boolean.TYPE, Boolean.class}, "boolean",JsonElement::getAsBoolean),
+        CHARACTER(new Class[] {Character.TYPE, Character.class}, "character",JsonElement::getAsCharacter),
+        STRING(new Class[] {String.class}, "string",JsonElement::getAsString),
+        JSON_OBJECT(new Class[] {JsonObject.class}, "{object}",JsonElement::getAsJsonObject),
+        JSON_ARRAY(new Class[] {JsonArray.class}, "[array]",j -> {
             if (j.isJsonArray()) return j.getAsJsonArray();
             else {
                 JsonArray array = new JsonArray();
@@ -98,13 +99,13 @@ public class DataObject {
                 return array;
             }
         }),
-        FUNCTION_PRINTER(FunctionPrinter.class, "String (Function)",j -> new FunctionPrinter(j.getAsString())),
+        FUNCTION_PRINTER(new Class[] {FunctionPrinter.class}, "String (Function)",j -> new FunctionPrinter(j.getAsString()))
         ;
-        final Class<?> type;
+        final Class<?>[] types;
         final String name;
         final Function<JsonElement,Object> converter;
         private static DataType findByClass(Class<?> clazz) {
-            return Arrays.stream(values()).filter(d -> d.type == clazz).findFirst().orElse(null);
+            return Arrays.stream(values()).filter(d -> Arrays.stream(d.types).anyMatch(t -> t == clazz)).findFirst().orElse(null);
         }
     }
 }

@@ -4,6 +4,7 @@ import kor.toxicity.cutscenemaker.CutsceneConfig;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.util.InvUtil;
 import kor.toxicity.cutscenemaker.util.ItemBuilder;
+import kor.toxicity.cutscenemaker.util.ItemUtil;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import kor.toxicity.cutscenemaker.util.gui.GuiAdapter;
 import kor.toxicity.cutscenemaker.util.gui.GuiExecutor;
@@ -124,9 +125,11 @@ final class QnA extends EditorSupplier implements DialogAddon {
                         ))
                 );
             });
+            ItemStack barrier = new ItemStack(Material.BARRIER);
+            barrier.setItemMeta(ItemUtil.edit(barrier.getItemMeta(),ChatColor.WHITE.toString()));
             inv.setItem(
                     newCenter,
-                    new ItemStack(Material.BARRIER)
+                    barrier
             );
             return inv;
         }
@@ -178,6 +181,8 @@ final class QnA extends EditorSupplier implements DialogAddon {
         public ConfigurationSection getSaveData() {
             ConfigurationSection buttonSection = new MemoryConfiguration();
             sectionMap.forEach((k,v) -> buttonSection.set(Integer.toString(k),v));
+            resources.set("Name",name);
+            resources.set("Slot",slot);
             resources.set("Button",buttonSection);
             return resources;
         }

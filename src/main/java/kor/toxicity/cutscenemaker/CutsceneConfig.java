@@ -72,7 +72,7 @@ public class CutsceneConfig {
 
             defaultQuestIcon = getItemStack(load.getString("default-quest-icon", "BOOK"),(short) load.getInt("default-quest-durability",0));
 
-            enableTagging = load.getBoolean("enable-tagging",true);
+            enableTagging = load.getBoolean("enable-tagging",false);
 
         } catch (IOException | InvalidConfigurationException e) {
             throw new RuntimeException(e);

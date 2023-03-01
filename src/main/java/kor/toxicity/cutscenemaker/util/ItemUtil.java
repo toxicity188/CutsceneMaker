@@ -6,14 +6,13 @@ import org.bukkit.Material;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.*;
 
 public final class ItemUtil {
 	private ItemUtil() {
@@ -140,6 +139,25 @@ public final class ItemUtil {
 				left,
 				temp
 				) : null;
+	}
+
+	public static ItemMeta edit(@NotNull ItemMeta meta, String display) {
+		return edit(meta,display,null);
+	}
+	public static ItemMeta edit(@NotNull ItemMeta meta, String display, List<String> lore) {
+		meta.setDisplayName((display != null) ? display : "");
+		meta.setLore(lore);
+		return meta;
+	}
+	public static ItemMeta addLore(@NotNull ItemMeta meta, String... lore) {
+		return addLore(meta,(lore == null) ? Collections.emptyList() : (lore.length == 1) ? Collections.singletonList(lore[0]) : Arrays.asList(lore));
+	}
+	public static ItemMeta addLore(@NotNull ItemMeta meta, List<String> lore) {
+		List<String> get = meta.getLore();
+		if (get == null) get = new ArrayList<>();
+		get.addAll(lore);
+		meta.setLore(get);
+		return meta;
 	}
 
 }

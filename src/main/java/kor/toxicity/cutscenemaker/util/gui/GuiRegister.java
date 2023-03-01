@@ -3,6 +3,7 @@ package kor.toxicity.cutscenemaker.util.gui;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.data.CutsceneData;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
+import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -12,6 +13,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
@@ -57,7 +59,8 @@ public final class GuiRegister extends CutsceneData implements Listener {
             GuiExecutor executor = getExecutor(p);
             if (executor != null) {
                 e.setCancelled(true);
-                if (e.getClickedInventory() != null && e.getCurrentItem() != null && !CLICK_DELAY.containsKey(p)) {
+                ItemStack current = e.getCurrentItem();
+                if (e.getClickedInventory() != null && current != null && current.getType() != Material.AIR && !CLICK_DELAY.containsKey(p)) {
                     CLICK_DELAY.put(p,getPlugin().getManager().runTaskLaterAsynchronously(() -> CLICK_DELAY.remove(p), executor.getDelay()));
                     MouseButton button = MouseButton.OTHER;
                     if (e.isLeftClick()) {
@@ -68,7 +71,7 @@ public final class GuiRegister extends CutsceneData implements Listener {
                         if (!e.isShiftClick()) button = MouseButton.RIGHT;
                         else button = MouseButton.RIGHT_WITH_SHIFT;
                     }
-                    executor.onClick(e.getCurrentItem(),e.getSlot(),button, e.getClickedInventory().equals(p.getInventory()));
+                    executor.onClick(current,e.getSlot(),button, e.getClickedInventory().equals(p.getInventory()));
                 }
             }
         }

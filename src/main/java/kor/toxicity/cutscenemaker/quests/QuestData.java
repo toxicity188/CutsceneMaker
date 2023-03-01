@@ -273,7 +273,7 @@ public final class QuestData extends CutsceneData {
     private InventorySupplier supplier;
 
     private final ConfigFunction questSetFunction = getFunction("QuestSet",(c,f,s) -> {
-        QuestSet questSet = new QuestSet(getPlugin(),s,c);
+        QuestSet questSet = new QuestSet(f, s, getPlugin().getManager(), c);
         QUEST_SET_MAP.put(questSet.getName(),questSet);
     });
     private final ConfigFunction dialogFunction = getFunction("Dialog",(c,f,s) -> DIALOG_MAP.put(s,new Dialog(f,s,getPlugin().getManager(),c)));

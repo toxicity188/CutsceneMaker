@@ -10,6 +10,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -90,10 +91,14 @@ public class EntityManager implements Listener {
     }
 
     private CutsceneEntity a(EntityType type, Location location) {
+        Chunk chunk = location.getChunk();
+        if (!chunk.isLoaded()) chunk.load();
         return new CutsceneEntity((LivingEntity) location.getWorld().spawnEntity(location,type));
     }
 
     private CutsceneEntity b(String key, Location location) {
+        Chunk chunk = location.getChunk();
+        if (!chunk.isLoaded()) chunk.load();
         try {
             MythicMob mob = MythicMobs.inst().getMobManager().getMythicMob(key);
             if (mob == null) {

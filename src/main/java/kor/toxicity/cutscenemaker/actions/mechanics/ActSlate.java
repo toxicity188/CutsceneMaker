@@ -16,6 +16,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -36,6 +38,7 @@ public class ActSlate extends CutsceneAction {
     }
 
     private static ListenerManager manager;
+    private static final PotionEffect INVISIBILITY = new PotionEffect(PotionEffectType.INVISIBILITY,99999999,0,true,false);
 
     public ActSlate(CutsceneManager pl) {
         super(pl);
@@ -99,7 +102,10 @@ public class ActSlate extends CutsceneAction {
     }
     private static void on(Player player, boolean save, boolean change, boolean grounding) {
         SLATE_TOGGLE.add(player);
-        if (change) player.setGameMode(GameMode.SPECTATOR);
+        if (change) {
+            player.setGameMode(GameMode.SPECTATOR);
+            player.addPotionEffect(INVISIBILITY);
+        }
         else {
             if (grounding) {
                 Location loc = player.getLocation();
@@ -117,6 +123,7 @@ public class ActSlate extends CutsceneAction {
     }
     private static void off(Player player) {
         player.setGameMode(CutsceneConfig.getInstance().getDefaultGameMode());
+        if (player.hasPotionEffect(PotionEffectType.INVISIBILITY)) player.removePotionEffect(PotionEffectType.INVISIBILITY);
         for (Consumer<Player> p : tasksOff) p.accept(player);
 
         Location back = ActMark.LOCATION.get(player);

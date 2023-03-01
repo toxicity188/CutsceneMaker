@@ -36,12 +36,17 @@ public abstract class EditorSupplier {
 
     private static class EditorConfiguration {
         private final Class<? extends EditorSupplier> clazz;
-        private final ConfigurationSection section = new MemoryConfiguration();
+        private final YamlConfiguration section = new YamlConfiguration();
+        private String build;
         private EditorConfiguration(Class<? extends EditorSupplier> clazz) {
             this.clazz = clazz;
         }
         private EditorConfiguration set(String key, Object obj) {
             section.set(key,obj);
+            return this;
+        }
+        private EditorConfiguration build() {
+            build = section.saveToString();
             return this;
         }
 
@@ -53,8 +58,10 @@ public abstract class EditorSupplier {
                         CutsceneManager.class,
                         ConfigurationSection.class
                 );
+                YamlConfiguration configuration = new YamlConfiguration();
+                configuration.loadFromString(build);
                 constructor.setAccessible(true);
-                EditorSupplier supplier = constructor.newInstance(file,key,manager,section);
+                EditorSupplier supplier = constructor.newInstance(file,key,manager,configuration);
                 constructor.setAccessible(false);
                 return supplier;
             } catch (Exception e) {
@@ -76,8 +83,27 @@ public abstract class EditorSupplier {
     static  {
         EDITOR_MAP.put("dialog", QuestData.DIALOG_MAP);
         EDITOR_MAP.put("qna", QuestData.QNA_MAP);
+        EDITOR_MAP.put("questset", QuestData.QUEST_SET_MAP);
 
-        CONFIGURATION_MAP.put("dialog",new EditorConfiguration(Dialog.class).set("Talk",new String[] {"a new talk"}));
+        CONFIGURATION_MAP.put(
+                "dialog",
+                new EditorConfiguration(Dialog.class)
+                        .set("Talk",new String[] {"a new talk"})
+                        .build()
+        );
+        CONFIGURATION_MAP.put(
+                "qna",
+                new EditorConfiguration(QnA.class)
+                        .set("Button", new MemoryConfiguration())
+                        .build()
+        );
+        CONFIGURATION_MAP.put(
+                "questset",
+                new EditorConfiguration(QuestSet.class)
+                        .set("Title","a new Title")
+                        .set("Lore", new String[] {"a new lore"})
+                        .build()
+        );
     }
     public static @NotNull List<String> getEditorList() {
         return new ArrayList<>(EDITOR_MAP.keySet());

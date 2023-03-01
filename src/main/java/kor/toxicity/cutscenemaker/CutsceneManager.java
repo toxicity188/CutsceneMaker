@@ -144,7 +144,7 @@ public final class CutsceneManager {
                         String str = CutsceneConfig.getInstance().getTempStorageMessage().print(player);
                         if (!"".equals(str)) player.sendMessage(str);
                     }
-                },60,60 * 20));
+                },60,600 * 20));
                 container.put(player, container1);
                 Bukkit.getScheduler().runTask(plugin,() -> EvtUtil.call(new UserDataLoadEvent(player)));
             });

@@ -61,7 +61,7 @@ public class InventoryGui extends InventorySupplier {
         private void randomCast(Player player) {
             if (soundPlay != null) soundPlay.accept(player);
             if (closeInventory) player.closeInventory();
-            ActionData.start(actionArray[ThreadLocalRandom.current().nextInt(0,actionArray.length)],player);
+            if (actionArray != null && actionArray.length > 0) ActionData.start(actionArray[ThreadLocalRandom.current().nextInt(0,actionArray.length)],player);
         }
     }
 }

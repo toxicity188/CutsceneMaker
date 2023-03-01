@@ -6,10 +6,12 @@ import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.data.ActionData;
 import kor.toxicity.cutscenemaker.events.QuestCompleteEvent;
+import kor.toxicity.cutscenemaker.material.WrappedMaterial;
 import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import kor.toxicity.cutscenemaker.util.gui.GuiAdapter;
+import kor.toxicity.cutscenemaker.util.gui.GuiExecutor;
 import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
 import kor.toxicity.cutscenemaker.util.gui.MouseButton;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
@@ -27,6 +29,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -35,7 +38,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public final class QuestSet implements Comparable<QuestSet> {
+public final class QuestSet extends EditorSupplier implements Comparable<QuestSet> {
 
     private static final List<BiConsumer<Player,Double>> EXP_GETTER = new ArrayList<>();
     static final NavigableSet<String> TYPE_LIST = new TreeSet<>();
@@ -70,10 +73,11 @@ public final class QuestSet implements Comparable<QuestSet> {
 
     private final Consumer<Player> onRemove, onComplete, onGive;
 
-    QuestSet(CutsceneMaker plugin, String node, ConfigurationSection section) {
-        this.plugin = plugin;
+    QuestSet(String fileName, String name, CutsceneManager manager, ConfigurationSection section) {
+        super(fileName,name,manager,section);
+        this.plugin = manager.getPlugin();
 
-        name = TextUtil.colored(section.getString("Name",node));
+        this.name = TextUtil.colored(section.getString("Name",name));
         type = section.getString("Type",null);
         if (type != null) TYPE_LIST.add(type);
         title = getFunctionPrinter(section);
@@ -137,7 +141,7 @@ public final class QuestSet implements Comparable<QuestSet> {
     }
 
     public void warn(String s) {
-        CutsceneMaker.warn(s + " (QuestSet " + name + ")");
+        CutsceneMaker.warn(s + " (QuestSet " + name + " in file \"" + fileName + "\".yml)");
     }
     public ItemStack getIcon(Player player) {
         ItemStack stack = CutsceneConfig.getInstance().getDefaultQuestIcon().clone();
@@ -394,4 +398,83 @@ public final class QuestSet implements Comparable<QuestSet> {
         private final Location location;
     }
 
+    @Override
+    Editor getEditor(Player player) {
+        return new QuestSetEditor(player);
+    }
+
+    private class QuestSetEditor extends Editor {
+
+        private final ConfigurationSection resources = QuestUtil.copy(section);
+
+        private String title = ConfigUtil.getString(resources,"Title").orElse("a new title");
+        private String[] lore = ConfigUtil.getStringList(resources,"Lore").map(l -> l.toArray(new String[0])).orElse(new String[] {"a new lore"});
+
+        private Inventory inv;
+        QuestSetEditor(Player player) {
+            super(player, "QuestSet");
+        }
+
+        @Override
+        GuiExecutor getMainExecutor() {
+            if (inv == null) {
+                inv = InvUtil.create(invName,6);
+                setupGui();
+            }
+            return new GuiAdapter(player,inv) {
+                @Override
+                public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
+
+                }
+            };
+        }
+        private void setupGui() {
+            inv.setItem(
+                    10,
+                    getStringItem(
+                            new ItemStack(Material.PAINTING),
+                            "Title",
+                            title,
+                            "",
+                            ChatColor.GRAY + "(Left: change title)"
+                    )
+            );
+            inv.setItem(
+                    12,
+                    getArrayItem(
+                            new ItemStack(Material.PAPER),
+                            "Lore",
+                            lore
+                    )
+            );
+        }
+
+        @Override
+        ConfigurationSection getSaveData() {
+            return resources;
+        }
+        private ItemStack getStringItem(@NotNull ItemStack item, @NotNull String display, @NotNull String name, String... lore) {
+            item.setItemMeta(
+                    ItemUtil.addLore(
+                            ItemUtil.edit(item.getItemMeta(),ChatColor.WHITE + display,Collections.singletonList(ChatColor.WHITE + name)),
+                            lore
+                    )
+            );
+            return item;
+        }
+        private ItemStack getArrayItem(@NotNull ItemStack item, @NotNull String display ,@Nullable String... array) {
+            item.setItemMeta(ItemUtil.addLore((array == null || array.length == 0) ?
+                    ItemUtil.edit(item.getItemMeta(),ChatColor.WHITE + display,Collections.singletonList(ChatColor.GRAY + "--- <none> ---")) :
+                    ItemUtil.edit(item.getItemMeta(),ChatColor.WHITE + display,
+                            (array.length == 1) ?
+                                    Collections.singletonList(ChatColor.YELLOW + " - " + ChatColor.WHITE + TextUtil.colored(array[0])) :
+                                    Arrays.stream(array).map(s -> ChatColor.YELLOW + " - " + ChatColor.WHITE + TextUtil.colored(s)).collect(Collectors.toList())
+                    ),
+                    "",
+                    ChatColor.GRAY + "(Left: add text)",
+                    ChatColor.GRAY + "(Right: delete last text)"
+            ));
+            return item;
+        }
+    }
 }
