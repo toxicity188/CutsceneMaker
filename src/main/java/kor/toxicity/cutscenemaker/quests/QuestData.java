@@ -334,8 +334,8 @@ public final class QuestData extends CutsceneData {
         tryParse("Present",switchFunction(presentFunction));
         runAll(PRE_DIALOG_TASK);
         runAll(Dialog.LAZY_TASK);
-        runAll(POST_DIALOG_TASK);
         tryParse("NPC",switchFunction(npcFunction));
+        runAll(POST_DIALOG_TASK);
         Navigator.reload();
         QuestSet.EVENT_MAP.clear();
         send(QUEST_SET_MAP.size(),"QuestSets");
