@@ -10,10 +10,7 @@ import kor.toxicity.cutscenemaker.material.WrappedMaterial;
 import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
-import kor.toxicity.cutscenemaker.util.gui.GuiAdapter;
-import kor.toxicity.cutscenemaker.util.gui.GuiExecutor;
-import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
-import kor.toxicity.cutscenemaker.util.gui.MouseButton;
+import kor.toxicity.cutscenemaker.util.gui.*;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -403,12 +400,27 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
         return new QuestSetEditor(player);
     }
 
+    private static final List<String> NULL_ARRAY = Collections.singletonList(ChatColor.GRAY + "--- <none> ---");
+
     private class QuestSetEditor extends Editor {
 
         private final ConfigurationSection resources = QuestUtil.copy(section);
 
         private String title = ConfigUtil.getString(resources,"Title").orElse("a new title");
         private String[] lore = ConfigUtil.getStringList(resources,"Lore").map(l -> l.toArray(new String[0])).orElse(new String[] {"a new lore"});
+        private String[] recommend = ConfigUtil.getStringList(resources,"Recommend").map(l -> l.toArray(new String[0])).orElse(null);
+
+        private String[] rewardItem = ConfigUtil.getStringList(resources,"RewardItem").map(l -> l.toArray(new String[0])).orElse(null);
+
+        private String[] takeItem = ConfigUtil.getStringList(resources,"TakeItem").map(l -> l.toArray(new String[0])).orElse(null);
+
+
+        private String type = ConfigUtil.getString(resources,"Type").orElse(null);
+        private int priority = ConfigUtil.getInt(resources,"Priority").orElse(-1);
+        private int money = ConfigUtil.getInt(resources,"Money").orElse(0);
+        private int exp = ConfigUtil.getInt(resources,"Exp").orElse(0);
+
+        private boolean cancellable = resources.getBoolean("Cancellable",false);
 
         private Inventory inv;
         QuestSetEditor(Player player) {
@@ -424,13 +436,143 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
             return new GuiAdapter(player,inv) {
                 @Override
                 public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
-
+                    switch (slot) {
+                        case 11:
+                            chatTask(
+                                    button,
+                                    new String[] {
+                                            ChatColor.YELLOW + "enter a title in the chat. " + ChatColor.GOLD + "cancel: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "cancel" + ChatColor.WHITE + "\""
+                                    },
+                                    s -> title = s[0],
+                                    null
+                            );
+                            break;
+                        case 13:
+                            chatTask(
+                                    button,
+                                    new String[] {
+                                            ChatColor.YELLOW + "enter a lore in the chat. " + ChatColor.GOLD + "cancel: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "cancel" + ChatColor.WHITE + "\""
+                                    },
+                                    s -> lore = QuestUtil.plusElement(lore,s[0]),
+                                    () -> lore = QuestUtil.deleteLast(lore)
+                            );
+                            break;
+                        case 15:
+                            chatTask(
+                                    button,
+                                    new String[] {
+                                            ChatColor.YELLOW + "enter a recommend in the chat. " + ChatColor.GOLD + "cancel: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "cancel" + ChatColor.WHITE + "\""
+                                    },
+                                    s -> recommend = QuestUtil.plusElement(recommend,s[0]),
+                                    () -> recommend = QuestUtil.deleteLast(recommend)
+                            );
+                            break;
+                        case 19:
+                            signTask(
+                                    button,
+                                    new String[] {
+                                            "",
+                                            "write the type!",
+                                            "",
+                                            ""
+                                    },
+                                    s -> type = s[0],
+                                    () -> type = null
+                            );
+                            break;
+                        case 21:
+                            signTask(
+                                    button,
+                                    new String[] {
+                                            "",
+                                            "write the priority!",
+                                            "format) integer",
+                                            "disable) -1"
+                                    },
+                                    s -> {
+                                        try {
+                                            priority = Integer.parseInt(s[0]);
+                                        } catch (NumberFormatException e) {
+                                            CutsceneMaker.send(player,"This is not an integer!");
+                                        }
+                                    },
+                                    () -> priority = -1
+                            );
+                            break;
+                        case 23:
+                            signTask(
+                                    button,
+                                    new String[] {
+                                            "",
+                                            "write the money amount!",
+                                            "format) integer",
+                                            ""
+                                    },
+                                    s -> {
+                                        try {
+                                            money = Integer.parseInt(s[0]);
+                                        } catch (NumberFormatException e) {
+                                            CutsceneMaker.send(player,"This is not an integer!");
+                                        }
+                                    }
+                            );
+                            break;
+                        case 25:
+                            signTask(
+                                    button,
+                                    new String[] {
+                                            "",
+                                            "write the exp amount!",
+                                            "format) integer",
+                                            ""
+                                    },
+                                    s -> {
+                                        try {
+                                            exp = Integer.parseInt(s[0]);
+                                        } catch (NumberFormatException e) {
+                                            CutsceneMaker.send(player,"This is not an integer!");
+                                        }
+                                    }
+                            );
+                            break;
+                        case 29:
+                            signTask(
+                                    button,
+                                    new String[] {
+                                            "",
+                                            "write the item name!",
+                                            "format) <name> <amount>",
+                                            ""
+                                    },
+                                    s -> rewardItem = QuestUtil.plusElement(rewardItem,s[0]),
+                                    () -> rewardItem = QuestUtil.deleteLast(rewardItem)
+                            );
+                            break;
+                        case 31:
+                            cancellable = !cancellable;
+                            setupGui();
+                            player.updateInventory();
+                            break;
+                        case 33:
+                            signTask(
+                                    button,
+                                    new String[] {
+                                            "",
+                                            "write the item name!",
+                                            "format) <name> <amount>",
+                                            ""
+                                    },
+                                    s -> takeItem = QuestUtil.plusElement(takeItem,s[0]),
+                                    () -> takeItem = QuestUtil.deleteLast(takeItem)
+                            );
+                            break;
+                    }
                 }
             };
         }
         private void setupGui() {
             inv.setItem(
-                    10,
+                    11,
                     getStringItem(
                             new ItemStack(Material.PAINTING),
                             "Title",
@@ -440,23 +582,171 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
                     )
             );
             inv.setItem(
-                    12,
+                    13,
                     getArrayItem(
                             new ItemStack(Material.PAPER),
                             "Lore",
                             lore
                     )
             );
+            inv.setItem(
+                    15,
+                    getArrayItem(
+                            new ItemStack(Material.BOOK),
+                            "Recommend",
+                            recommend
+                    )
+            );
+            inv.setItem(
+                    19,
+                    getStringItem(
+                            new ItemStack(WrappedMaterial.getWrapper().getMonsterEgg()),
+                            "Type",
+                            type,
+                            "",
+                            ChatColor.GRAY + "(Left: change type)",
+                            ChatColor.GRAY + "(Right: delete type)"
+                    )
+            );
+            inv.setItem(
+                    21,
+                    getIntItem(
+                            new ItemStack(WrappedMaterial.getWrapper().getCommandBlock()),
+                            "Priority",
+                            priority,
+                            "",
+                            ChatColor.GRAY + "(Left: change priority)"
+                    )
+            );
+            inv.setItem(
+                    23,
+                    getIntItem(
+                            new ItemStack(Material.GOLD_INGOT),
+                            "Money",
+                            money,
+                            "",
+                            ChatColor.GRAY + "(Left: change money)"
+                    )
+            );
+            inv.setItem(
+                    25,
+                    getIntItem(
+                            new ItemStack(Material.EMERALD),
+                            "Exp",
+                            exp,
+                            "",
+                            ChatColor.GRAY + "(Left: change exp)"
+                    )
+            );
+            inv.setItem(
+                    29,
+                    getArrayItem(
+                            new ItemStack(Material.CHEST),
+                            "Reward Item",
+                            rewardItem
+                    )
+            );
+            inv.setItem(
+                    31,
+                    getBooleanItem(
+                            "Cancellable",
+                            cancellable,
+                            "",
+                            ChatColor.GRAY + "(Click: toggle cancellable)"
+                    )
+            );
+            inv.setItem(
+                    33,
+                    getArrayItem(
+                            new ItemStack(Material.ENDER_CHEST),
+                            "Take Item",
+                            takeItem
+                    )
+            );
         }
 
+        private void chatTask(MouseButton button, String[] args, Consumer<String[]> callback, Runnable delete) {
+            switch (button) {
+                case LEFT:
+                case LEFT_WITH_SHIFT:
+                    CallbackManager.callbackChat(player,args,s -> {
+                        callback.accept(s);
+                        setupGui();
+                        manager.runTaskLater(this::updateGui,5);
+                    });
+                    break;
+                case RIGHT:
+                case RIGHT_WITH_SHIFT:
+                    if (delete != null) {
+                        delete.run();
+                        setupGui();
+                        player.updateInventory();
+                    }
+                    break;
+            }
+        }
+        private void signTask(MouseButton button, String[] args, Consumer<String[]> callback) {
+            signTask(button, args, callback,null);
+        }
+        private void signTask(MouseButton button, String[] args, Consumer<String[]> callback, Runnable delete) {
+            switch (button) {
+                case LEFT:
+                case LEFT_WITH_SHIFT:
+                    CallbackManager.openSign(player,args,s -> {
+                        if (!s[0].equals("")) {
+                            callback.accept(s);
+                        } else CutsceneMaker.send(player,"This value cannot be empty string!");
+                        setupGui();
+                        manager.runTaskLater(this::updateGui,5);
+                    });
+                    break;
+                case RIGHT:
+                case RIGHT_WITH_SHIFT:
+                    if (delete != null) {
+                        delete.run();
+                        setupGui();
+                        player.updateInventory();
+                    }
+                    break;
+            }
+        }
         @Override
         ConfigurationSection getSaveData() {
+            resources.set("Title",title);
+
+            resources.set("Cancellable",(cancellable) ? true : null);
+            resources.set("Type",type);
+            resources.set("Priority",(priority >= 0) ? priority : null);
+
+            resources.set("Lore",lore);
+            resources.set("Recommend",recommend);
+
+            resources.set("Money",(money >= 0) ? money : null);
+            resources.set("Exp",(exp >= 0) ? exp : null);
+
+            resources.set("TakeItem",takeItem);
+            resources.set("RewardItem",rewardItem);
+
             return resources;
         }
-        private ItemStack getStringItem(@NotNull ItemStack item, @NotNull String display, @NotNull String name, String... lore) {
+        private ItemStack getBooleanItem(@NotNull String display, boolean name, String... lore) {
+            return getStringItem(
+                    (name) ? new ItemStack(Material.EMERALD_BLOCK) : new ItemStack(Material.REDSTONE_BLOCK),
+                    display,
+                    (name) ? ChatColor.GREEN + "Enable" : ChatColor.RED + "Disable", lore
+            );
+        }
+        private ItemStack getIntItem(@NotNull ItemStack item, @NotNull String display, int name, String... lore) {
+            return getStringItem(item,display,TextUtil.applyComma(name),lore);
+        }
+        private ItemStack getStringItem(@NotNull ItemStack item, @NotNull String display, @Nullable String name, String... lore) {
             item.setItemMeta(
                     ItemUtil.addLore(
-                            ItemUtil.edit(item.getItemMeta(),ChatColor.WHITE + display,Collections.singletonList(ChatColor.WHITE + name)),
+                            ItemUtil.edit(
+                                    item.getItemMeta(),
+                                    ChatColor.WHITE + TextUtil.colored(display),
+                                    (name == null) ? NULL_ARRAY : Collections.singletonList(ChatColor.WHITE + TextUtil.colored(name))
+                            ),
                             lore
                     )
             );
@@ -464,8 +754,8 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
         }
         private ItemStack getArrayItem(@NotNull ItemStack item, @NotNull String display ,@Nullable String... array) {
             item.setItemMeta(ItemUtil.addLore((array == null || array.length == 0) ?
-                    ItemUtil.edit(item.getItemMeta(),ChatColor.WHITE + display,Collections.singletonList(ChatColor.GRAY + "--- <none> ---")) :
-                    ItemUtil.edit(item.getItemMeta(),ChatColor.WHITE + display,
+                    ItemUtil.edit(item.getItemMeta(),ChatColor.WHITE + TextUtil.colored(display),NULL_ARRAY) :
+                    ItemUtil.edit(item.getItemMeta(),ChatColor.WHITE + TextUtil.colored(display),
                             (array.length == 1) ?
                                     Collections.singletonList(ChatColor.YELLOW + " - " + ChatColor.WHITE + TextUtil.colored(array[0])) :
                                     Arrays.stream(array).map(s -> ChatColor.YELLOW + " - " + ChatColor.WHITE + TextUtil.colored(s)).collect(Collectors.toList())

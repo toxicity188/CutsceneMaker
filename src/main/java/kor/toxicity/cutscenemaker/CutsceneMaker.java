@@ -29,6 +29,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -206,6 +207,21 @@ public final class CutsceneMaker extends JavaPlugin {
     }
     public ConfigLoad read(String dict) {
         return new ConfigLoad(new File(getDataFolder(), dict),"");
+    }
+    public static void addTempItem(Player player, ItemStack stack) {
+        VarsContainer container = manager.getVars(player);
+        if (container == null) return;
+        LocalDate data = LocalDate.now();
+        container.getTempStorage().add(
+                new StorageItem(
+                        stack,
+                        data.getYear(),
+                        data.getMonthValue(),
+                        data.getDayOfMonth(),
+                        -1,
+                        false
+                )
+        );
     }
     public static void removeVars(Player player, String key) {
         manager.getVars(player).remove(key);
