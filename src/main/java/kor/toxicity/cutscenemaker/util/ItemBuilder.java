@@ -73,10 +73,6 @@ public class ItemBuilder implements ItemSupplier {
             FunctionPrinter printer = new FunctionPrinter(d);
             if (printer.anyMatch()) metaList.add((p,m) -> m.setDisplayName(printer.print(p)));
         });
-        Optional.ofNullable(meta.getLore()).ifPresent(l -> {
-            List<FunctionPrinter> printer = l.stream().map(FunctionPrinter::new).collect(Collectors.toList());
-            if (printer.stream().anyMatch(FunctionPrinter::anyMatch)) metaList.add((p, m) -> m.setLore(printer.stream().map(t -> t.print(p)).collect(Collectors.toList())));
-        });
         Optional.ofNullable(meta.getLocalizedName()).ifPresent(d -> {
             FunctionPrinter printer = new FunctionPrinter(d);
             if (printer.anyMatch()) metaList.add((p,m) -> m.setLocalizedName(printer.print(p)));

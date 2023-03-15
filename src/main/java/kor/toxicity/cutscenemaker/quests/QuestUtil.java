@@ -22,24 +22,13 @@ public final class QuestUtil {
     private QuestUtil() {
         throw new RuntimeException();
     }
-    static Dialog[] getDialog(List<String> list) {
-        Dialog[] dialog = list.stream().map(QuestUtil::getDialog).filter(Objects::nonNull).toArray(Dialog[]::new);
+    static Dialog[] getDialog(List<String> list, String fileName, String name) {
+        Dialog[] dialog = list.stream().map(s -> getDialog(s,fileName,name)).filter(Objects::nonNull).toArray(Dialog[]::new);
         return (dialog.length > 0) ? dialog : null;
     }
-    static QnA[] getQnA(List<String> list) {
-        QnA[] qna = list.stream().map(s -> getFromMap(s,QuestData.QNA_MAP,"QnA")).filter(Objects::nonNull).toArray(QnA[]::new);
-        return (qna.length > 0) ? qna : null;
-    }
-    static Present[] getPresent(List<String> list) {
-        Present[] presents = list.stream().map(s -> getFromMap(s,QuestData.PRESENT_MAP,"Present")).filter(Objects::nonNull).toArray(Present[]::new);
-        return (presents.length > 0) ? presents : null;
-    }
-    static Dialog getDialog(String s) {
-        return getFromMap(s,QuestData.DIALOG_MAP,"Dialog");
-    }
-    static <V> V getFromMap(String s, Map<String,V> targetMap, String name) {
-        V v = targetMap.get(s);
-        if (v == null) CutsceneMaker.warn("the " + name + " named \"" + s + "\" doesn't exist!");
+    static Dialog getDialog(String s, String fileName, String name) {
+        Dialog v = QuestData.DIALOG_MAP.get(s);
+        if (v == null) CutsceneMaker.warn("the Dialog named \"" + s + "\" doesn't exist! ("+ name + " in file \"" + fileName + "\".yml)");
         return v;
     }
 

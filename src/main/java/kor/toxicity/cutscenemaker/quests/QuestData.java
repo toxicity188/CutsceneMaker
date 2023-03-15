@@ -278,20 +278,18 @@ public final class QuestData extends CutsceneData {
     });
     private final ConfigFunction dialogFunction = getFunction("Dialog",(c,f,s) -> DIALOG_MAP.put(s,new Dialog(f,s,getPlugin().getManager(),c)));
     private final ConfigFunction qnaFunction = getFunction("QnA",(c,f,s) -> QNA_MAP.put(s,new QnA(f,s,getPlugin().getManager(),c)));
-    private final ConfigFunction presentFunction = getFunction("Present",(c,f,s) -> PRESENT_MAP.put(s,new Present(getPlugin().getManager(),c)));
+    private final ConfigFunction presentFunction = getFunction("Present",(c,f,s) -> PRESENT_MAP.put(s,new Present(f,s,getPlugin().getManager(),c)));
     private final ConfigFunction npcFunction = getFunction("NPC",(c,f,s) -> {
         if (c.isSet("Dialog")) {
-            Consumer<Player> typingSound = null;
-            if (c.isSet("TypingSound") && c.isString("TypingSound"))
-                typingSound = QuestUtil.getSoundPlay(c.getString("TypingSound"));
             NPCData data = new NPCData(
                     c.getString("Vars", null),
-                    QuestUtil.getDialog(c.getStringList("Dialog")),
-                    typingSound,
+                    QuestUtil.getDialog(c.getStringList("Dialog"),f,s),
+                    ConfigUtil.getString(c,"TypingSound").map(QuestUtil::getSoundPlay).orElse(null),
                     (c.isSet("Inventory")) ? (c.isConfigurationSection("Inventory") ? new InventorySupplier(c.getConfigurationSection("Inventory")) : ItemData.getGui(c.getString("Inventory"))) : null
             );
             if (data.dialogs != null) NPC_MAP.put(c.getString("Name", s), data);
-        }
+            else CutsceneMaker.warn("Dialog not found: NPC must have at least one Dialog! (NPC " + s + " in file \"" + f + "\".yml)");
+        } else CutsceneMaker.warn("Syntax error: NPC must have at least one Dialog! (NPC " + s + " in file \"" + f + "\".yml)");
     });
     private static final List<Runnable> PRE_DIALOG_TASK = new ArrayList<>();
     private static final List<Runnable> POST_DIALOG_TASK = new ArrayList<>();

@@ -48,7 +48,7 @@ public abstract class CutsceneAction {
             invoke = this::apply;
         }
         if (If != null) {
-            String[] state = TextUtil.split(If," ");
+            String[] state = TextUtil.split(If.replace(':','=')," ");
             if (state.length >= 3) {
                 Predicate<LivingEntity> predicate = ConditionBuilder.LIVING_ENTITY.find(state);
                 if (predicate != null) invoke = e -> {

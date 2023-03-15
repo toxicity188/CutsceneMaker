@@ -40,7 +40,7 @@ final class QnA extends EditorSupplier implements DialogAddon {
                     ConfigurationSection detail = button.getConfigurationSection(s);
                     buttonMap.put(Integer.parseInt(s),new Button(
                             InvUtil.fromConfig(detail,"Item"),
-                            QuestUtil.getDialog(detail.getStringList("Dialog"))
+                            QuestUtil.getDialog(detail.getStringList("Dialog"),fileName,name)
                     ));
                 } catch (Exception ignored) {
 

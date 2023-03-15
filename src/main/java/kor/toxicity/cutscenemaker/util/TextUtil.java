@@ -73,7 +73,8 @@ public final class TextUtil {
     }
 
     public static String getEntityName(Entity e) {
-        return (e.getName() != null && !e.getName().equals("")) ? uncolored(e.getName()) : e.getType().toString().toLowerCase();
+        String name = e.getName();
+        return (name != null && !name.equals("")) ? uncolored(name) : e.getType().toString().toLowerCase();
     }
     public static String getItemName(ItemStack stack) {
         ItemMeta meta = stack.getItemMeta();

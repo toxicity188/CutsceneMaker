@@ -164,7 +164,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
             ActionPredicate<Player> predicate = q.getQuestChecker(args[0],(args.length > 1) ? args[1].toLowerCase() : "complete");
             if (predicate != null) {
                 if (args.length > 2) {
-                    Dialog dialog = QuestUtil.getDialog(args[2]);
+                    Dialog dialog = QuestUtil.getDialog(args[2], q.fileName, q.name);
                     if (dialog != null) q.addPredicate(d -> predicate.castInstead(p -> dialog.run(d)).test(d.player));
                 } else q.addPredicate(d -> predicate.test(d.player));
             }
@@ -174,19 +174,19 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
             ActionPredicate<LivingEntity> check = (cond.length >= 3) ? ConditionBuilder.LIVING_ENTITY.find(cond) : null;
             if (check != null) {
                 if (cond.length > 3) {
-                    Dialog dialog = QuestUtil.getDialog(cond[3]);
+                    Dialog dialog = QuestUtil.getDialog(cond[3], q.fileName, q.name);
                     if (dialog != null) q.addPredicate(d -> check.castInstead(p -> dialog.run(d)).test(d.player));
                 } else q.addPredicate(d -> check.test(d.player));
             }
         })));
         addValue(
                 STRING_LIST_PARSER,
-                (q,t) -> addLazyTask(() -> q.endDialog = QuestUtil.getDialog(t)),
+                (q,t) -> addLazyTask(() -> q.endDialog = QuestUtil.getDialog(t, q.fileName, q.name)),
                 "LinkedDialog","Dialog"
         );
         addValue(
                 STRING_LIST_PARSER,
-                (q,t) -> addLazyTask(() -> q.subDialog = QuestUtil.getDialog(t)),
+                (q,t) -> addLazyTask(() -> q.subDialog = QuestUtil.getDialog(t, q.fileName, q.name)),
                 "LinkedSubDialog","SubDialog"
         );
         addValue(
@@ -547,6 +547,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
         }
 
         private void restart(long time) {
+            if (message == null) return;
             if (length < message.length()) {
                 endTask();
                 start(time);
@@ -807,7 +808,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
             setupPage();
         }
         private void setupPage() {
-            totalPage = Math.max(talk.length/36,1);
+            totalPage = Math.max((int)Math.ceil((double) talk.length/36D),1);
             ItemStack button = new ItemStack(Material.STONE_BUTTON);
             inv.setItem(46,write(
                     button,
@@ -886,58 +887,55 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                                 updateGui();
                                 break;
                             case 9:
-                                CallbackManager.callbackChat(player,new String[]{
+                                callbackChat(new String[]{
                                         ChatColor.YELLOW + "enter a value in the chat. " + ChatColor.GOLD + "cancel: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "cancel" + ChatColor.WHITE + "\"",
                                         ChatColor.GOLD + "format: " + ChatColor.GREEN + "<talk>" + ChatColor.WHITE + " or " + ChatColor.GREEN + "<talker: talk>",
                                         ChatColor.GOLD + "function format: " + ChatColor.GREEN + "%function[]%"
                                 },e -> {
                                     CutsceneMaker.send(player,"successfully changed.");
-                                    Matcher matcher = TALK_PATTERN.matcher(e[0]);
+                                    Matcher matcher = TALK_PATTERN.matcher(e);
                                     if (matcher.find()) {
                                         talk = matcher.group("content");
                                         talker = matcher.group("talker");
                                     }
-                                    reopen();
                                 });
                                 break;
                             case 11:
-                                CallbackManager.callbackChat(player,new String[]{
+                                callbackChat(new String[]{
                                         ChatColor.YELLOW + "enter a value in the chat. " + ChatColor.GOLD + "cancel: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "cancel" + ChatColor.WHITE + "\"",
                                         ChatColor.GOLD + "format: " + ChatColor.GREEN + "<talker>",
                                         ChatColor.GOLD + "function format: " + ChatColor.GREEN + "%function[]%",
                                         ChatColor.GOLD + "remove: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "null" + ChatColor.WHITE + "\""
                                 },e -> {
                                     CutsceneMaker.send(player,"successfully changed.");
-                                    talker = (e[0].equals("null")) ? null : e[0];
-                                    reopen();
+                                    talker = (e.equals("null")) ? null : e;
                                 });
                                 break;
                             case 13:
-                                CallbackManager.callbackChat(player,new String[]{
+                                callbackChat(new String[]{
                                         ChatColor.YELLOW + "enter a value in the chat. " + ChatColor.GOLD + "cancel: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "cancel" + ChatColor.WHITE + "\"",
                                         ChatColor.GOLD + "format: " + ChatColor.GREEN + "<sound name> <volume> <pitch>",
                                         ChatColor.GOLD + "remove: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "null" + ChatColor.WHITE + "\""
                                 },e -> {
                                     CutsceneMaker.send(player,"successfully changed.");
-                                    sound = (e[0].equals("null")) ? null : e[0];
-                                    reopen();
+                                    sound = (e.equals("null")) ? null : e;
                                 });
                                 break;
                             case 15:
-                                CallbackManager.callbackChat(player,new String[]{
+                                callbackChat(new String[]{
                                         ChatColor.YELLOW + "enter a value in the chat. " + ChatColor.GOLD + "cancel: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "cancel" + ChatColor.WHITE + "\"",
                                         ChatColor.GOLD + "format: " + ChatColor.GREEN + "<interface name>",
                                         ChatColor.GOLD + "example: " + ChatColor.GREEN + "default",
                                         ChatColor.GOLD + "remove: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "null" + ChatColor.WHITE + "\""
                                 },e -> {
-                                    String t = e[0].toLowerCase();
-                                    if (!TYPING_MANAGER_MAP.containsKey(t)) {
+                                    String t = e.toLowerCase();
+                                    boolean isNull = e.equals("null");
+                                    if (!isNull && !TYPING_MANAGER_MAP.containsKey(t)) {
                                         CutsceneMaker.send(player,"The Interface named \"" + t + "\" doesn't exist!");
                                     } else {
                                         CutsceneMaker.send(player,"successfully changed.");
-                                        typing = (e[0].equals("null")) ? null : e[0];
+                                        typing = (isNull) ? null : e;
                                     }
-                                    reopen();
                                 });
                                 break;
                             case 17:
@@ -979,28 +977,45 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                                 break;
                         }
                     }
+                    private void callbackChat(String[] message, Consumer<String> consumer) {
+                        CallbackManager.callbackChat(
+                                player,
+                                message,
+                                strings -> {
+                                    String s = strings[0];
+                                    if (s.equals("cancel")) {
+                                        CutsceneMaker.send(player,"task cancelled.");
+                                        reopen();
+                                    } else {
+                                        consumer.accept(s);
+                                        reopen();
+                                    }
+                                }
+                        );
+                    }
                 });
             }
             private ItemStack getItem(Material material, String name, String target) {
                 return write(
                         new ItemStack(material),
                         name,
-                        (target != null) ? Collections.singletonList(talk) : Collections.emptyList()
+                        (target != null) ? Collections.singletonList(target) : Collections.emptyList()
                 );
             }
         }
         private Inventory inv;
 
         public void resetInv() {
-            for (int t = 0; t < 36; t++) {
+            for (int t = 0; t < 45; t++) {
                 inv.setItem(t,null);
             }
             int i = 0;
             final ItemStack talkItem = new ItemStack(Material.BOOK);
             final ItemMeta meta = talkItem.getItemMeta();
-            if (talk != null) for (int t = (page - 1) * 36; t < Math.min(page * 36,talk.length); t++) {
+            int p = (page - 1) * 36;
+            if (talk != null) for (int t = p; t < Math.min(page * 36,talk.length); t++) {
                 TalkEditor s = talk[t];
-                meta.setDisplayName(ChatColor.WHITE + "Talk: " + (i + 1));
+                meta.setDisplayName(ChatColor.WHITE + "Talk: " + (i + 1 + p));
                 List<String> list = new ArrayList<>();
                 list.add(ChatColor.WHITE + write(s.talk));
                 list.add("");
@@ -1089,7 +1104,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                 public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
                     if (isPlayerInventory) return;
                     if (item.getType() == Material.BOOK) {
-                        int i = slot - 9;
+                        int i = slot - 9 + ((page -1) * 36);
                         switch (button) {
                             case LEFT:
                                 talk[i].open();

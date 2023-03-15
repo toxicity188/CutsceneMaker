@@ -24,7 +24,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-final class Present implements DialogAddon {
+final class Present extends EditorSupplier implements DialogAddon {
 
     private static final FunctionPrinter DEFAULT_TITLE = new FunctionPrinter("Click your item you want to present!");
     private static final ItemSupplier DEFAULT_ITEM_SUPPLIER;
@@ -43,15 +43,14 @@ final class Present implements DialogAddon {
     }
 
     private final Set<PresentKey> presentKeys = new HashSet<>();
-    private final CutsceneManager manager;
-    private final FunctionPrinter name;
+    private final FunctionPrinter inventoryName;
     private final ItemSupplier supplier;
     private final boolean take;
     private final Consumer<Player> soundPlay;
 
-    Present(CutsceneManager manager, ConfigurationSection section) {
-        this.manager = manager;
-        name = (section.isSet("Name") && section.isSet("Name")) ? new FunctionPrinter(section.getString("Name")) : DEFAULT_TITLE;
+    Present(String fileName, String name, CutsceneManager manager, ConfigurationSection section) {
+        super(fileName,name,manager,section);
+        inventoryName = (section.isSet("Name") && section.isSet("Name")) ? new FunctionPrinter(section.getString("Name")) : DEFAULT_TITLE;
         take = section.getBoolean("TakeItem",true);
         String sound = section.getString("Sound",null);
         soundPlay = (sound != null) ? QuestUtil.getSoundPlay(sound) : DEFAULT_SOUND;
@@ -73,7 +72,7 @@ final class Present implements DialogAddon {
 
     @Override
     public void run(Dialog.DialogCurrent current) {
-        Inventory inv = InvUtil.create(name.print(current.player),3);
+        Inventory inv = InvUtil.create(inventoryName.print(current.player),3);
         inv.setItem(13,current.inventory.getItem(CutsceneConfig.getInstance().getDefaultDialogCenter()));
         inv.setItem(15, supplier.get(current.player));
 
@@ -117,15 +116,20 @@ final class Present implements DialogAddon {
         return (section.isSet(key) && section.isConfigurationSection(key)) ? Optional.of(section.getConfigurationSection(key)) : Optional.empty();
     }
 
+    @Override
+    Editor getEditor(Player player) {
+        return null;
+    }
+
     @EqualsAndHashCode
-    private static class PresentKey {
+    private class PresentKey {
         private final ItemBuilder builder;
         @EqualsAndHashCode.Exclude
         private final Dialog[] dialog;
 
         private PresentKey(ConfigurationSection section) {
             ItemBuilder item = InvUtil.toName(section.getString("Item"));
-            dialog = QuestUtil.getDialog(section.getStringList("Dialog"));
+            dialog = QuestUtil.getDialog(section.getStringList("Dialog"),fileName,name);
             if (item == null || dialog == null) throw new RuntimeException("The item or dialog value doesn't exist!");
 
             int amount = section.getInt("Amount",1);

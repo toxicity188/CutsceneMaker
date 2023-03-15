@@ -60,9 +60,7 @@ public final class CallbackManager implements Reloadable, Listener {
         CallbackData data = CALLBACK_MAP.get(e.getPlayer());
         if (data != null && data.type == CallBackType.CHAT) {
             e.setCancelled(true);
-            if (e.getMessage().equals("cancel")) {
-                CutsceneMaker.send(e.getPlayer(),"task cancelled.");
-            } else Bukkit.getScheduler().runTask(pl,() -> data.stringArray.accept(new String[] {e.getMessage()}));
+            Bukkit.getScheduler().runTask(pl,() -> data.stringArray.accept(new String[] {e.getMessage()}));
             CALLBACK_MAP.remove(e.getPlayer());
         }
     }
