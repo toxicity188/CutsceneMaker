@@ -229,6 +229,9 @@ public final class CutsceneMaker extends JavaPlugin {
     public static Vars getVars(Player player, String key) {
         return manager.getVars(player,key);
     }
+    public static Vars[] getVarsArray(Player player, String node) {
+        return manager.getVars(player).getVars().entrySet().stream().filter(e -> e.getKey().startsWith(node)).map(Map.Entry::getValue).toArray(Vars[]::new);
+    }
     public static boolean isSet(Player player, String key) {
         return manager.isSet(player,key);
     }

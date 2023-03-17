@@ -5,6 +5,7 @@ import com.comphenix.protocol.ProtocolManager;
 import de.slikey.effectlib.EffectManager;
 import kor.toxicity.cutscenemaker.events.UserDataLoadEvent;
 import kor.toxicity.cutscenemaker.shaded.mewin.WGRegionEvents.WGRegionEventsListener;
+import kor.toxicity.cutscenemaker.skript.SkManager;
 import kor.toxicity.cutscenemaker.util.DataContainer;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
 import kor.toxicity.cutscenemaker.util.LocationStudio;
@@ -74,6 +75,9 @@ public final class CutsceneManager {
 
         if (Bukkit.getPluginManager().isPluginEnabled("WorldGuard")) {
             EvtUtil.register(plugin,new WGRegionEventsListener(plugin));
+        }
+        if (Bukkit.getPluginManager().isPluginEnabled("Skript")) {
+            SkManager.registerAddon();
         }
     }
     public static boolean onDelay(Player player) {

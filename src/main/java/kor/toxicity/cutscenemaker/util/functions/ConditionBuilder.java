@@ -7,6 +7,8 @@ import com.google.gson.JsonParser;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.actions.mechanics.ActCoolTime;
 import kor.toxicity.cutscenemaker.data.ItemData;
+import kor.toxicity.cutscenemaker.quests.QuestData;
+import kor.toxicity.cutscenemaker.quests.QuestSet;
 import kor.toxicity.cutscenemaker.util.*;
 import lombok.Setter;
 import org.bukkit.Bukkit;
@@ -43,6 +45,7 @@ public final class ConditionBuilder<T> {
             return "<none>";
         });
         LIVING_ENTITY.STRING.addFunction("location",(e,j) -> TextUtil.toSimpleLoc(e.getLocation()));
+
         LIVING_ENTITY.NUMBER.addFunction("money",(e,j) -> {
             if (e instanceof Player) {
                 return MoneyUtil.getMoney((Player) e);
@@ -120,6 +123,46 @@ public final class ConditionBuilder<T> {
         LIVING_ENTITY.STRING.addFunction("name",(e,j) -> {
             if (j.size() > 0) return Bukkit.getPlayer(j.get(0).getAsString()).getName();
             return e.getName();
+        });
+
+        LIVING_ENTITY.BOOL.addFunction("hasquest", new CheckableFunction<LivingEntity, Boolean>() {
+            @Override
+            public boolean check(JsonArray array) {
+                return array.size() > 0;
+            }
+            @Override
+            public Boolean apply(LivingEntity entity, JsonArray array) {
+                if (entity instanceof Player) {
+                    QuestSet set = QuestData.getQuestSet(array.get(0).getAsString());
+                    return set != null && set.has((Player) entity);
+                } else return false;
+            }
+        });
+        LIVING_ENTITY.BOOL.addFunction("completequest", new CheckableFunction<LivingEntity, Boolean>() {
+            @Override
+            public boolean check(JsonArray array) {
+                return array.size() > 0;
+            }
+            @Override
+            public Boolean apply(LivingEntity entity, JsonArray array) {
+                if (entity instanceof Player) {
+                    QuestSet set = QuestData.getQuestSet(array.get(0).getAsString());
+                    return set != null && set.isCompleted((Player) entity);
+                } else return false;
+            }
+        });
+        LIVING_ENTITY.BOOL.addFunction("readyquest", new CheckableFunction<LivingEntity, Boolean>() {
+            @Override
+            public boolean check(JsonArray array) {
+                return array.size() > 0;
+            }
+            @Override
+            public Boolean apply(LivingEntity entity, JsonArray array) {
+                if (entity instanceof Player) {
+                    QuestSet set = QuestData.getQuestSet(array.get(0).getAsString());
+                    return set != null && set.isReady((Player) entity);
+                } else return false;
+            }
         });
         LIVING_ENTITY.BOOL.addFunction("op",(e,j) -> e.isOp());
         LIVING_ENTITY.BOOL.addFunction("inregion",(e,j) -> {

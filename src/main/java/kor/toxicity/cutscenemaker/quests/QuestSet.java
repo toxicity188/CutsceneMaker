@@ -169,6 +169,7 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
             );
         }
         addLore(list, ChatColor.GREEN.toString() + ChatColor.BOLD + "[!] Rewards:", rewardsArray);
+        if (QuestData.suffix != null) list.addAll(QuestData.suffix);
 
         meta.setLore(list);
         if (isCompleted(player)) meta.addEnchant(Enchantment.DURABILITY,0,true);
@@ -349,6 +350,11 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
         }
     }
 
+    @Override
+    public String toString() {
+        return name;
+    }
+
     static final class LocationSet {
         private final List<NamedLocation> set = new ArrayList<>();
         private Inventory inventory;
@@ -361,7 +367,7 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
         }
 
         private LocationSet build(String name) {
-            inventory = InvUtil.create(name,(int) Math.ceil((double) set.size() / 9D) + 2);
+            inventory = InvUtil.create(TextUtil.colored(name),(int) Math.ceil((double) set.size() / 9D) + 2);
             ItemStack stack = new ItemStack(Material.BOOK);
             ItemMeta meta = stack.getItemMeta();
             int i = 0;

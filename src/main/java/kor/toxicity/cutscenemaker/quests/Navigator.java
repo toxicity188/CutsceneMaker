@@ -6,6 +6,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -21,6 +22,7 @@ public final class Navigator {
         throw new RuntimeException();
     }
     static void startNavigate(Player player, Location location) {
+        player.closeInventory();
         NavigateTarget t;
         if ((t = NAVIGATE_TARGET_MAP.get(player)) != null) {
             t.start(location);
@@ -29,7 +31,7 @@ public final class Navigator {
         NAVIGATE_TARGET_MAP.put(player,new NavigateTarget(player, location));
     }
     static void endNavigate(Player player) {
-        NavigateTarget target = getNavigate(player);
+        NavigateTarget target = NAVIGATE_TARGET_MAP.remove(player);
         if (target != null) target.cancel();
     }
 
@@ -42,10 +44,6 @@ public final class Navigator {
                 endNavigate(e.getPlayer());
             }
             @EventHandler
-            public void kick(PlayerKickEvent e) {
-                endNavigate(e.getPlayer());
-            }
-            @EventHandler
             public void swap(PlayerSwapHandItemsEvent e) {
                 if (contains(e.getPlayer())) e.setCancelled(true);
             }
@@ -54,6 +52,7 @@ public final class Navigator {
                 if (e.getWhoClicked() instanceof Player) {
                     Player player = (Player) e.getWhoClicked();
                     if (e.getSlot() == 40 && contains(player)) {
+                        e.setCancelled(true);
                         endNavigate(player);
                     }
                 }
@@ -62,11 +61,9 @@ public final class Navigator {
     }
     static void reload() {
         NAVIGATE_TARGET_MAP.values().forEach(NavigateTarget::cancel);
+        NAVIGATE_TARGET_MAP.clear();
         onStart = QuestData.QUEST_MESSAGE_MAP.get("quest-start-navigate");
         onEnd = QuestData.QUEST_MESSAGE_MAP.get("quest-end-navigate");
-    }
-    private static NavigateTarget getNavigate(Player player) {
-        return NAVIGATE_TARGET_MAP.get(player);
     }
     private static boolean contains(Player player) {
         return NAVIGATE_TARGET_MAP.containsKey(player);
@@ -82,7 +79,6 @@ public final class Navigator {
 
         private NavigateTarget(Player player, Location location) {
             this.player = player;
-            player.closeInventory();
             ItemStack hand = player.getInventory().getItemInOffHand();
             before = (hand != null) ? hand : EMPTY;
             player.getInventory().setItemInOffHand(COMPASS);
@@ -94,10 +90,9 @@ public final class Navigator {
         }
 
         private void cancel() {
-            player.closeInventory();
             player.getInventory().setItemInOffHand(before);
+            player.closeInventory();
             if (onEnd != null) onEnd.send(player);
-            NAVIGATE_TARGET_MAP.remove(player);
         }
     }
 }

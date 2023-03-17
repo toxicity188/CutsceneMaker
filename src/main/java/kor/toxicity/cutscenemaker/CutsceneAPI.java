@@ -7,6 +7,7 @@ import kor.toxicity.cutscenemaker.data.ActionData;
 import kor.toxicity.cutscenemaker.handlers.ActionHandler;
 import kor.toxicity.cutscenemaker.quests.Dialog;
 import kor.toxicity.cutscenemaker.quests.QuestData;
+import kor.toxicity.cutscenemaker.quests.QuestSet;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -45,6 +46,9 @@ public final class CutsceneAPI {
     }
     public @Nullable Dialog getDialog(String name) {
         return QuestData.getDialog(name);
+    }
+    public @Nullable QuestSet getQuestSet(String name) {
+        return QuestData.getQuestSet(name);
     }
 
 }

@@ -1,0 +1,49 @@
+[ Expressions ]
+
+CutsceneMaker's variable (컷신메이커의 변수 가져오기)
+format: [cutscenemaker] [the] cutscene (variable|var) %string% of %player%
+return: string type of this variable
+usage:
+    - add 1 to cutscene var "Talk_SomeNPC" of player
+    - set cutscene var "_Var" of player to "hello world!"
+
+CutsceneMaker's QuestSet (퀘스트셋 및 그 값 가져오기)
+format: [cutscenemaker] [the] [questset] money of %questset%
+return: an instance of QuestSet
+usage:
+    - set {_t} to exp of questset named "SomeQuest"
+    - set {_t} to the money of questset named "SomeQuest"
+    - give questset named "SomeQuest" to player
+    - complete questset named "SomeQuest" to player
+
+
+
+[ Effects ]
+
+Run CutsceneMaker's Action(컷신메이커의 액션 재생하기)
+format: "[cutscenemaker] (run|invoke|call) [the] [cutscene] action named %string% to %entity%"
+usage:
+    - run action named "SomeAction" to player
+
+Run CutsceneMaker's Dialog(컷신메이커의 다이얼로그 재생하기)
+format: [cutscenemaker] (run|invoke|call) [the] [cutscene] dialog named %string% to %player% as talker %string% [with typing sound %-string%]
+usage:
+    - run dialog named "SomeDialog" to player as talker "SomeTalker"
+    - run dialog named "SomeDialog" to player as talker "SomeTalker" with typing sound "block.note.hat 0.6 0.95"
+
+
+
+[ Events ]
+
+Quest Complete Event
+format: "[cutscenemaker] complete [cutscene] quest [of %-string%]"
+usage:
+1)
+on quest complete:
+    add 10 to exp of event-questset
+    add 100 of money of event-questset
+
+2)
+on quest complete:
+    set {_t} to exp of event-questset
+    send "%{_t}%" to player

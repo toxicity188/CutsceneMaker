@@ -418,10 +418,10 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
     public static boolean isRunning(Player player) {
         return CURRENT_TASK.containsKey(player);
     }
-    public void run(@NotNull Player player, @NotNull String talker, @Nullable Consumer<Player> typingSound) {
-        run(player,talker,null,typingSound);
+    public boolean run(@NotNull Player player, @NotNull String talker, @Nullable Consumer<Player> typingSound) {
+        return run(player,talker,null,typingSound);
     }
-    public void run(@NotNull Player player, @NotNull String talker, @Nullable Inventory inv, @Nullable Consumer<Player> typingSound) {
+    public boolean run(@NotNull Player player, @NotNull String talker, @Nullable Inventory inv, @Nullable Consumer<Player> typingSound) {
         Map<String,Consumer<Player>> soundMap;
         if (typingSounds != null) {
             soundMap = new WeakHashMap<>(typingSounds);
@@ -432,16 +432,20 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
         else {
             soundMap = null;
         }
-        run(
+        return run(
                 player,
                 talker,
                 inv,
                 soundMap
         );
     }
-    public void run(@NotNull Player player, @NotNull String talker, @Nullable Inventory inv, @Nullable Map<String,Consumer<Player>> typingSound) {
-        if (isRunning(player)) return;
-        if (run(new DialogCurrent(player, talker, inv, typingSound))) EvtUtil.call(new DialogStartEvent(player,this));
+    public boolean run(@NotNull Player player, @NotNull String talker, @Nullable Inventory inv, @Nullable Map<String,Consumer<Player>> typingSound) {
+        if (isRunning(player)) return false;
+        if (run(new DialogCurrent(player, talker, inv, typingSound))) {
+            EvtUtil.call(new DialogStartEvent(player,this));
+            return true;
+        }
+        else return false;
     }
     synchronized boolean run(DialogCurrent current) {
         if (conditions == null || conditions.test(current)) {
