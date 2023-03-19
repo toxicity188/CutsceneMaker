@@ -785,15 +785,18 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
             }
         }
         private void extend(int index) {
+            TalkEditor n = new TalkEditor();
+            n.talk = "a new talk";
+            extend(index,n);
+        }
+        private void extend(int index, TalkEditor add) {
             TalkEditor[] editors = new TalkEditor[talk.length + 1];
             int i = 0;
             for (TalkEditor editor : talk) {
                 editors[i++] = editor;
                 if (i > index) break;
             }
-            TalkEditor n = new TalkEditor();
-            n.talk = "a new talk";
-            editors[i++] = n;
+            editors[i++] = add;
             if (i < editors.length) {
                 for (; i < editors.length; i++) {
                     editors[i] = talk[i - 1];
@@ -1031,6 +1034,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                 list.add("");
                 list.add(ChatColor.GRAY + "(Left: rewrite this Talk)");
                 list.add(ChatColor.GRAY + "(Shift+Left: create new Talk)");
+                list.add(ChatColor.GRAY + "(Right: copy this Talk");
                 list.add(ChatColor.GRAY + "(Shift+Right: delete this Talk)");
                 meta.setLore(list);
                 talkItem.setItemMeta(meta);
@@ -1115,6 +1119,16 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                                 break;
                             case LEFT_WITH_SHIFT:
                                 extend(i);
+                                resetInv();
+                                break;
+                            case RIGHT:
+                                TalkEditor editor = new TalkEditor();
+                                TalkEditor target = talk[i];
+                                editor.talk = target.talk;
+                                editor.typing = target.typing;
+                                editor.talker = target.talker;
+                                editor.item = (target.item != null) ? QuestUtil.copy(target.item) : null;
+                                extend(i,editor);
                                 resetInv();
                                 break;
                             case RIGHT_WITH_SHIFT:
