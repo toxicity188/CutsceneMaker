@@ -126,9 +126,8 @@ public class ActSlate extends CutsceneAction {
         if (player.hasPotionEffect(PotionEffectType.INVISIBILITY)) player.removePotionEffect(PotionEffectType.INVISIBILITY);
         for (Consumer<Player> p : tasksOff) p.accept(player);
 
-        Location back = ActMark.LOCATION.get(player);
+        Location back = ActMark.LOCATION.remove(player);
         if (back != null) player.teleport(back, PlayerTeleportEvent.TeleportCause.PLUGIN);
-        ActMark.LOCATION.remove(player);
         SLATE_TOGGLE.remove(player);
     }
 }
