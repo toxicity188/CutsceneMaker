@@ -491,9 +491,6 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
                     } else {
                         CM.send(sender, "this item's material is: ${get.type}")
                     }
-                    Bukkit.getOfflinePlayers().forEach {
-                        sender.sendMessage("${it.uniqueId} ${if (it.isOnline) "온라인" else "오프라인"} ${it is Player}")
-                    }
                 }
             }
             .done()
