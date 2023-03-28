@@ -1,14 +1,18 @@
 package kor.toxicity.cutscenemaker.util.vars;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
 
 @AllArgsConstructor
 public class Vars {
-    @Getter
-    @Setter
     private String var;
+
+    public String getVar() {
+        return var;
+    }
+
+    public void setVar(String var) {
+        this.var = var;
+    }
 
     public Number getAsNum() {
         return getAsNum(0D);

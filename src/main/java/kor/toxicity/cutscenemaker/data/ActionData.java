@@ -191,6 +191,9 @@ public final class ActionData extends CutsceneData {
         }
     }
 
+    public static List<String> getActionKeys() {
+        return new ArrayList<>(actionContainer.keySet());
+    }
     public static void addAction(String name, Class<? extends CutsceneAction> action) {
         actions.putIfAbsent(name,action);
     }

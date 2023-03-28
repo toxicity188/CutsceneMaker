@@ -17,9 +17,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public final class ItemData extends CutsceneData implements Listener {
 
@@ -89,6 +87,9 @@ public final class ItemData extends CutsceneData implements Listener {
         if (enableTagging) getPlugin().getManager().runTask(() -> Bukkit.getOnlinePlayers().forEach(this::check));
     }
 
+    public static List<String> getItemKeys() {
+        return new ArrayList<>(ITEM_MAP.keySet());
+    }
     public static ItemBuilder getItem(String name) {
         return ITEM_MAP.get(name);
     }

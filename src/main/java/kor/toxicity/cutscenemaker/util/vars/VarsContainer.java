@@ -37,11 +37,17 @@ public class VarsContainer {
         tasks.clear();
     }
     private static final Map<String, Vars> global = new ConcurrentHashMap<>();
-    @Getter
     private final Map<String,Vars> vars = new ConcurrentHashMap<>();
 
-    @Getter
+    public Map<String, Vars> getVars() {
+        return vars;
+    }
+
     private final List<StorageItem> tempStorage = new ArrayList<>();
+
+    public List<StorageItem> getTempStorage() {
+        return tempStorage;
+    }
 
     public synchronized @NotNull Vars get(String key) {
         if (key == null || key.length() == 0) return EMPTY;

@@ -29,7 +29,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -81,7 +83,7 @@ public final class CutsceneMaker extends JavaPlugin {
         load(t -> send("Plugin enabled."));
     }
 
-    void tempStorage(Player player) {
+    public void tempStorage(Player player) {
         Inventory inv = InvUtil.create(CutsceneConfig.getInstance().getTempStorageName().print(player),6);
         List<StorageItem> tempStorage = manager.getVars(player).getTempStorage();
         GuiRegister.registerNewGui(new GuiAdapter(player,inv) {
@@ -94,14 +96,12 @@ public final class CutsceneMaker extends JavaPlugin {
                         stack = storageItem.getStack().clone();
                         ItemMeta meta = stack.getItemMeta();
 
-                        int year = storageItem.getYear();
-                        int month = storageItem.getMonth();
-                        int day = storageItem.getDay();
+                        LocalDateTime localTime = storageItem.getTime();
 
-                        String timeStr = ChatColor.GOLD + ChatColor.ITALIC.toString() + "Day: " + ((year > 0 && month > 0 && day > 0) ? (ChatColor.YELLOW.toString() + year + "-" + month + "-" + day) : (ChatColor.GRAY + "<unknown>"));
-                        List<String> time = (storageItem.isTemp()) ? Arrays.asList(
+                        String timeStr = ChatColor.GOLD + ChatColor.ITALIC.toString() + "Day: " + ChatColor.YELLOW + localTime.getYear() + "-" + localTime.getMonthValue() + "-" + localTime.getDayOfMonth();
+                        List<String> time = (storageItem.getLeftHour() > 0) ? Arrays.asList(
                                 timeStr,
-                                ChatColor.GOLD + ChatColor.ITALIC.toString() + "Left: " + ChatColor.YELLOW + storageItem.getLeft() + "D"
+                                ChatColor.GOLD + ChatColor.ITALIC.toString() + "Left: " + ChatColor.YELLOW + (storageItem.getLeftHour() - Duration.between(localTime.toLocalTime(),LocalDateTime.now().toLocalTime()).toHours()) + "h"
                         ) : Collections.singletonList(timeStr);
 
                         List<String> lore = meta.getLore();
@@ -159,7 +159,7 @@ public final class CutsceneMaker extends JavaPlugin {
         send("Plugin disabled.");
     }
 
-    void load(Consumer<Long> callback) {
+    public void load(Consumer<Long> callback) {
         ActionReloadStartEvent event = new ActionReloadStartEvent();
         EvtUtil.call(event);
         Bukkit.getScheduler().runTaskAsynchronously(this,() -> {
@@ -211,15 +211,11 @@ public final class CutsceneMaker extends JavaPlugin {
     public static void addTempItem(Player player, ItemStack stack) {
         VarsContainer container = manager.getVars(player);
         if (container == null) return;
-        LocalDate data = LocalDate.now();
         container.getTempStorage().add(
                 new StorageItem(
                         stack,
-                        data.getYear(),
-                        data.getMonthValue(),
-                        data.getDayOfMonth(),
-                        -1,
-                        false
+                        LocalDateTime.now(),
+                        -1
                 )
         );
     }

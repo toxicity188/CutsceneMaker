@@ -1,5 +1,6 @@
 package kor.toxicity.cutscenemaker.actions.mechanics;
 
+import com.google.gson.JsonArray;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
@@ -9,12 +10,17 @@ import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class ActWarp extends CutsceneAction {
 
     @DataField(aliases = {"loc","l"},throwable = true)
-    public String location;
+    public JsonArray location;
 
     private Function<LivingEntity,Location> function;
     private final CutsceneManager manager;
@@ -26,12 +32,21 @@ public class ActWarp extends CutsceneAction {
     @Override
     public void initialize() {
         super.initialize();
-        Location loc = manager.getLocations().getValue(location);
-        if (loc == null) CutsceneMaker.warn("unable to find a location named \"" + location + "\"");
-        else function = p -> {
+        List<String> loc = new ArrayList<>();
+        location.forEach(j -> {
+            if (j.isJsonPrimitive()) loc.add(j.getAsString());
+        });
+        List<Location> loc2 = loc.stream().map(s -> {
+            Location loc3 = manager.getLocations().getValue(s);
+            if (loc3 == null) CutsceneMaker.warn("unable to find a location named \"" + s + "\"");
+            return loc3;
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+        function = p -> {
+            int rand1 = ThreadLocalRandom.current().nextInt(0,loc.size());
+            int rand2 = ThreadLocalRandom.current().nextInt(0,loc2.size());
             if (p instanceof Player) {
-                return LocationStudio.getPlayerRecord((Player) p).map(r -> r.getLocation(location)).orElse(loc);
-            } return loc;
+                return LocationStudio.getPlayerRecord((Player) p).map(r -> r.getLocation(loc.get(rand1))).orElse(loc2.get(rand2));
+            } return loc2.get(rand2);
         };
     }
 

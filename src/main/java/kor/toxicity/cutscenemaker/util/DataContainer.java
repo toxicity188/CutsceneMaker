@@ -1,8 +1,6 @@
 package kor.toxicity.cutscenemaker.util;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 public class DataContainer<T> {
 
@@ -10,8 +8,17 @@ public class DataContainer<T> {
 
     private class DataNode {
         private final Map<String,T> value = new LinkedHashMap<>();
+
+        private Set<String> getKeys() {
+            return value.keySet();
+        }
     }
 
+    public List<String> getKeys() {
+        List<String> ret = new ArrayList<>();
+        node.values().forEach(r -> ret.addAll(r.getKeys()));
+        return ret;
+    }
     public boolean containsNodeKey(String key) {
         return node.containsKey(key);
     }

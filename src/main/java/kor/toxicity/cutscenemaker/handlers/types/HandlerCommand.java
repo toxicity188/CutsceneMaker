@@ -29,12 +29,12 @@ public class HandlerCommand extends ActionHandler {
         if (aliases != null) strings.addAll(Arrays.asList(TextUtil.split(aliases,",")));
 
         if (vars.length == 1) {
-            strings.forEach(s -> CutsceneCommand.createCommand(s, (sender, command1, label, args) -> {
+            strings.forEach(s -> CutsceneCommand.Companion.createCommand(s, (sender, command1, label, args) -> {
                 if (sender instanceof LivingEntity) apply((LivingEntity) sender);
                 return true;
             }));
         } else {
-            strings.forEach(s -> CutsceneCommand.createCommand(s, (sender, command1, label, args) -> {
+            strings.forEach(s -> CutsceneCommand.Companion.createCommand(s, (sender, command1, label, args) -> {
                 if (sender instanceof LivingEntity) {
                     Map<String, String> localVars = new WeakHashMap<>();
                     for (int i = 1; i <= Math.min(args.length, vars.length - 1); i++) {

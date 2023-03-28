@@ -44,12 +44,19 @@ public final class CutsceneManager {
     @Getter
     private final ProtocolManager protocolLib;
 
-    @Getter
     private final DataContainer<Location> locations = new DataContainer<>();
+
+    public DataContainer<Location> getLocations() {
+        return locations;
+    }
+
     @Getter
     private final Map<String, LocationStudio> studioMap = new HashMap<>();
 
-    @Getter
+    public Map<String, BlockAnimation> getAnimationMap() {
+        return animationMap;
+    }
+
     private final Map<String, BlockAnimation> animationMap = new HashMap<>();
 
     private static final List<Player> delays = new ArrayList<>(1 << 8);

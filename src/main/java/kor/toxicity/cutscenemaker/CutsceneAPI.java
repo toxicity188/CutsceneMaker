@@ -2,7 +2,6 @@ package kor.toxicity.cutscenemaker;
 
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.actions.mechanics.ActSlate;
-import kor.toxicity.cutscenemaker.commands.CommandListener;
 import kor.toxicity.cutscenemaker.data.ActionData;
 import kor.toxicity.cutscenemaker.handlers.ActionHandler;
 import kor.toxicity.cutscenemaker.quests.Dialog;
@@ -26,9 +25,6 @@ public final class CutsceneAPI {
 
     public void addAction(@NotNull String name,@NotNull Class<? extends CutsceneAction> action) {
         ActionData.addAction(name,action);
-    }
-    public void registerCommand(@NotNull CommandListener listener) {
-        CutsceneCommand.register(pl,listener);
     }
 
     public void addEventHandler(@NotNull String string,@NotNull Class<? extends ActionHandler> clazz) {

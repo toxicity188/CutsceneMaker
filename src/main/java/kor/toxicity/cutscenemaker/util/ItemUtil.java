@@ -11,7 +11,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 public final class ItemUtil {
@@ -110,11 +112,8 @@ public final class ItemUtil {
 	public static String encode(StorageItem itemStack) {
 		YamlConfiguration config = new YamlConfiguration();
 		config.set("i", itemStack.getStack());
-		config.set("y", itemStack.getYear());
-		config.set("m", itemStack.getMonth());
-		config.set("d", itemStack.getDay());
-		config.set("l", itemStack.getLeft());
-		config.set("t", itemStack.isTemp());
+		config.set("t", itemStack.getTime().toString());
+		config.set("h", itemStack.getLeftHour());
 		return Base64.getEncoder().encodeToString(config.saveToString().getBytes(StandardCharsets.UTF_8));
 	}
 	public static StorageItem decode(String string) {
@@ -126,19 +125,12 @@ public final class ItemUtil {
 			return null;
 		}
 		ItemStack stack = config.getItemStack("i", null);
-		int year = config.getInt("y",-1);
-		int month = config.getInt("m",-1);
-		int day = config.getInt("d",-1);
-		boolean temp = config.getBoolean("t",false);
-		int left = config.getInt("l",-1) + TextUtil.calculateDay(year,month,day);
-		return (stack != null && stack.getType() != Material.AIR && (!temp || left >= 0)) ? new StorageItem(
-				stack,
-				year,
-				month,
-				day,
-				left,
-				temp
-				) : null;
+		LocalDateTime time = LocalDateTime.parse(config.getString("t"));
+		int left = config.getInt("h",-1);
+		return (stack != null
+				&& stack.getType() != Material.AIR
+				&& (left < 0 || Duration.between(time.toLocalTime(),LocalDateTime.now().toLocalTime()).toHours() < left)
+		) ? new StorageItem(stack, time, left) : null;
 	}
 
 	public static ItemMeta edit(@NotNull ItemMeta meta, String display) {

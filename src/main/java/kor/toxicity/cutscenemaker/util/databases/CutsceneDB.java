@@ -6,7 +6,6 @@ import kor.toxicity.cutscenemaker.CutsceneConfig;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.util.ItemUtil;
 import kor.toxicity.cutscenemaker.util.StorageItem;
-import kor.toxicity.cutscenemaker.util.TextUtil;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import kor.toxicity.cutscenemaker.util.vars.VarsContainer;
 import lombok.AccessLevel;
@@ -21,6 +20,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.*;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -181,6 +182,9 @@ public class CutsceneDB  {
         return dbAccessor.load(player,plugin);
     }
     public static void save(OfflinePlayer player, JavaPlugin plugin, VarsContainer container) {
+        dbAccessor.save(player,plugin,container);
+    }
+    public static void stop(OfflinePlayer player, JavaPlugin plugin, VarsContainer container) {
         dbAccessor.stop(player,plugin,container);
     }
 
@@ -200,7 +204,7 @@ public class CutsceneDB  {
             ));
             container.addTask(Bukkit.getScheduler().runTaskTimerAsynchronously(
                     plugin,
-                    () -> container.getTempStorage().removeIf(item -> item.isTemp() && item.getLeft() - TextUtil.calculateDay(item.getYear(), item.getMonth(), item.getDay()) < 0),
+                    () -> container.getTempStorage().removeIf(item -> item.getLeftHour() > 0 && Duration.between(item.getTime().toLocalTime(),LocalDateTime.now().toLocalTime()).toHours() > item.getLeftHour()),
                     60 * 20,
                     60 * 20
             ));
