@@ -28,6 +28,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -51,6 +53,9 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
     private final int priority;
     @Getter
     private final String name;
+
+    @Getter
+    private final long limit;
     private final String completeAction;
     private List<QuestListener> listeners;
 
@@ -68,7 +73,7 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
     private final LocationSet locationSet;
 
 
-    private final Consumer<Player> onRemove, onComplete, onGive;
+    private final Consumer<Player> onRemove, onComplete, onGive, onTimeOver;
 
     QuestSet(String fileName, String name, CutsceneManager manager, ConfigurationSection section) {
         super(fileName,name,manager,section);
@@ -78,6 +83,7 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
         type = section.getString("Type",null);
         if (type != null) TYPE_LIST.add(type);
         title = getFunctionPrinter(section);
+        limit = section.getLong("Limit",-1);
         priority = section.getInt("Priority",-1);
         completeAction = getString(section);
         cancellable = section.getBoolean("Cancellable",false);
@@ -108,6 +114,7 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
         onGive = getVarsConsumer(section,"OnGive");
         onComplete = getVarsConsumer(section,"OnComplete");
         onRemove = getVarsConsumer(section,"OnRemove");
+        onTimeOver = getVarsConsumer(section,"OnTimeOut");
 
         getConfig(section,"Locations").ifPresent(loc -> loc.getKeys(false).forEach(s -> getConfig(loc,s).ifPresent(t -> {
             if (!t.isSet("Location")) return;
@@ -169,6 +176,19 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
             );
         }
         addLore(list, ChatColor.GREEN.toString() + ChatColor.BOLD + "[!] Rewards:", rewardsArray);
+        if (limit > 0) {
+            String printer = CutsceneConfig.getInstance().getTimeLimit().print(player);
+            if (!"".equals(printer)) {
+                list.add("");
+                String time;
+                try {
+                    time = Long.toString((limit - ChronoUnit.MINUTES.between(LocalDateTime.parse(manager.getVars(player).get("quest." + name).getVar()),LocalDateTime.now())));
+                } catch (Exception e) {
+                    time = "NaN";
+                }
+                list.add(String.format(printer,time));
+            }
+        }
         if (QuestData.suffix != null) list.addAll(QuestData.suffix);
 
         meta.setLore(list);
@@ -215,7 +235,7 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
     public void give(Player player) {
         MessageSender sender = QuestData.QUEST_MESSAGE_MAP.get("quest-give");
         if (sender != null) sender.send(player,title.print(player));
-        plugin.getManager().getVars(player).get("quest." +name).setVar("true");
+        manager.getVars(player).get("quest." +name).setVar(LocalDateTime.now().toString());
         if (onGive != null) onGive.accept(player);
     }
     public boolean has(Player player) {
@@ -247,6 +267,9 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
     public void remove(Player player) {
         plugin.getManager().getVars(player).remove("quest." +name);
         if (onRemove != null) onRemove.accept(player);
+    }
+    public void timeOver(Player player) {
+        if (onTimeOver != null) onTimeOver.accept(player);
     }
 
     private Optional<ConfigurationSection> getConfig(ConfigurationSection section, String key) {

@@ -2,6 +2,7 @@ debug: false #true일 시, 해당 플러그인이 하는 작업을 버킷 메세
 
 temp-storage-name: "임시 보관함" #임시 보관함의 이름입니다.
 temp-storage-message: "보관함에 새 아이템이 있습니다!" #보관함에 아이템이 있을 경우 매 분마다 해당 메세지를 전송합니다.
+time-limit: " &6&l[!] &f시간 제한: %t분"
 
 default-game-mode: survival #관전자 상태에서 해제될 때, 기본이 되는 게임모드입니다.
 change-game-mode: true #유저가 접속할 시 위의 게임모드로 변경할 지 여부입니다.

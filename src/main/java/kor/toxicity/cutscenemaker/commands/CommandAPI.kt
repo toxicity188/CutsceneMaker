@@ -9,7 +9,7 @@ class CommandAPI(prefix: String) {
     private val commandMap = LinkedHashMap<String, CommandData>()
     init {
         create("list").apply {
-            aliases = arrayOf("리스트","l")
+            aliases = arrayOf("l","리스트")
             description = "show the list of registered command."
             usage = "list"
             opOnly = false

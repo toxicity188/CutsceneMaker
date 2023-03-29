@@ -37,6 +37,7 @@ public abstract class ActionHandler implements Listener {
         handlers.put("itemclick", HandlerItemClick.class);
         handlers.put("process", HandlerProcess.class);
         handlers.put("swap", HandlerItemSwap.class);
+        handlers.put("timeover", HandlerTimeOver.class);
         if (Bukkit.getPluginManager().isPluginEnabled("WorldGuard")) {
             handlers.put("enter", HandlerRegionEnter.class);
             handlers.put("exit", HandlerRegionExit.class);

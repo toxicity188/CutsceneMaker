@@ -25,7 +25,7 @@ public class CutsceneConfig {
     private boolean changeGameMode, debug;
 
     @Getter
-    private FunctionPrinter tempStorageMessage, tempStorageName;
+    private FunctionPrinter tempStorageMessage, tempStorageName, timeLimit;
     @Getter
     private int autoSaveTime;
     @Getter
@@ -58,6 +58,7 @@ public class CutsceneConfig {
 
             tempStorageMessage = new FunctionPrinter(load.getString("temp-storage-message",""));
             tempStorageName = new FunctionPrinter(load.getString("temp-storage-name",""));
+            timeLimit = new FunctionPrinter(load.getString("quest-time-limit",""));
 
             changeGameMode = load.getBoolean("change-game-mode",true);
             debug = load.getBoolean("debug",false);

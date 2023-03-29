@@ -33,6 +33,20 @@ public abstract class EditorSupplier {
 
     private static final Map<String,EditorConfiguration> CONFIGURATION_MAP = new HashMap<>();
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        EditorSupplier supplier = (EditorSupplier) o;
+
+        return Objects.equals(name, supplier.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name != null ? name.hashCode() : 0;
+    }
 
     private static class EditorConfiguration {
         private final Class<? extends EditorSupplier> clazz;

@@ -4,6 +4,10 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 import kor.toxicity.cutscenemaker.CutsceneConfig;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
+import kor.toxicity.cutscenemaker.events.QuestTimeOverEvent;
+import kor.toxicity.cutscenemaker.quests.QuestData;
+import kor.toxicity.cutscenemaker.quests.QuestSet;
+import kor.toxicity.cutscenemaker.util.EvtUtil;
 import kor.toxicity.cutscenemaker.util.ItemUtil;
 import kor.toxicity.cutscenemaker.util.StorageItem;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
@@ -12,6 +16,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,8 +25,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.*;
-import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 
@@ -204,8 +209,30 @@ public class CutsceneDB  {
             ));
             container.addTask(Bukkit.getScheduler().runTaskTimerAsynchronously(
                     plugin,
-                    () -> container.getTempStorage().removeIf(item -> item.getLeftHour() > 0 && Duration.between(item.getTime().toLocalTime(),LocalDateTime.now().toLocalTime()).toHours() > item.getLeftHour()),
-                    60 * 20,
+                    () -> {
+                        Player online = Bukkit.getPlayer(player.getUniqueId());
+                        LocalDateTime now = LocalDateTime.now();
+                        container.getTempStorage().removeIf(item -> item.getLeftHour() > 0 && ChronoUnit.HOURS.between(item.getTime(),now) > item.getLeftHour());
+                        container.getVars().entrySet().removeIf(e -> {
+                            String s = e.getKey();
+                            if (s.startsWith("quest.")) {
+                                QuestSet questSet = QuestData.getQuestSet(s.substring("quest.".length()));
+                                if (questSet != null) {
+                                    try {
+                                        long limit = questSet.getLimit();
+                                        boolean remove = limit > 0 && ChronoUnit.MINUTES.between(LocalDateTime.parse(e.getValue().getVar()),now) > limit;
+                                        if (remove && online != null) {
+                                            questSet.timeOver(online);
+                                            Bukkit.getScheduler().runTask(plugin,() -> EvtUtil.call(new QuestTimeOverEvent(online,questSet)));
+                                        }
+                                        return remove;
+                                    } catch (Exception ignored) {}
+                                }
+                            }
+                            return false;
+                        });
+                    },
+                    0,
                     60 * 20
             ));
             return container;

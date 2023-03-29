@@ -392,7 +392,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
             }
             .done()
             .create("temp").apply {
-                aliases = arrayOf("보관함","storage","s")
+                aliases = arrayOf("storage","s","보관함")
                 description = "show the CutsceneMaker's temp storage command."
                 usage = "temp"
                 executor = { commandSender, strings ->
@@ -602,7 +602,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
                 allowedSender = arrayOf(SenderType.PLAYER)
                 executor = { sender, _ ->
                     InvUtil.give(sender as Player, WAND)
-                    CM.send(sender, "successfully got.")
+                    CM.send(sender, "successfully given.")
                 }
             }
             .done()

@@ -165,7 +165,7 @@ public final class CutsceneManager {
             Bukkit.getScheduler().runTaskAsynchronously(plugin,() -> {
                 VarsContainer c = container.get(e.getPlayer());
                 if (c != null) {
-                    CutsceneDB.save(e.getPlayer(),plugin,c);
+                    CutsceneDB.stop(e.getPlayer(),plugin,c);
                     container.remove(e.getPlayer());
                 }
             });

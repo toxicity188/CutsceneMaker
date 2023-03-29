@@ -30,8 +30,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -101,7 +101,7 @@ public final class CutsceneMaker extends JavaPlugin {
                         String timeStr = ChatColor.GOLD + ChatColor.ITALIC.toString() + "Day: " + ChatColor.YELLOW + localTime.getYear() + "-" + localTime.getMonthValue() + "-" + localTime.getDayOfMonth();
                         List<String> time = (storageItem.getLeftHour() > 0) ? Arrays.asList(
                                 timeStr,
-                                ChatColor.GOLD + ChatColor.ITALIC.toString() + "Left: " + ChatColor.YELLOW + (storageItem.getLeftHour() - Duration.between(localTime.toLocalTime(),LocalDateTime.now().toLocalTime()).toHours()) + "h"
+                                ChatColor.GOLD + ChatColor.ITALIC.toString() + "Left: " + ChatColor.YELLOW + (storageItem.getLeftHour() - ChronoUnit.HOURS.between(localTime,LocalDateTime.now())) + "h"
                         ) : Collections.singletonList(timeStr);
 
                         List<String> lore = meta.getLore();
@@ -121,6 +121,7 @@ public final class CutsceneMaker extends JavaPlugin {
             public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
                 if (isPlayerInventory || item.getType() == Material.AIR) return;
                 StorageItem t = tempStorage.get(slot);
+                if (t == null) return;
                 ItemStack stack = t.getStack();
                 if (InvUtil.storage(player,stack) < stack.getAmount()) {
                     return;
