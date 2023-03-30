@@ -182,7 +182,7 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
                 list.add("");
                 String time;
                 try {
-                    time = Long.toString((limit - ChronoUnit.MINUTES.between(LocalDateTime.parse(manager.getVars(player).get("quest." + name).getVar()),LocalDateTime.now())));
+                    time = Long.toString(Math.max((limit - ChronoUnit.MINUTES.between(LocalDateTime.parse(manager.getVars(player).get("quest." + name).getVar()),LocalDateTime.now())),0));
                 } catch (Exception e) {
                     time = "NaN";
                 }

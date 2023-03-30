@@ -39,11 +39,11 @@ Quest Complete Event
 format: "[cutscenemaker] complete [cutscene] quest [of %-string%]"
 usage:
 1)
-on quest complete:
+on complete quest:
     add 10 to exp of event-questset
     add 100 of money of event-questset
 
 2)
-on quest complete:
+on complete quest of "SomeQuest":
     set {_t} to exp of event-questset
     send "%{_t}%" to player
