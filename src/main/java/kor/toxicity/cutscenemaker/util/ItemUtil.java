@@ -120,17 +120,17 @@ public final class ItemUtil {
 		YamlConfiguration config = new YamlConfiguration();
 		try {
 			config.loadFromString(new String(Base64.getDecoder().decode(string), StandardCharsets.UTF_8));
+			ItemStack stack = config.getItemStack("i", null);
+			LocalDateTime time = LocalDateTime.parse(config.getString("t"));
+			int left = config.getInt("h",-1);
+			return (stack != null
+					&& stack.getType() != Material.AIR
+					&& (left < 0 || Duration.between(time.toLocalTime(),LocalDateTime.now().toLocalTime()).toHours() < left)
+			) ? new StorageItem(stack, time, left) : null;
 		} catch (IllegalArgumentException | InvalidConfigurationException e) {
 			e.printStackTrace();
 			return null;
 		}
-		ItemStack stack = config.getItemStack("i", null);
-		LocalDateTime time = LocalDateTime.parse(config.getString("t"));
-		int left = config.getInt("h",-1);
-		return (stack != null
-				&& stack.getType() != Material.AIR
-				&& (left < 0 || Duration.between(time.toLocalTime(),LocalDateTime.now().toLocalTime()).toHours() < left)
-		) ? new StorageItem(stack, time, left) : null;
 	}
 
 	public static ItemMeta edit(@NotNull ItemMeta meta, String display) {

@@ -289,22 +289,28 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
             private final Map<Player,BukkitTask> delay = new HashMap<>();
             @EventHandler
             public void onInvClick(InventoryClickEvent e) {
-                if (e.getWhoClicked() instanceof Player) {
-                    Player p = (Player) e.getWhoClicked();
-                    DialogRun run = getDialogRun(p);
-                    if (run != null) {
-                        e.setCancelled(true);
-                        Inventory clickedInventory = e.getClickedInventory();
-                        if (clickedInventory != null && clickedInventory.equals(run.current.inventory) && e.getSlot() == CutsceneConfig.getInstance().getDefaultDialogCenter() && !delay.containsKey(p)) {
-                            delay.put(p,plugin.getManager().runTaskLaterAsynchronously(() -> delay.remove(p), 4));
-                            if (e.isLeftClick()) {
-                                run.current.time = Math.max(run.current.time - 1, 1);
-                                run.restart(run.current.time);
-                            }
-                            if (e.isRightClick()) {
-                                run.current.time = Math.min(run.current.time + 1, 4);
-                                run.restart(run.current.time);
-                            }
+                if (!(e.getWhoClicked() instanceof Player)) return;
+                Player p = (Player) e.getWhoClicked();
+                DialogRun run = getDialogRun(p);
+                if (run == null) return;
+                e.setCancelled(true);
+                Inventory clickedInventory = e.getClickedInventory();
+                if (clickedInventory != null && clickedInventory.equals(run.current.inventory) && e.getSlot() == CutsceneConfig.getInstance().getDefaultDialogCenter() && !delay.containsKey(p)) {
+                    delay.put(p,plugin.getManager().runTaskLaterAsynchronously(() -> delay.remove(p), 4));
+                    if (e.isLeftClick()) {
+                        if (e.isShiftClick() && CutsceneConfig.getInstance().isEnableSkip()) {
+                            run.skip();
+                        } else {
+                            run.current.time = Math.max(run.current.time - 1, 1);
+                            run.restart();
+                        }
+                    }
+                    if (e.isRightClick()) {
+                        if (e.isShiftClick() && CutsceneConfig.getInstance().isEnableSkip()) {
+                            run.completeSkip();
+                        } else {
+                            run.current.time = Math.min(run.current.time + 1, 4);
+                            run.restart();
                         }
                     }
                 }
@@ -550,11 +556,24 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
             start(current.time);
         }
 
-        private void restart(long time) {
+        private void skip() {
+            if (executor == null || output == null) return;
+            executor.apply(ChatColor.WHITE + output,soundActual);
+            endTask();
+            load();
+        }
+        private void completeSkip() {
+            if (executor == null) return;
+            DialogRecord record = records[records.length - 1];
+            executor.initialize(record,(record.talker != null) ? record.talker.print(current.player) : current.talker);
+            executor.apply(ChatColor.WHITE + record.invoke(current.player).replace("*",""),soundActual);
+            cancel();
+        }
+        private void restart() {
             if (message == null) return;
             if (length < message.length()) {
                 endTask();
-                start(time);
+                start(current.time);
             }
         }
         private void start(long time) {

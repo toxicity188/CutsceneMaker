@@ -22,7 +22,7 @@ public class CutsceneConfig {
     @Getter
     private GameMode defaultGameMode;
     @Getter
-    private boolean changeGameMode, debug;
+    private boolean changeGameMode, debug, enableSkip;
 
     @Getter
     private FunctionPrinter tempStorageMessage, tempStorageName, timeLimit;
@@ -74,6 +74,7 @@ public class CutsceneConfig {
             defaultQuestIcon = getItemStack(load.getString("default-quest-icon", "BOOK"),(short) load.getInt("default-quest-durability",0));
 
             enableTagging = load.getBoolean("enable-tagging",false);
+            enableSkip = load.getBoolean("enable-skip",true);
 
         } catch (IOException | InvalidConfigurationException e) {
             throw new RuntimeException(e);

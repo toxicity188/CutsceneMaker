@@ -195,12 +195,12 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
                                 else -> {
                                     Bukkit.getPlayer(args[4])?.run {
                                         listOf(this)
+                                    } ?: Bukkit.getOfflinePlayers().firstOrNull { it.name == args[4] }?.run {
+                                        listOf(this)
                                     } ?: emptyList()
                                 }
                             }
-                            if (list.isEmpty()) {
-                                CM.send(sender, "player not found.")
-                            }
+                            if (list.isEmpty()) CM.send(sender, "player not found.")
                             else YamlConfiguration().run {
                                 load(file)
                                 if (isConfigurationSection(args[3])) {
@@ -354,13 +354,11 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
                 usage = "run <action>"
                 allowedSender = arrayOf(SenderType.LIVING_ENTITY)
                 executor = { sender,args ->
-                    plugin.load {
-                        if (ActionData.start(args[1], sender as LivingEntity)) CutsceneMaker.send(
-                            sender,
-                            "run success!"
-                        )
-                        else CutsceneMaker.send(sender, "run failed!")
-                    }
+                    if (ActionData.start(args[1], sender as LivingEntity)) CutsceneMaker.send(
+                        sender,
+                        "run success!"
+                    )
+                    else CutsceneMaker.send(sender, "run failed!")
                 }
                 tabComplete = { _,args ->
                     if (args.size == 2) ActionData.getActionKeys().filter { it.startsWith(args[1]) } else null

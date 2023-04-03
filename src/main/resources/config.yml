@@ -17,3 +17,6 @@ default-typing-delay: 2 #Dialog 에서 글자 하나가 넘어가는 속도입�
 
 default-quest-icon: BOOK #퀘스트 GUI 에서 기본이 되는 아이콘 타입입니다.
 default-quest-durability: 0
+
+enable-tagging: false #출력하는 아이템에 NBT태그를 붙일지 여부입니다.
+enable-skip: true #스킵 기능을 활성화할지 여부입니다.
