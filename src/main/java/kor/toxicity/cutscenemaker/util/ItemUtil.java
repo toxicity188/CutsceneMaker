@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public final class ItemUtil {
@@ -125,7 +126,7 @@ public final class ItemUtil {
 			int left = config.getInt("h",-1);
 			return (stack != null
 					&& stack.getType() != Material.AIR
-					&& (left < 0 || Duration.between(time.toLocalTime(),LocalDateTime.now().toLocalTime()).toHours() < left)
+					&& (left < 0 || ChronoUnit.HOURS.between(time,LocalDateTime.now()) < left)
 			) ? new StorageItem(stack, time, left) : null;
 		} catch (IllegalArgumentException | InvalidConfigurationException e) {
 			e.printStackTrace();
