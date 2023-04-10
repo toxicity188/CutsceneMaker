@@ -8,22 +8,31 @@ import java.lang.StringBuilder
 class CommandAPI(prefix: String) {
     private val commandMap = LinkedHashMap<String, CommandData>()
     init {
-        create("list").apply {
+        create("help").apply {
             aliases = arrayOf("l","리스트")
             description = "show the list of registered command."
-            usage = "list"
+            usage = "help ${CC.YELLOW}[page]"
             opOnly = false
-            executor = { sender,_ ->
-               commandMap.values.forEach {
-                   if (!it.opOnly || sender.isOp) CM.send(sender,"/$prefix ${it.usage} ${
-                       if (it.aliases.isNotEmpty()) StringBuilder().append(CC.GRAY.toString()).append('(').apply {
+            executor = { sender, args ->
+                val s = commandMap.size / 6 + 1
+                val page = if (args.size > 1) try {
+                    args[args.size - 1].toInt().coerceAtLeast(1).coerceAtMost(s)
+                } catch (ex: Exception) {
+                    1
+                } else 1
+                val p = (page - 1) * 6
+                sender.sendMessage("${CC.YELLOW}[${CC.WHITE}/${CC.GOLD}$prefix${CC.YELLOW}] ${CC.GRAY}==========< page $page / $s >==========")
+                val value = commandMap.values.toList()
+                value.subList(p,(p + 6).coerceAtMost(value.size)).forEach {
+                   if (!it.opOnly || sender.isOp) sender.sendMessage("/${CC.GOLD}$prefix ${it.usage} ${
+                       if (it.aliases.isNotEmpty()) StringBuilder().append(CC.DARK_GRAY).append('(').apply {
                            it.aliases.forEachIndexed { index, s ->
                                append(s)
                                if (index < it.aliases.size - 1) append(",")
                            }
-                       }.append(')').append(CC.WHITE.toString()) else ""
-                   }: ${it.description}")
-               }
+                       }.append(')').append(CC.WHITE) else CC.WHITE.toString()
+                   } - ${CC.GREEN}${it.description}")
+                }
             }
         }.done()
     }
@@ -34,7 +43,7 @@ class CommandAPI(prefix: String) {
     fun execute(command: String, sender: CommandSender, args: Array<String>) {
         (commandMap[command] ?: commandMap.values.firstOrNull { it.aliases.contains(command) })?.run {
             if (opOnly && !sender.isOp) return CM.send(sender,"On only command.")
-            if (length > args.size - 1) return CM.send(sender,"this command requires at least $length of arguments.")
+            if (length > args.size - 1) return CM.send(sender,"this command requires at least $length arguments.")
             if (allowedSender.none { it.accept(sender.javaClass) }) return CM.send("allowed sender type: ${
                 StringBuilder().apply {
                     allowedSender.forEachIndexed { index, senderType ->

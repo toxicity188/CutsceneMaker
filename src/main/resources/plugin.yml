@@ -18,7 +18,7 @@ commands:
   cutscene:
     description: Cutscene command
     usage: /<command>
-    aliases: [cut,컷씬]
+    aliases: [cut,컷씬,컷신,cm]
   quest:
       description: Cutscene quest
       usage: /<command>

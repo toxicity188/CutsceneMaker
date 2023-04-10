@@ -125,11 +125,11 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
         }
     }
     private val commandAPI = run {
-        val temp = CommandAPI("cutscene temp")
+        val temp = CommandAPI("cm temp")
             .create("preset").apply {
                 aliases = arrayOf("p","프리셋")
                 description = "save the preset"
-                usage = "preset <file> <key>"
+                usage = "preset ${CC.YELLOW}<file> <key>"
                 length = 3
                 allowedSender = arrayOf(SenderType.PLAYER)
                 executor = { sender, args ->
@@ -167,7 +167,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
             .create("give").apply {
                 aliases = arrayOf("g","지급")
                 description = "give the preset"
-                usage = "give <file> <key> <player> [hour]"
+                usage = "give ${CC.YELLOW}<file> <key> <player> [hour]"
                 length = 4
                 executor = { sender, args ->
                     fun giveOnlinePlayer(player: Player, item: ItemStack, hour: Int) {
@@ -227,11 +227,11 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
                     } ?: emptyList() else null
                 }
             }.done()
-        val item = CommandAPI("cutscene item")
+        val item = CommandAPI("cm item")
             .create("get").apply {
                 aliases = arrayOf("g","지급")
                 description = "get the item"
-                usage = "get <key>"
+                usage = "get ${CC.YELLOW}<key>"
                 length = 2
                 allowedSender = arrayOf(SenderType.PLAYER)
                 executor = { sender, args ->
@@ -252,7 +252,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
             .create("set").apply {
                 aliases = arrayOf("s","설정")
                 description = "set the item"
-                usage = "set <file> <key>"
+                usage = "set ${CC.YELLOW}<file> <key>"
                 length = 3
                 allowedSender = arrayOf(SenderType.PLAYER)
                 executor = { sender, args ->
@@ -284,11 +284,11 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
                 }
             }
             .done()
-        val animation = CommandAPI("cutscene animation")
+        val animation = CommandAPI("cm animation")
             .create("save").apply {
                 aliases = arrayOf("s","저장")
                 description = "save the block animation."
-                usage = "save <key>"
+                usage = "save ${CC.YELLOW}<key>"
                 length = 2
                 allowedSender = arrayOf(SenderType.PLAYER)
                 executor = { sender, args ->
@@ -310,7 +310,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
             .create("load").apply {
                 aliases = arrayOf("로드")
                 description = "load the block."
-                usage = "load <key>"
+                usage = "load ${CC.YELLOW}<key>"
                 length = 2
                 allowedSender = arrayOf(SenderType.PLAYER)
                 executor = { sender, args ->
@@ -324,7 +324,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
             .create("air").apply {
                 aliases = arrayOf("a","청소")
                 description = "clean the block."
-                usage = "air <key>"
+                usage = "air ${CC.YELLOW}<key>"
                 length = 2
                 allowedSender = arrayOf(SenderType.PLAYER)
                 executor = { sender, args ->
@@ -335,7 +335,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
                 }
             }
             .done()
-        CommandAPI("cutscene")
+        CommandAPI("cm")
             .create("reload").apply {
                 aliases = arrayOf("re","rl","리로드")
                 description = "reload this plugin."
@@ -351,7 +351,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
                 aliases = arrayOf("r","실행")
                 description = "run the Action."
                 length = 1
-                usage = "run <action>"
+                usage = "run ${CC.YELLOW}<action>"
                 allowedSender = arrayOf(SenderType.LIVING_ENTITY)
                 executor = { sender,args ->
                     if (ActionData.start(args[1], sender as LivingEntity)) CutsceneMaker.send(
@@ -370,7 +370,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
                 description = "show the CutsceneMaker's item command."
                 usage = "item"
                 executor = { commandSender, strings ->
-                    item.execute(if (strings.size > 1) strings[1] else "list",commandSender,strings)
+                    item.execute(if (strings.size > 1) strings[1] else "help",commandSender,strings)
                 }
                 tabComplete = { sender, args ->
                     if (args.size == 2) item.searchCommand(args[1],sender) else item.tabComplete(args[1],sender,args)
@@ -382,7 +382,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
                 description = "show the CutsceneMaker's block animation command."
                 usage = "animation"
                 executor = { commandSender, strings ->
-                    animation.execute(if (strings.size > 1) strings[1] else "list",commandSender,strings)
+                    animation.execute(if (strings.size > 1) strings[1] else "help",commandSender,strings)
                 }
                 tabComplete = { sender, args ->
                     if (args.size == 2) animation.searchCommand(args[1],sender) else animation.tabComplete(args[1],sender,args)
@@ -394,7 +394,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
                 description = "show the CutsceneMaker's temp storage command."
                 usage = "temp"
                 executor = { commandSender, strings ->
-                    temp.execute(if (strings.size > 1) strings[1] else "list",commandSender,strings)
+                    temp.execute(if (strings.size > 1) strings[1] else "help",commandSender,strings)
                 }
                 tabComplete = { sender, args ->
                     if (args.size == 2) temp.searchCommand(args[1],sender) else temp.tabComplete(args[1],sender,args)
@@ -404,7 +404,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
             .create("location").apply {
                 aliases = arrayOf("loc","좌표")
                 description = "save your location to file data."
-                usage = "location <file> <key>"
+                usage = "location ${CC.YELLOW}<file> <key>"
                 length = 2
                 allowedSender = arrayOf(SenderType.PLAYER)
                 executor = { sender, args ->
@@ -434,7 +434,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
             .create("teleport").apply {
                 aliases = arrayOf("tp","텔포")
                 description = "teleport to a registered location."
-                usage = "teleport <location>"
+                usage = "teleport ${CC.YELLOW}<location>"
                 length = 1
                 allowedSender = arrayOf(SenderType.LIVING_ENTITY)
                 executor = { sender, args ->
@@ -450,7 +450,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
             .create("variable").apply {
                 aliases = arrayOf("var","v","변수")
                 description = "access to specific player's variables."
-                usage = "variable <player> <name> <value>"
+                usage = "variable ${CC.YELLOW}<player> <name> <value>"
                 length = 3
                 executor = { sender, args ->
                     val player = Bukkit.getPlayer(args[1])
@@ -495,7 +495,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
             .create("project").apply {
                 aliases = arrayOf("p","프로젝트")
                 description = "open gui editor."
-                usage = "project <editable> <key>"
+                usage = "project ${CC.YELLOW}<editable> <key>"
                 length = 2
                 allowedSender = arrayOf(SenderType.PLAYER)
                 executor = { sender, args ->
@@ -520,7 +520,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
             .create("create").apply {
                 aliases = arrayOf("c","생성")
                 description = "create new editor."
-                usage = "create <editable> <file> <key>"
+                usage = "create ${CC.YELLOW}<editable> <file> <key>"
                 length = 3
                 allowedSender = arrayOf(SenderType.PLAYER)
                 executor = { sender, args ->
@@ -652,7 +652,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
         label: String?,
         args: Array<String>
     ): Boolean {
-        (if (args.isEmpty()) arrayOf("list") else args).run {
+        (if (args.isEmpty()) arrayOf("help") else args).run {
             commandAPI.execute(get(0),sender,this)
         }
         return true
