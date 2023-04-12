@@ -34,6 +34,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public final class CutsceneMaker extends JavaPlugin {
 
@@ -209,16 +210,20 @@ public final class CutsceneMaker extends JavaPlugin {
     public ConfigLoad read(String dict) {
         return new ConfigLoad(new File(getDataFolder(), dict),"");
     }
+
     public static void addTempItem(OfflinePlayer player, ItemStack stack, int left) {
-        StorageItem storage = new StorageItem(stack, LocalDateTime.now(), left);
+        addTempItem(player,Collections.singletonList(stack),left);
+    }
+    public static void addTempItem(OfflinePlayer player, List<ItemStack> stack, int left) {
+        List<StorageItem> storage = stack.stream().map(s -> new StorageItem(s, LocalDateTime.now(), left)).collect(Collectors.toList());
         VarsContainer container;
         if (player instanceof Player) {
              container = manager.getVars((Player) player);
             if (container == null) return;
-            container.getTempStorage().add(storage);
+            container.getTempStorage().addAll(storage);
         } else {
             container = CutsceneDB.read(player,manager.getPlugin());
-            container.getTempStorage().add(storage);
+            container.getTempStorage().addAll(storage);
             CutsceneDB.save(player,manager.getPlugin(),container);
         }
     }

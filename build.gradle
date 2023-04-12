@@ -85,8 +85,16 @@ shadowJar {
     relocate("com.opencsv","kor.toxicity.cutscenemaker.shaded.com.opencsv")
 
     relocate("io.heartpattern","kor.toxicity.cutscenemaker.shaded.io.heartpattern")
-    relocate("org.apache.commons","kor.toxicity.cutscenemaker.shaded.org.apache.commons")
+
     relocate("org.apache.http","kor.toxicity.cutscenemaker.shaded.org.apache.http")
+    relocate("org.apache.commons.codec","kor.toxicity.cutscenemaker.shaded.org.apache.commons.codec")
+    relocate("org.apache.commons.beanutils","kor.toxicity.cutscenemaker.shaded.org.apache.commons.beanutils")
+    relocate("org.apache.commons.collections","kor.toxicity.cutscenemaker.shaded.org.apache.commons.collections")
+    relocate("org.apache.commons.collections4","kor.toxicity.cutscenemaker.shaded.org.apache.commons.collections4")
+    relocate("org.apache.commons.lang3","kor.toxicity.cutscenemaker.shaded.org.apache.commons.lang3")
+    relocate("org.apache.commons.logging","kor.toxicity.cutscenemaker.shaded.org.apache.commons.logging")
+    relocate("org.apache.commons.text","kor.toxicity.cutscenemaker.shaded.org.apache.commons.text")
+
     relocate("com.fasterxml","kor.toxicity.cutscenemaker.shaded.com.fasterxml")
     relocate("org.apache.http","kor.toxicity.cutscenemaker.shaded.org.apache.http")
     relocate("javax.validation","kor.toxicity.cutscenemaker.shaded.javax.validation")
