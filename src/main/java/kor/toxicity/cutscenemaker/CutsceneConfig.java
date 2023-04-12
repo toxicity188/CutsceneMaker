@@ -43,6 +43,9 @@ public class CutsceneConfig {
     @Getter
     private boolean enableTagging;
 
+    @Getter
+    private String openAPIKey;
+
     void load(CutsceneMaker pl) {
         try {
             if (!new File(pl.getDataFolder().getAbsolutePath() + "\\config.yml").exists()) pl.saveResource("config.yml",false);
@@ -75,6 +78,8 @@ public class CutsceneConfig {
 
             enableTagging = load.getBoolean("enable-tagging",false);
             enableSkip = load.getBoolean("enable-skip",true);
+
+            openAPIKey = load.getString("open-api-key",null);
 
         } catch (IOException | InvalidConfigurationException e) {
             throw new RuntimeException(e);

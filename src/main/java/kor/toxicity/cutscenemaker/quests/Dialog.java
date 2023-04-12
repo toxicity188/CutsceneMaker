@@ -15,6 +15,7 @@ import kor.toxicity.cutscenemaker.util.gui.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import net.milkbowl.vault.chat.Chat;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -1107,6 +1108,11 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                     "Set Vars",
                     toList(setVars)
             ));
+            ItemStack gpt = new ItemStack(WrappedMaterial.getWrapper().getCommandBlock());
+            ItemMeta gptMeta = gpt.getItemMeta();
+            ItemUtil.edit(gptMeta,ChatColor.GOLD + "Call ChatGPT",Collections.singletonList(ChatColor.GRAY + "(Left: add random dialog with ChatGPT)"));
+            gpt.setItemMeta(gptMeta);
+            inv.setItem(7,gpt);
             setupException();
         }
         private void toggleException() {
@@ -1157,6 +1163,41 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                         }
                     } else {
                         switch (slot) {
+                            case 7:
+                                String key = CutsceneConfig.getInstance().getOpenAPIKey();
+                                if (key == null) {
+                                    CutsceneMaker.send(player,"you have to write your api key in config.yml!");
+                                    return;
+                                }
+                                CallbackManager.openSign(
+                                        player,
+                                        new String[] {
+                                                "",
+                                                "write the NPC's job!",
+                                                "",
+                                                ""
+                                        },
+                                        s -> {
+                                            if (s[0].equals("")) {
+                                                CutsceneMaker.send(player,"value cannot be empty string!");
+                                                dialogUpdate();
+                                            } else {
+                                                manager.runTaskAsynchronously(() -> {
+                                                    TalkEditor editor = new TalkEditor();
+                                                    String k = TalkGenerator.generate(key,s[0]);
+                                                    if (k == null) {
+                                                        CutsceneMaker.send(player,"invalid api key!");
+                                                        dialogUpdate();
+                                                        return;
+                                                    }
+                                                    editor.talk = k;
+                                                    extend(talk.length - 1,editor);
+                                                    dialogUpdate();
+                                                });
+                                            }
+                                        }
+                                );
+                                break;
                             case 46:
                                 page = Math.max(page - 1, 1);
                                 setupPage();

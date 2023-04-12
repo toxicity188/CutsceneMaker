@@ -47,6 +47,7 @@ dependencies {
 
     implementation group: 'com.opencsv', name: 'opencsv', version: '4.6'
     implementation group: 'org.codemc.worldguardwrapper', name: 'worldguardwrapper', version: '1.2.0-SNAPSHOT'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.14'
 
     compileOnly 'com.sk89q.worldguard:worldguard-legacy:6.2'
     compileOnly 'com.sk89q.worldedit:worldedit-bukkit:6.1.4-SNAPSHOT'
@@ -81,20 +82,21 @@ compileTestKotlin {
 shadowJar {
     setArchivesBaseName("CutsceneMaker")
     relocate("kotlin","kor.toxicity.cutscenemaker.shaded.kotlin")
-    relocate("com.opencsv","kor.toxicity.cutscenemaker.shaded.opencsv")
+    relocate("com.opencsv","kor.toxicity.cutscenemaker.shaded.com.opencsv")
 
-    relocate("org.apache.commons.beanutils","kor.toxicity.cutscenemaker.shaded.apache.commons.beanutils")
-    relocate("org.apache.commons.collections","kor.toxicity.cutscenemaker.shaded.apache.commons.collections")
-    relocate("org.apache.commons.collections4","kor.toxicity.cutscenemaker.shaded.apache.commons.collections4")
-    relocate("org.apache.commons.lang3","kor.toxicity.cutscenemaker.shaded.apache.commons.lang3")
-    relocate("org.apache.commons.logging","kor.toxicity.cutscenemaker.shaded.apache.commons.logging")
-    relocate("org.apache.commons.text","kor.toxicity.cutscenemaker.shaded.apache.commons.text")
+    relocate("io.heartpattern","kor.toxicity.cutscenemaker.shaded.io.heartpattern")
+    relocate("org.apache.commons","kor.toxicity.cutscenemaker.shaded.org.apache.commons")
+    relocate("org.apache.http","kor.toxicity.cutscenemaker.shaded.org.apache.http")
+    relocate("com.fasterxml","kor.toxicity.cutscenemaker.shaded.com.fasterxml")
+    relocate("org.apache.http","kor.toxicity.cutscenemaker.shaded.org.apache.http")
+    relocate("javax.validation","kor.toxicity.cutscenemaker.shaded.javax.validation")
 
-    relocate("org.codemc","kor.toxicity.cutscenemaker.shaded.codemc")
-    relocate("de.slikey","kor.toxicity.cutscenemaker.shaded.slikey")
+    relocate("org.codemc","kor.toxicity.cutscenemaker.shaded.org.codemc")
+    relocate("de.slikey","kor.toxicity.cutscenemaker.shaded.de.slikey")
     dependencies {
         exclude(dependency("org.jetbrains:annotations:13.0"))
     }
     exclude("*.properties")
     exclude("*.php")
+    exclude("module-info.class")
 }

@@ -9,7 +9,7 @@ class CommandAPI(prefix: String) {
     private val commandMap = LinkedHashMap<String, CommandData>()
     init {
         create("help").apply {
-            aliases = arrayOf("l","리스트")
+            aliases = arrayOf("h","l","리스트","도움말")
             description = "show the list of registered command."
             usage = "help ${CC.YELLOW}[page]"
             opOnly = false
@@ -24,7 +24,7 @@ class CommandAPI(prefix: String) {
                 sender.sendMessage("${CC.YELLOW}[${CC.WHITE}/${CC.GOLD}$prefix${CC.YELLOW}] ${CC.GRAY}==========< page $page / $s >==========")
                 val value = commandMap.values.toList()
                 value.subList(p,(p + 6).coerceAtMost(value.size)).forEach {
-                   if (!it.opOnly || sender.isOp) sender.sendMessage("/${CC.GOLD}$prefix ${it.usage} ${
+                   if (!it.opOnly || sender.isOp) sender.sendMessage("/${CC.GOLD}$prefix ${CC.WHITE}${it.usage} ${
                        if (it.aliases.isNotEmpty()) StringBuilder().append(CC.DARK_GRAY).append('(').apply {
                            it.aliases.forEachIndexed { index, s ->
                                append(s)

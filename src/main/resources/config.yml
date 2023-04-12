@@ -20,3 +20,5 @@ default-quest-durability: 0
 
 enable-tagging: false #출력하는 아이템에 NBT태그를 붙일지 여부입니다.
 enable-skip: true #스킵 기능을 활성화할지 여부입니다.
+
+open-api-key: "write your OpenAPI key here."

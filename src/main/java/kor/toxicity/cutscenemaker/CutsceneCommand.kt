@@ -125,7 +125,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
         }
     }
     private val commandAPI = run {
-        val temp = CommandAPI("cm temp")
+        val temp = CommandAPI("cm t")
             .create("preset").apply {
                 aliases = arrayOf("p","프리셋")
                 description = "save the preset"
@@ -227,7 +227,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
                     } ?: emptyList() else null
                 }
             }.done()
-        val item = CommandAPI("cm item")
+        val item = CommandAPI("cm i")
             .create("get").apply {
                 aliases = arrayOf("g","지급")
                 description = "get the item"
@@ -284,7 +284,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
                 }
             }
             .done()
-        val animation = CommandAPI("cm animation")
+        val animation = CommandAPI("cm a")
             .create("save").apply {
                 aliases = arrayOf("s","저장")
                 description = "save the block animation."
@@ -390,7 +390,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
             }
             .done()
             .create("temp").apply {
-                aliases = arrayOf("storage","s","보관함")
+                aliases = arrayOf("t","storage","s","보관함")
                 description = "show the CutsceneMaker's temp storage command."
                 usage = "temp"
                 executor = { commandSender, strings ->
