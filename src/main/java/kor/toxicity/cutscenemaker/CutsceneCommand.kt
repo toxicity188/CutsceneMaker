@@ -170,14 +170,6 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
                 usage = "give ${CC.YELLOW}<file> <key> <player> [hour]"
                 length = 4
                 executor = { sender, args ->
-                    fun giveOnlinePlayer(player: Player, item: ItemStack, hour: Int) {
-                        plugin.manager.getVars(player).tempStorage.add(StorageItem(item, LocalDateTime.now(), hour))
-                    }
-                    fun giveOfflinePlayer(player: OfflinePlayer, item: ItemStack, hour: Int) {
-                        val container = CutsceneDB.read(player,plugin)
-                        container.tempStorage.add(StorageItem(item, LocalDateTime.now(), hour))
-                        CutsceneDB.save(player, plugin, container)
-                    }
                     plugin.manager.runTaskAsynchronously {
                         try {
                             val hour: Int = try {
@@ -209,7 +201,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
                                         if (section.isItemStack(key)) {
                                             val i = section.getItemStack(key)
                                             list.forEach {
-                                                if (it is Player) giveOnlinePlayer(it,i,hour) else giveOfflinePlayer(it,i,hour)
+                                                CM.addTempItem(it,i,hour)
                                             }
                                         }
                                     }

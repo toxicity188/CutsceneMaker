@@ -19,6 +19,7 @@ import kor.toxicity.cutscenemaker.util.vars.VarsContainer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
@@ -208,16 +209,18 @@ public final class CutsceneMaker extends JavaPlugin {
     public ConfigLoad read(String dict) {
         return new ConfigLoad(new File(getDataFolder(), dict),"");
     }
-    public static void addTempItem(Player player, ItemStack stack) {
-        VarsContainer container = manager.getVars(player);
-        if (container == null) return;
-        container.getTempStorage().add(
-                new StorageItem(
-                        stack,
-                        LocalDateTime.now(),
-                        -1
-                )
-        );
+    public static void addTempItem(OfflinePlayer player, ItemStack stack, int left) {
+        StorageItem storage = new StorageItem(stack, LocalDateTime.now(), left);
+        VarsContainer container;
+        if (player instanceof Player) {
+             container = manager.getVars((Player) player);
+            if (container == null) return;
+            container.getTempStorage().add(storage);
+        } else {
+            container = CutsceneDB.read(player,manager.getPlugin());
+            container.getTempStorage().add(storage);
+            CutsceneDB.save(player,manager.getPlugin(),container);
+        }
     }
     public static void removeVars(Player player, String key) {
         manager.getVars(player).remove(key);
