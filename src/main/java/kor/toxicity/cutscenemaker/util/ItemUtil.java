@@ -128,7 +128,7 @@ public final class ItemUtil {
 					&& stack.getType() != Material.AIR
 					&& (left < 0 || ChronoUnit.HOURS.between(time,LocalDateTime.now()) < left)
 			) ? new StorageItem(stack, time, left) : null;
-		} catch (IllegalArgumentException | InvalidConfigurationException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
