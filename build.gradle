@@ -37,6 +37,11 @@ repositories {
 }
 
 dependencies {
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
+    testImplementation 'org.spigotmc:spigot-api:1.12.2-R0.1-SNAPSHOT'
+
     implementation 'com.elmakers.mine.bukkit:EffectLib:9.4'
     compileOnly 'org.projectlombok:lombok:1.18.26'
     compileOnly 'com.github.SkriptLang:Skript:dev37c'
@@ -77,6 +82,10 @@ compileKotlin {
 
 compileTestKotlin {
     kotlinOptions.jvmTarget = '1.8'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 shadowJar {

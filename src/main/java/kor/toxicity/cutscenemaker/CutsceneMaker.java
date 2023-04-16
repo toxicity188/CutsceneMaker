@@ -1,5 +1,6 @@
 package kor.toxicity.cutscenemaker;
 
+import com.google.gson.JsonParser;
 import kor.toxicity.cutscenemaker.data.*;
 import kor.toxicity.cutscenemaker.entities.EntityManager;
 import kor.toxicity.cutscenemaker.events.ActionReloadEndEvent;
@@ -16,6 +17,10 @@ import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
 import kor.toxicity.cutscenemaker.util.gui.MouseButton;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import kor.toxicity.cutscenemaker.util.vars.VarsContainer;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -28,8 +33,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -39,6 +46,7 @@ import java.util.stream.Collectors;
 public final class CutsceneMaker extends JavaPlugin {
 
     public static final String NAME = "[CutsceneMaker]";
+    public static final String BUILD_VERSION = "2023-04-16";
     private static final List<Runnable> LATE_CHECK = new ArrayList<>();
     public void addLateCheck(Runnable runnable) {
         LATE_CHECK.add(runnable);
@@ -179,6 +187,15 @@ public final class CutsceneMaker extends JavaPlugin {
             } catch (Exception e) {
                 warn("Error has occurred while reloading: " + e.getMessage());
             }
+            try (CloseableHttpClient client = HttpClients.createDefault(); CloseableHttpResponse response = client.execute(new HttpGet("https://api.github.com/repos/toxicity188/CutsceneMaker/tags"))) {
+                String version = new JsonParser().parse(new BufferedReader(new InputStreamReader(response.getEntity().getContent()))).getAsJsonArray().get(0).getAsJsonObject().get("name").getAsString();
+                if (!BUILD_VERSION.equals(version)) {
+                    warn("New version found: " + version);
+                    warn("Download: https://github.com/toxicity188/CutsceneMaker/releases/tag/" + version);
+                }
+            } catch (Exception e) {
+                warn("fail to find the updated version.");
+            }
         });
     }
 
@@ -211,6 +228,12 @@ public final class CutsceneMaker extends JavaPlugin {
         return new ConfigLoad(new File(getDataFolder(), dict),"");
     }
 
+    public static void addTempItem(OfflinePlayer player, ItemStack stack) {
+        addTempItem(player,stack,-1);
+    }
+    public static void addTempItem(OfflinePlayer player, List<ItemStack> stack) {
+        addTempItem(player,stack,-1);
+    }
     public static void addTempItem(OfflinePlayer player, ItemStack stack, int left) {
         addTempItem(player,Collections.singletonList(stack),left);
     }
