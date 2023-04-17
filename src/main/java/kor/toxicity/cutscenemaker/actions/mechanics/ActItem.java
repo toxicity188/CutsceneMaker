@@ -1,6 +1,7 @@
 package kor.toxicity.cutscenemaker.actions.mechanics;
 
 import com.google.gson.JsonObject;
+import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.actions.CutsceneAction;
 import kor.toxicity.cutscenemaker.data.ItemData;
@@ -50,7 +51,12 @@ public class ActItem extends CutsceneAction {
     public void initialize() {
         super.initialize();
         if (config != null) {
-            apply = p -> ItemData.getItem(p,config);
+            ItemBuilder builder = ItemData.getItem(config);
+            if (builder == null) CutsceneMaker.warn("The Item named \"" + config + "\" doesn't exist!");
+            else {
+                ItemBuilder n = builder.setAmount(amount);
+                apply = n::get;
+            }
         }
         if (apply == null) {
             ItemStack give;

@@ -12,7 +12,7 @@ public class UpdateTest {
     @Test
     public void testUpdate() {
         try (CloseableHttpClient client = HttpClients.createDefault();
-             CloseableHttpResponse response = client.execute(new HttpGet("https://api.github.com/repos/toxicity188/CutsceneMaker/tags"))) {
+             CloseableHttpResponse response = client.execute(new HttpGet("https://api.github.com/repos/toxicity188/CutsceneMaker/tags?per_page=1"))) {
             System.out.println(new JsonParser().parse(new BufferedReader(new InputStreamReader(response.getEntity().getContent()))).getAsJsonArray().get(0).getAsJsonObject().get("name").getAsString());
         } catch (Exception e) {
             System.out.println("An error has occurred.");

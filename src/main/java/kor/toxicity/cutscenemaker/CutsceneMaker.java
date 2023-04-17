@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 public final class CutsceneMaker extends JavaPlugin {
 
     public static final String NAME = "[CutsceneMaker]";
-    public static final String BUILD_VERSION = "2023-04-16";
+    public static final String BUILD_VERSION = "2023-04-17";
     private static final List<Runnable> LATE_CHECK = new ArrayList<>();
     public void addLateCheck(Runnable runnable) {
         LATE_CHECK.add(runnable);
@@ -187,7 +187,7 @@ public final class CutsceneMaker extends JavaPlugin {
             } catch (Exception e) {
                 warn("Error has occurred while reloading: " + e.getMessage());
             }
-            try (CloseableHttpClient client = HttpClients.createDefault(); CloseableHttpResponse response = client.execute(new HttpGet("https://api.github.com/repos/toxicity188/CutsceneMaker/tags"))) {
+            try (CloseableHttpClient client = HttpClients.createDefault(); CloseableHttpResponse response = client.execute(new HttpGet("https://api.github.com/repos/toxicity188/CutsceneMaker/tags?per_page=1"))) {
                 String version = new JsonParser().parse(new BufferedReader(new InputStreamReader(response.getEntity().getContent()))).getAsJsonArray().get(0).getAsJsonObject().get("name").getAsString();
                 if (!BUILD_VERSION.equals(version)) {
                     warn("New version found: " + version);
