@@ -8,7 +8,7 @@ import kor.toxicity.cutscenemaker.events.QuestTimeOverEvent;
 import kor.toxicity.cutscenemaker.quests.QuestData;
 import kor.toxicity.cutscenemaker.quests.QuestSet;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
-import kor.toxicity.cutscenemaker.util.ItemUtil;
+import kor.toxicity.cutscenemaker.util.NBTReflector;
 import kor.toxicity.cutscenemaker.util.StorageItem;
 import kor.toxicity.cutscenemaker.util.vars.Vars;
 import kor.toxicity.cutscenemaker.util.vars.VarsContainer;
@@ -49,7 +49,7 @@ public class CutsceneDB  {
                 reader.forEach(t -> {
                     if (t.length >= 2) {
                         if (t[0].startsWith("temp.")) {
-                            StorageItem decodedItem = ItemUtil.decode(t[1]);
+                            StorageItem decodedItem = NBTReflector.decode(t[1]);
                             if (decodedItem != null) decodedItems.add(decodedItem);
                         }
                         else container.getVars().put(t[0],new Vars(t[1]));
@@ -73,7 +73,7 @@ public class CutsceneDB  {
                         .forEach(writer::writeNext);
                 int i = 0;
                 for (StorageItem decodedItem : container.getTempStorage()) {
-                    writer.writeNext(new String[] {"temp." + (++i), ItemUtil.encode(decodedItem)});
+                    writer.writeNext(new String[] {"temp." + (++i), NBTReflector.encode(decodedItem)});
                 }
                 CutsceneMaker.debug(player.getName() + "'s user data saved.");
             } catch (Exception e) {
@@ -109,7 +109,7 @@ public class CutsceneDB  {
                     String value = set.getString("v");
                     List<StorageItem> items = container.getTempStorage();
                     if (key.startsWith("temp.")) {
-                        StorageItem item = ItemUtil.decode(value);
+                        StorageItem item = NBTReflector.decode(value);
                         if (item != null) items.add(item);
                     }
                     else container.getVars().put(key, new Vars(value));
@@ -137,7 +137,7 @@ public class CutsceneDB  {
             for (StorageItem storageItem : container.getTempStorage()) {
                 try (PreparedStatement statement = con.prepareStatement("INSERT INTO " + name + " VALUES(?,?);")) {
                     statement.setString(1, "temp." + (++i));
-                    statement.setString(2, ItemUtil.encode(storageItem));
+                    statement.setString(2, NBTReflector.encode(storageItem));
                     statement.executeUpdate();
                 } catch (SQLException ignored) {}
             }

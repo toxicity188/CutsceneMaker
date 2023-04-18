@@ -4,7 +4,7 @@ import kor.toxicity.cutscenemaker.CutsceneConfig;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.util.InvUtil;
 import kor.toxicity.cutscenemaker.util.ItemBuilder;
-import kor.toxicity.cutscenemaker.util.ItemUtil;
+import kor.toxicity.cutscenemaker.util.NBTReflector;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import kor.toxicity.cutscenemaker.util.gui.GuiAdapter;
 import kor.toxicity.cutscenemaker.util.gui.GuiExecutor;
@@ -126,7 +126,7 @@ final class QnA extends EditorSupplier implements DialogAddon {
                 );
             });
             ItemStack barrier = new ItemStack(Material.BARRIER);
-            barrier.setItemMeta(ItemUtil.edit(barrier.getItemMeta(),ChatColor.WHITE.toString()));
+            barrier.setItemMeta(NBTReflector.edit(barrier.getItemMeta(),ChatColor.WHITE.toString()));
             inv.setItem(
                     newCenter,
                     barrier

@@ -15,7 +15,6 @@ import kor.toxicity.cutscenemaker.util.gui.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import net.milkbowl.vault.chat.Chat;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -1110,7 +1109,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
             ));
             ItemStack gpt = new ItemStack(WrappedMaterial.getWrapper().getCommandBlock());
             ItemMeta gptMeta = gpt.getItemMeta();
-            ItemUtil.edit(gptMeta,ChatColor.GOLD + "Call ChatGPT",Collections.singletonList(ChatColor.GRAY + "(Left: add random dialog with ChatGPT)"));
+            NBTReflector.edit(gptMeta,ChatColor.GOLD + "Call ChatGPT",Collections.singletonList(ChatColor.GRAY + "(Left: add random dialog with ChatGPT)"));
             gpt.setItemMeta(gptMeta);
             inv.setItem(7,gpt);
             setupException();

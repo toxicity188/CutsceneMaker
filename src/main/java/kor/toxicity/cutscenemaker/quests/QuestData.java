@@ -105,7 +105,7 @@ public final class QuestData extends CutsceneData {
             List<QuestSet> sub = questList.subList(0, Math.min(questList.size(), 9));
             sub.sort(Comparator.naturalOrder());
             for (QuestSet questSet : sub) {
-                inventory.setItem(loop, ItemUtil.setInternalTag(questSet.getIcon(p),INTERNAL_NAME_KEY,questSet.getName()));
+                inventory.setItem(loop, NBTReflector.setInternalTag(questSet.getIcon(p),INTERNAL_NAME_KEY,questSet.getName()));
                 loop++;
             }
             final QuestCurrent current = new QuestCurrent(new ArrayList<>(QuestSet.TYPE_LIST));
@@ -148,7 +148,7 @@ public final class QuestData extends CutsceneData {
                                 break;
                         }
                     } else {
-                        QuestSet get = QUEST_SET_MAP.get(ItemUtil.readInternalTag(item, INTERNAL_NAME_KEY));
+                        QuestSet get = QUEST_SET_MAP.get(NBTReflector.readInternalTag(item, INTERNAL_NAME_KEY));
                         if (get == null) return;
                         switch (button) {
                             case LEFT:
@@ -213,7 +213,7 @@ public final class QuestData extends CutsceneData {
                     List<QuestSet> subList = questSets.subList(k, Math.min(k + 9, questSets.size()));
                     subList.sort(Comparator.naturalOrder());
                     for (QuestSet questSet : subList) {
-                        inventory.setItem(i++, ItemUtil.setInternalTag(questSet.getIcon(p),INTERNAL_NAME_KEY,questSet.getName()));
+                        inventory.setItem(i++, NBTReflector.setInternalTag(questSet.getIcon(p),INTERNAL_NAME_KEY,questSet.getName()));
                     }
                     for (int t = 0; t < 9 - subList.size(); t++) {
                         inventory.setItem(i++,null);

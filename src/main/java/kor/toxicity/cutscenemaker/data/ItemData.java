@@ -5,7 +5,7 @@ import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
 import kor.toxicity.cutscenemaker.util.ItemBuilder;
-import kor.toxicity.cutscenemaker.util.ItemUtil;
+import kor.toxicity.cutscenemaker.util.NBTReflector;
 import kor.toxicity.cutscenemaker.util.gui.InventoryGui;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -40,7 +40,7 @@ public final class ItemData extends CutsceneData implements Listener {
         if (!(e.getWhoClicked() instanceof Player)) return;
         ItemStack current;
         if ((current = e.getCurrentItem()) != null) {
-            ItemBuilder builder = ITEM_MAP.get(ItemUtil.readInternalTag(current,ITEM_KEY));
+            ItemBuilder builder = ITEM_MAP.get(NBTReflector.readInternalTag(current,ITEM_KEY));
             if (builder != null) {
                 ItemStack get = builder.get((Player) e.getWhoClicked());
                 if (get.isSimilar(current)) return;
@@ -55,7 +55,7 @@ public final class ItemData extends CutsceneData implements Listener {
         Inventory inv = player.getInventory();
         for (ItemStack stack : inv) {
             if (stack != null) {
-                ItemBuilder builder = ITEM_MAP.get(ItemUtil.readInternalTag(stack, ITEM_KEY));
+                ItemBuilder builder = ITEM_MAP.get(NBTReflector.readInternalTag(stack, ITEM_KEY));
                 if (builder != null) inv.setItem(i,builder.get(player));
             }
             i++;
@@ -72,7 +72,7 @@ public final class ItemData extends CutsceneData implements Listener {
         load.getAllFiles().forEach(s -> {
             ItemStack stack = load.getItemStack(s);
             if (stack != null) {
-                ITEM_MAP.put(s,new ItemBuilder((enableTagging) ? ItemUtil.setInternalTag(stack,ITEM_KEY,s) : stack));
+                ITEM_MAP.put(s,new ItemBuilder((enableTagging) ? NBTReflector.setInternalTag(stack,ITEM_KEY,s) : stack));
             }
         });
         inventory.getAllFiles().forEach(s -> {

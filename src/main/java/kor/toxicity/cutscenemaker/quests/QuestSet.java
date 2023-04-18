@@ -770,8 +770,8 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
         }
         private ItemStack getStringItem(@NotNull ItemStack item, @NotNull String display, @Nullable String name, String... lore) {
             item.setItemMeta(
-                    ItemUtil.addLore(
-                            ItemUtil.edit(
+                    NBTReflector.addLore(
+                            NBTReflector.edit(
                                     item.getItemMeta(),
                                     ChatColor.WHITE + TextUtil.colored(display),
                                     (name == null) ? NULL_ARRAY : Collections.singletonList(ChatColor.WHITE + TextUtil.colored(name))
@@ -782,9 +782,9 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
             return item;
         }
         private ItemStack getArrayItem(@NotNull ItemStack item, @NotNull String display ,@Nullable String... array) {
-            item.setItemMeta(ItemUtil.addLore((array == null || array.length == 0) ?
-                    ItemUtil.edit(item.getItemMeta(),ChatColor.WHITE + TextUtil.colored(display),NULL_ARRAY) :
-                    ItemUtil.edit(item.getItemMeta(),ChatColor.WHITE + TextUtil.colored(display),
+            item.setItemMeta(NBTReflector.addLore((array == null || array.length == 0) ?
+                    NBTReflector.edit(item.getItemMeta(),ChatColor.WHITE + TextUtil.colored(display),NULL_ARRAY) :
+                    NBTReflector.edit(item.getItemMeta(),ChatColor.WHITE + TextUtil.colored(display),
                             (array.length == 1) ?
                                     Collections.singletonList(ChatColor.YELLOW + " - " + ChatColor.WHITE + TextUtil.colored(array[0])) :
                                     Arrays.stream(array).map(s -> ChatColor.YELLOW + " - " + ChatColor.WHITE + TextUtil.colored(s)).collect(Collectors.toList())

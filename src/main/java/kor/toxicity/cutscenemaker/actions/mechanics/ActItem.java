@@ -78,7 +78,7 @@ public class ActItem extends CutsceneAction {
             if (tag != null) {
                 Map<String, String> tags = new HashMap<>();
                 tag.entrySet().stream().filter(e -> e.getValue().getAsString() != null).forEach(e -> tags.put(e.getKey(), e.getValue().getAsString()));
-                give = ItemUtil.setInternalTag(give, tags);
+                give = NBTReflector.setInternalTag(give, tags);
             }
             ItemBuilder builder = new ItemBuilder(give);
             apply = builder::get;
