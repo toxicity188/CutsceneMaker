@@ -1,4 +1,4 @@
-package kor.toxicity.cutscenemaker.shaded.mewin.WGRegionEvents;
+package kor.toxicity.cutscenemaker.shaded.com.mewin.WGRegionEvents;
 
 /**
  * describes the way how a player left/entered a region

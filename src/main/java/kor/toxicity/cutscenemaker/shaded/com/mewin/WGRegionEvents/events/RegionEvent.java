@@ -1,7 +1,7 @@
-package kor.toxicity.cutscenemaker.shaded.mewin.WGRegionEvents.events;
+package kor.toxicity.cutscenemaker.shaded.com.mewin.WGRegionEvents.events;
 
 import kor.toxicity.cutscenemaker.events.ICutsceneEvent;
-import kor.toxicity.cutscenemaker.shaded.mewin.WGRegionEvents.MovementWay;
+import kor.toxicity.cutscenemaker.shaded.com.mewin.WGRegionEvents.MovementWay;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;

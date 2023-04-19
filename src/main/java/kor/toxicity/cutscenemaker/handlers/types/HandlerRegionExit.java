@@ -1,7 +1,7 @@
 package kor.toxicity.cutscenemaker.handlers.types;
 
 import kor.toxicity.cutscenemaker.handlers.ActionHandler;
-import kor.toxicity.cutscenemaker.shaded.mewin.WGRegionEvents.events.RegionLeaveEvent;
+import kor.toxicity.cutscenemaker.shaded.com.mewin.WGRegionEvents.events.RegionLeaveEvent;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.reflect.DataField;
 import org.bukkit.Bukkit;

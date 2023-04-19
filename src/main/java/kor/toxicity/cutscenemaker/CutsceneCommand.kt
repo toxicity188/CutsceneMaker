@@ -220,7 +220,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
         val item = CommandAPI("cm i")
             .create("get").apply {
                 aliases = arrayOf("g","지급")
-                description = "get the item"
+                description = "get an item."
                 usage = "get ${CC.YELLOW}<key>"
                 length = 2
                 allowedSender = arrayOf(SenderType.PLAYER)
@@ -241,7 +241,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
             .done()
             .create("set").apply {
                 aliases = arrayOf("s","설정")
-                description = "set the item"
+                description = "set an item."
                 usage = "set ${CC.YELLOW}<file> <key>"
                 length = 3
                 allowedSender = arrayOf(SenderType.PLAYER)
@@ -249,7 +249,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
                     (sender as Player).run {
                         val item = inventory.itemInMainHand
                         if (item == null || item.type == Material.AIR) {
-                            CutsceneMaker.send(sender, "hold the item you want to save.")
+                            CutsceneMaker.send(sender, "hold an item you want to save.")
                         } else plugin.manager.runTaskAsynchronously {
                             try {
                                 val file = File(File(plugin.dataFolder, "Items").apply { mkdir() }, "${args[2]}.yml").apply {
@@ -262,7 +262,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
                                 }
                                 CutsceneMaker.send(sender, "successfully saved.")
                             } catch (ex: Exception) {
-                                CutsceneMaker.send(sender, "unable to save the item")
+                                CutsceneMaker.send(sender, "unable to save an item")
                             }
                         }
                     }
@@ -339,7 +339,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
             .done()
             .create("run").apply {
                 aliases = arrayOf("r","실행")
-                description = "run the Action."
+                description = "run a Action."
                 length = 1
                 usage = "run ${CC.YELLOW}<action>"
                 allowedSender = arrayOf(SenderType.LIVING_ENTITY)
@@ -357,7 +357,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
             .done()
             .create("item").apply {
                 aliases = arrayOf("i","아이템")
-                description = "show the CutsceneMaker's item command."
+                description = "show a CutsceneMaker's item command."
                 usage = "item"
                 executor = { commandSender, strings ->
                     item.execute(if (strings.size > 1) strings[1] else "help",commandSender,strings)
@@ -369,7 +369,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
             .done()
             .create("animation").apply {
                 aliases = arrayOf("a","anim","애니메이션")
-                description = "show the CutsceneMaker's block animation command."
+                description = "show a CutsceneMaker's block animation command."
                 usage = "animation"
                 executor = { commandSender, strings ->
                     animation.execute(if (strings.size > 1) strings[1] else "help",commandSender,strings)
@@ -381,7 +381,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
             .done()
             .create("temp").apply {
                 aliases = arrayOf("t","storage","s","보관함")
-                description = "show the CutsceneMaker's temp storage command."
+                description = "show a CutsceneMaker's temp storage command."
                 usage = "temp"
                 executor = { commandSender, strings ->
                     temp.execute(if (strings.size > 1) strings[1] else "help",commandSender,strings)

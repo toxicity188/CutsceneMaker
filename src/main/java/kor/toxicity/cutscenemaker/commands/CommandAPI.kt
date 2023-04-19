@@ -2,38 +2,50 @@ package kor.toxicity.cutscenemaker.commands
 
 import kor.toxicity.cutscenemaker.CC
 import kor.toxicity.cutscenemaker.CM
+import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import java.lang.StringBuilder
+import java.util.regex.Pattern
 
 class CommandAPI(prefix: String) {
+    companion object {
+        private val NUMBER_PATTERN = Pattern.compile("^(?<number>([1-9])+)")
+    }
     private val commandMap = LinkedHashMap<String, CommandData>()
+    private val defaultCommand: (CommandSender,Array<String>) -> Unit = { sender, args ->
+        val s = commandMap.size / 6 + 1
+        val page = if (args.size > 1) try {
+            args[args.size - 1].toInt().coerceAtLeast(1).coerceAtMost(s)
+        } catch (ex: Exception) {
+            1
+        } else 1
+        val p = (page - 1) * 6
+        sender.sendMessage("")
+        sender.sendMessage("${CC.YELLOW}[${CC.WHITE}/${CC.GOLD}$prefix${CC.YELLOW}] ${CC.GRAY}==========< page $page / $s >==========")
+        sender.sendMessage("")
+        sender.sendMessage(" ${CC.GRAY}Arguments: ${CC.YELLOW}<arg> ${CC.GRAY}- ${CC.WHITE}required${CC.GRAY}, ${CC.DARK_AQUA}[arg] ${CC.GRAY}- ${CC.WHITE}optional")
+        sender.sendMessage(" ${CC.GRAY}Aliases: (aliases)")
+        sender.sendMessage("")
+        val value = commandMap.values.toList()
+        value.subList(p,(p + 6).coerceAtMost(value.size)).forEach {
+            if (!it.opOnly || sender.isOp) sender.sendMessage("/${CC.GOLD}$prefix ${CC.WHITE}${it.usage} ${
+                if (it.aliases.isNotEmpty()) StringBuilder().append(CC.GRAY).append('(').apply {
+                    it.aliases.forEachIndexed { index, s ->
+                        append(s)
+                        if (index < it.aliases.size - 1) append(",")
+                    }
+                }.append(')').append(CC.WHITE) else CC.WHITE.toString()
+            } - ${CC.GREEN}${it.description}")
+        }
+        sender.sendMessage("")
+    }
     init {
         create("help").apply {
             aliases = arrayOf("h","l","리스트","도움말")
             description = "show the list of registered command."
-            usage = "help ${CC.YELLOW}[page]"
+            usage = "help ${CC.DARK_AQUA}[page]"
             opOnly = false
-            executor = { sender, args ->
-                val s = commandMap.size / 6 + 1
-                val page = if (args.size > 1) try {
-                    args[args.size - 1].toInt().coerceAtLeast(1).coerceAtMost(s)
-                } catch (ex: Exception) {
-                    1
-                } else 1
-                val p = (page - 1) * 6
-                sender.sendMessage("${CC.YELLOW}[${CC.WHITE}/${CC.GOLD}$prefix${CC.YELLOW}] ${CC.GRAY}==========< page $page / $s >==========")
-                val value = commandMap.values.toList()
-                value.subList(p,(p + 6).coerceAtMost(value.size)).forEach {
-                   if (!it.opOnly || sender.isOp) sender.sendMessage("/${CC.GOLD}$prefix ${CC.WHITE}${it.usage} ${
-                       if (it.aliases.isNotEmpty()) StringBuilder().append(CC.DARK_GRAY).append('(').apply {
-                           it.aliases.forEachIndexed { index, s ->
-                               append(s)
-                               if (index < it.aliases.size - 1) append(",")
-                           }
-                       }.append(')').append(CC.WHITE) else CC.WHITE.toString()
-                   } - ${CC.GREEN}${it.description}")
-                }
-            }
+            executor = defaultCommand
         }.done()
     }
 
@@ -53,13 +65,21 @@ class CommandAPI(prefix: String) {
                 }
             }")
             executor(sender,args)
-        } ?: CM.send(sender,"Unknown Command: $command")
+        } ?: run {
+            val matcher = NUMBER_PATTERN.matcher(args.last())
+            if (matcher.find()) {
+                val l = args.toMutableList()
+                l[l.size - 1] = "help"
+                l.add(matcher.group("number"))
+                defaultCommand(sender,l.toTypedArray())
+            } else defaultCommand(sender,args)
+        }
     }
     fun tabComplete(command: String, sender: CommandSender, args: Array<String>): List<String>? = (commandMap[command] ?: commandMap.values.firstOrNull { it.aliases.contains(command) })?.run {
         if (opOnly && !sender.isOp) return null
         tabComplete(sender,args)
     }
-    fun getCommandList(sender: CommandSender) = commandMap.entries.filter {
+    private fun getCommandList(sender: CommandSender) = commandMap.entries.filter {
         !it.value.opOnly || sender.isOp
     }.map {
         it.key

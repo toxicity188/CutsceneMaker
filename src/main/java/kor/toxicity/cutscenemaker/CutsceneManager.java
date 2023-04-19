@@ -4,7 +4,7 @@ import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import de.slikey.effectlib.EffectManager;
 import kor.toxicity.cutscenemaker.events.UserDataLoadEvent;
-import kor.toxicity.cutscenemaker.shaded.mewin.WGRegionEvents.WGRegionEventsListener;
+import kor.toxicity.cutscenemaker.shaded.com.mewin.WGRegionEvents.WGRegionEventsListener;
 import kor.toxicity.cutscenemaker.skript.SkManager;
 import kor.toxicity.cutscenemaker.util.DataContainer;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
@@ -17,6 +17,8 @@ import kor.toxicity.cutscenemaker.util.vars.VarsContainer;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.bstats.bukkit.Metrics;
+import org.bstats.charts.SimplePie;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -86,6 +88,7 @@ public final class CutsceneManager {
         if (Bukkit.getPluginManager().isPluginEnabled("Skript")) {
             SkManager.registerAddon();
         }
+        new Metrics(plugin,CutsceneMaker.BSTATS_ID);
     }
     public static boolean onDelay(Player player) {
         return applyDelay == null || applyDelay.apply(player);

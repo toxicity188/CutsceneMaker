@@ -1,7 +1,7 @@
-package kor.toxicity.cutscenemaker.shaded.mewin.WGRegionEvents;
+package kor.toxicity.cutscenemaker.shaded.com.mewin.WGRegionEvents;
 
-import kor.toxicity.cutscenemaker.shaded.mewin.WGRegionEvents.events.RegionEnterEvent;
-import kor.toxicity.cutscenemaker.shaded.mewin.WGRegionEvents.events.RegionLeaveEvent;
+import kor.toxicity.cutscenemaker.shaded.com.mewin.WGRegionEvents.events.RegionEnterEvent;
+import kor.toxicity.cutscenemaker.shaded.com.mewin.WGRegionEvents.events.RegionLeaveEvent;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;

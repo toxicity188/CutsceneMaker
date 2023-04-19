@@ -1,25 +1,24 @@
-package kor.toxicity.cutscenemaker.shaded.mewin.WGRegionEvents.events;
+package kor.toxicity.cutscenemaker.shaded.com.mewin.WGRegionEvents.events;
 
-import kor.toxicity.cutscenemaker.shaded.mewin.WGRegionEvents.MovementWay;
+import kor.toxicity.cutscenemaker.shaded.com.mewin.WGRegionEvents.MovementWay;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.player.PlayerEvent;
 import org.codemc.worldguardwrapper.region.IWrappedRegion;
 
 /**
- * event that is triggered before a player enters a WorldGuard region, can be cancelled sometimes
+ * event that is triggered before a player leaves a WorldGuard region, can be cancelled sometimes
  * @author mewin
  */
-public class RegionEnterEvent extends RegionEvent implements Cancellable
-{
+public class RegionLeaveEvent extends RegionEvent  implements Cancellable {
     private boolean cancelled, cancellable;
     /**
-     * creates a new RegionEnterEvent
-     * @param region the region the player is entering
+     * creates a new RegionLeaveEvent
+     * @param region the region the player is leaving
      * @param player the player who triggered the event
-     * @param movement the type of movement how the player enters the region
+     * @param movement the type of movement how the player leaves the region
      */
-    public RegionEnterEvent(IWrappedRegion region, Player player, MovementWay movement, PlayerEvent parent)
+    public RegionLeaveEvent(IWrappedRegion region, Player player, MovementWay movement, PlayerEvent parent)
     {
         super(region, player, movement, parent);
         cancelled = false;
@@ -34,8 +33,8 @@ public class RegionEnterEvent extends RegionEvent implements Cancellable
     
     /**
      * sets whether this event should be cancelled
-     * when the event is cancelled the player will not be able to move into the region
-     * @param cancelled true if the player should be stopped from moving into the region
+     * when the event is cancelled the player will not be able to move out of the region
+     * @param cancelled true if the player should be stopped from moving out of the region
      */
     @Override
     public void setCancelled(boolean cancelled)
@@ -60,7 +59,7 @@ public class RegionEnterEvent extends RegionEvent implements Cancellable
     
     
     /**
-     * sometimes you can not cancel an event, i.e. if a player entered a region by spawning inside of it
+     * sometimes you can not cancel an event, i.e. if a player left a region by dying inside of it
      * @return true, if you can cancel this event
      */
     public boolean isCancellable()
@@ -71,7 +70,7 @@ public class RegionEnterEvent extends RegionEvent implements Cancellable
     protected void setCancellable(boolean cancellable)
     {
         this.cancellable = cancellable;
-        
+
         if (!this.cancellable)
         {
             this.cancelled = false;
