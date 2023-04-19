@@ -71,7 +71,7 @@ public final class ActionData extends CutsceneData {
         actions.put("opentemp", ActOpenTemp.class);
 
         if (Bukkit.getPluginManager().isPluginEnabled("Skript")) {
-            actions.put("kor/toxicity/cutscenemaker/skript", ActSetSkriptVar.class);
+            actions.put("skript", ActSetSkriptVar.class);
         }
         if (Bukkit.getPluginManager().isPluginEnabled("Vault")) {
             actions.put("addmoney", ActAddMoney.class);
