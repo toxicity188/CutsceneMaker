@@ -21,9 +21,9 @@ public class ActKill extends CutsceneAction {
     @Override
     public void apply(LivingEntity entity) {
         if (entity instanceof Player) {
-            EntityManager manager = EntityManager.getInstance();
-            if (bound) manager.remove((Player) entity,key);
-            else manager.remove(key);
+            EntityManager m = manager.getEntityManager();
+            if (bound) m.remove((Player) entity,key);
+            else m.remove(key);
         }
     }
 }

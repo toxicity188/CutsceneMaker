@@ -147,7 +147,16 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
     public void warn(String s) {
         CutsceneMaker.warn(s + " (QuestSet " + name + " in file \"" + fileName + "\".yml)");
     }
+
+    @NotNull
     public ItemStack getIcon(Player player) {
+        return getIcon(player,true);
+    }
+    @NotNull
+    public ItemStack getIconWithoutSuffix(Player player) {
+        return getIcon(player,false);
+    }
+    private ItemStack getIcon(Player player, boolean addSuffix) {
         ItemStack stack = CutsceneConfig.getInstance().getDefaultQuestIcon().clone();
         ItemMeta meta = stack.getItemMeta();
         meta.setDisplayName(ChatColor.WHITE + title.print(player));
@@ -189,7 +198,7 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
                 list.add(String.format(printer,time));
             }
         }
-        if (QuestData.suffix != null) list.addAll(QuestData.suffix);
+        if (addSuffix && QuestData.suffix != null) list.addAll(QuestData.suffix);
 
         meta.setLore(list);
         if (isCompleted(player)) meta.addEnchant(Enchantment.DURABILITY,0,true);

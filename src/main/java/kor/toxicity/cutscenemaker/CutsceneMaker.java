@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 public final class CutsceneMaker extends JavaPlugin {
 
     public static final String NAME = "[CutsceneMaker]";
-    public static final String BUILD_VERSION = "2023-04-19";
+    public static final String BUILD_VERSION = "2023-04-21";
     public static final int BSTATS_ID = 18237;
     private static final List<Runnable> LATE_CHECK = new ArrayList<>();
     public void addLateCheck(Runnable runnable) {
@@ -88,7 +88,6 @@ public final class CutsceneMaker extends JavaPlugin {
             return true;
         });
 
-        EntityManager.getInstance().setExecutor(this);
 
         load(t -> send("Plugin enabled."));
     }

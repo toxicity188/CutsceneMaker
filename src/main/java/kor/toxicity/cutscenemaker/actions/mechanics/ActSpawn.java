@@ -40,7 +40,7 @@ public class ActSpawn extends CutsceneAction {
     public void initialize() {
         super.initialize();
         Location loc = manager.getLocations().getValue(location);
-        EntityManager manager1 = EntityManager.getInstance();
+        EntityManager manager1 = manager.getEntityManager();
         if (loc == null) {
             CutsceneMaker.warn("location not found.");
         } else {

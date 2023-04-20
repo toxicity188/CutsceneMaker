@@ -42,7 +42,7 @@ public abstract class CutsceneAction {
         if (delay < 0) delay = 0;
         if (target != null) {
             invoke = e -> {
-                if (e instanceof Player) Optional.ofNullable(EntityManager.getInstance().get((Player) e,target)).map(CutsceneEntity::getEntity).ifPresent(this::apply);
+                if (e instanceof Player) Optional.ofNullable(manager.getEntityManager().get((Player) e,target)).map(CutsceneEntity::getEntity).ifPresent(this::apply);
             };
         } else {
             invoke = this::apply;

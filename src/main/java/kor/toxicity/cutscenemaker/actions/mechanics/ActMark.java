@@ -10,9 +10,11 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -36,11 +38,12 @@ public class ActMark extends CutsceneAction {
     public ActMark(CutsceneManager pl) {
         super(pl);
         if (manager == null) manager = pl.register(new Listener() {
-            private final ActRecall recall = new ActRecall(pl);
 
             @EventHandler
             public void onQuit(PlayerQuitEvent e) {
-                recall.apply(e.getPlayer());
+                Player player = e.getPlayer();
+                Location loc = LOCATION.remove(player);
+                if (loc != null) player.teleport(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
             }
         });
     }

@@ -21,12 +21,22 @@ public class ActDisguise extends CutsceneAction {
     @Override
     public void initialize() {
         super.initialize();
-        type = DisguiseAPI.getCustomDisguise(key);
-        if (type == null) CutsceneMaker.warn("The custom disguise \"" + key + "\" doesn't exist!");
+        try {
+            type = DisguiseAPI.getCustomDisguise(key);
+            if (type == null) CutsceneMaker.warn("The custom disguise \"" + key + "\" doesn't exist!");
+        } catch (Throwable throwable) {
+            CutsceneMaker.warn("LibsDisguise not found.");
+        }
     }
 
     @Override
     protected void apply(LivingEntity entity) {
-        if (type != null) DisguiseAPI.disguiseToAll(entity,type);
+        if (type != null) {
+            try {
+                DisguiseAPI.disguiseToAll(entity,type);
+            } catch (Throwable throwable) {
+                CutsceneMaker.warn("LibsDisguise not found.");
+            }
+        }
     }
 }

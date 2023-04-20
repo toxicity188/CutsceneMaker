@@ -3,6 +3,7 @@ package kor.toxicity.cutscenemaker;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import de.slikey.effectlib.EffectManager;
+import kor.toxicity.cutscenemaker.entities.EntityManager;
 import kor.toxicity.cutscenemaker.events.UserDataLoadEvent;
 import kor.toxicity.cutscenemaker.shaded.com.mewin.WGRegionEvents.WGRegionEventsListener;
 import kor.toxicity.cutscenemaker.skript.SkManager;
@@ -27,6 +28,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.metadata.MetadataValue;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
@@ -62,6 +65,8 @@ public final class CutsceneManager {
 
     private static final List<Player> delays = new ArrayList<>(1 << 8);
     private static Function<Player,Boolean> applyDelay;
+    @Getter
+    private final EntityManager entityManager;
 
     CutsceneManager(CutsceneMaker plugin) {
         this.plugin = plugin;
@@ -77,6 +82,7 @@ public final class CutsceneManager {
                 return true;
             } else return false;
         };
+        entityManager = new EntityManager(this);
 
         protocolLib = ProtocolLibrary.getProtocolManager();
         effectLib = new EffectManager(plugin);
@@ -131,6 +137,10 @@ public final class CutsceneManager {
     public boolean isSet(Player player, String name) {
         VarsContainer container;
         return (container = getVars(player)) != null && container.contains(name);
+    }
+
+    public MetadataValue createMetaData(Object value) {
+        return new FixedMetadataValue(plugin,value);
     }
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     private class CutsceneUser implements Listener {

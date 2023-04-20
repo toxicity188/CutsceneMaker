@@ -1,5 +1,6 @@
 package kor.toxicity.cutscenemaker.entities;
 
+import kor.toxicity.cutscenemaker.CutsceneManager;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.LivingEntity;
@@ -7,7 +8,7 @@ import org.bukkit.entity.Player;
 
 @RequiredArgsConstructor
 public class CutsceneEntity {
-    private static final String METADATA_KEY = "CutsceneMob";
+    static final String METADATA_KEY = "cutscene_mob_bound";
     @Getter
     private final LivingEntity entity;
 
@@ -15,8 +16,8 @@ public class CutsceneEntity {
         entity.remove();
     }
 
-    public void setBound(Player player) {
-        //TODO make a player bound code
+    public void setBound(CutsceneManager manager, Player player) {
+        entity.setMetadata(METADATA_KEY,manager.createMetaData(player));
     }
 
 }

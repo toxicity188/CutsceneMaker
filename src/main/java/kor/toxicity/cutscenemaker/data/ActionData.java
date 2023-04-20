@@ -69,6 +69,8 @@ public final class ActionData extends CutsceneData {
         actions.put("lazywarp", ActLazyWarp.class);
         actions.put("cooldown", ActCoolTime.class);
         actions.put("opentemp", ActOpenTemp.class);
+        actions.put("removemark", ActRemoveMark.class);
+        actions.put("clone", ActClone.class);
 
         if (Bukkit.getPluginManager().isPluginEnabled("Skript")) {
             actions.put("skript", ActSetSkriptVar.class);
@@ -104,7 +106,7 @@ public final class ActionData extends CutsceneData {
                     try {
                         CutsceneAction a = a(k);
                         container.add(a);
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         CutsceneMaker.warn("Error: " + e.getMessage() + " (Action " + s + ")");
                     }
                 });
