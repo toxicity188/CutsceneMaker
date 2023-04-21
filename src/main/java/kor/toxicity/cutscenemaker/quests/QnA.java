@@ -57,7 +57,7 @@ final class QnA extends EditorSupplier implements DialogAddon {
     @Override
     public void run(Dialog.DialogCurrent current) {
 
-        Inventory inventory = InvUtil.create((name != null) ? name.print(current.player) : (current.inventory != null ? current.inventory.getTitle() : current.talker + "'s question"),slot);
+        Inventory inventory = InvUtil.create((name != null) ? name.print(current.player) : (current.inventory != null ? current.player.getOpenInventory().getTitle() : current.talker + "'s question"),slot);
         ItemStack itemStack = current.inventory.getItem(CutsceneConfig.getInstance().getDefaultDialogCenter());
         buttonMap.forEach((i,b) -> inventory.setItem(i,b.builder.get(current.player)));
         if (itemStack != null) inventory.setItem(center,itemStack);
