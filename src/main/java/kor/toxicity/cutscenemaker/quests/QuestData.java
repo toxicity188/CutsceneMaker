@@ -121,7 +121,7 @@ public final class QuestData extends CutsceneData {
                         current
                 ));
             }
-            GuiRegister.registerNewGui(new GuiAdapter(p, inventory) {
+            GuiRegister.registerNewGui(new GuiAdapter(p, manager, inventory) {
                 @Override
                 public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
                     if (isPlayerInventory) return;

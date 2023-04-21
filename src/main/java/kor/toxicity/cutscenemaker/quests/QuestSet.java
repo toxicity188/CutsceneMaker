@@ -128,14 +128,17 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
         })));
         locationSet = (!set.isEmpty()) ? set.build(section.getString("Navigator","click the location you want go to!")) : null;
     }
-    private static Consumer<Player> getVarsConsumer(ConfigurationSection section, String key) {
+    private Consumer<Player> getVarsConsumer(ConfigurationSection section, String key) {
         return ConfigUtil.getStringList(section,key).map(l -> {
             Consumer<Player> consumer = null;
             for (String s : l) {
                 String[] t = TextUtil.split(s," ");
 
-                Consumer<Player> t2 = QuestUtil.getVarsConsumer(t[0],t[2],t[1]);
-                if (t2 == null) continue;
+                Consumer<Player> t2 = QuestUtil.getVarsConsumer(t[0],(t.length > 2) ? t[2] : null,t[1]);
+                if (t2 == null) {
+                    warn("Unable to read this action: " + s);
+                    continue;
+                }
 
                 if (consumer == null) consumer = t2;
                 else consumer = consumer.andThen(t2);
@@ -387,7 +390,7 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
         return name;
     }
 
-    static final class LocationSet {
+    final class LocationSet {
         private final List<NamedLocation> set = new ArrayList<>();
         private Inventory inventory;
 
@@ -414,7 +417,7 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
             return this;
         }
         void open(Player player) {
-            GuiRegister.registerNewGui(new GuiAdapter(player,inventory) {
+            GuiRegister.registerNewGui(new GuiAdapter(player,manager,inventory) {
                 @Override
                 public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
                     int t = slot - 9;
@@ -471,7 +474,7 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
                 inv = InvUtil.create(invName,6);
                 setupGui();
             }
-            return new GuiAdapter(player,inv) {
+            return new GuiAdapter(player,manager,inv) {
                 @Override
                 public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
                     switch (slot) {

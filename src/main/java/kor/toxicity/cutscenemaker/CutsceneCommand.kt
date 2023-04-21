@@ -142,8 +142,9 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
                                     YamlConfiguration().run {
                                         load(file)
                                         set(args[3],MemoryConfiguration().apply {
-                                            it.values.forEachIndexed { index, itemStack ->
-                                                set(index.toString(), itemStack)
+                                            var i = 0
+                                            it.values.forEach { itemStack ->
+                                                if (itemStack.type != Material.AIR) set((++i).toString(), itemStack)
                                             }
                                         })
                                         save(file)

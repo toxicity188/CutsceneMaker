@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 public final class CutsceneMaker extends JavaPlugin {
 
     public static final String NAME = "[CutsceneMaker]";
-    public static final String BUILD_VERSION = "2023-04-21";
+    public static final String BUILD_VERSION = "2023-04-22";
     public static final int BSTATS_ID = 18237;
     private static final List<Runnable> LATE_CHECK = new ArrayList<>();
     public void addLateCheck(Runnable runnable) {
@@ -95,7 +95,7 @@ public final class CutsceneMaker extends JavaPlugin {
     public void tempStorage(Player player) {
         Inventory inv = InvUtil.create(CutsceneConfig.getInstance().getTempStorageName().print(player),6);
         List<StorageItem> tempStorage = manager.getVars(player).getTempStorage();
-        GuiRegister.registerNewGui(new GuiAdapter(player,inv) {
+        GuiRegister.registerNewGui(new GuiAdapter(player,manager,inv) {
             @Override
             public void initialize() {
                 for (int i = 0; i < 53; i++) {

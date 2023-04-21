@@ -95,7 +95,7 @@ public final class NBTReflector {
 					return "";
 				}
 			};
-		} catch (Exception e) {
+		} catch (Exception ex) {
 			try {
 				Class<?> persistenceDataType = Class.forName("org.bukkit.persistence.PersistentDataType");
 				Class<?> persistentDataContainer = Class.forName("org.bukkit.persistence.PersistentDataContainer");
@@ -143,10 +143,12 @@ public final class NBTReflector {
 				};
 				readInternalTag = (i,k) -> {
 					try {
-						Object o = method.invoke(i.getItemMeta());
+						ItemMeta meta = i.getItemMeta();
+						if (meta == null) return "";
+						Object o = method.invoke(meta);
 						String s = (String) get.invoke(o,fromString.invoke(null,k),stringType);
 						return (s != null) ? s : "";
-					} catch (Exception e2) {
+					} catch (Exception e) {
 						e.printStackTrace();
 						return "";
 					}

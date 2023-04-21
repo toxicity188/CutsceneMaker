@@ -37,7 +37,7 @@ public final class ItemData extends CutsceneData implements Listener {
     }
     @EventHandler
     public void click(InventoryClickEvent e) {
-        if (!(e.getWhoClicked() instanceof Player)) return;
+        if (!(e.getWhoClicked() instanceof Player) && !enableTagging) return;
         ItemStack current;
         if ((current = e.getCurrentItem()) != null) {
             ItemBuilder builder = ITEM_MAP.get(NBTReflector.readInternalTag(current,ITEM_KEY));

@@ -1,10 +1,12 @@
 package kor.toxicity.cutscenemaker.quests;
 
 import kor.toxicity.cutscenemaker.CutsceneConfig;
+import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
+import kor.toxicity.cutscenemaker.util.ConfigUtil;
 import kor.toxicity.cutscenemaker.util.InvUtil;
 import kor.toxicity.cutscenemaker.util.ItemBuilder;
-import kor.toxicity.cutscenemaker.util.NBTReflector;
+import kor.toxicity.cutscenemaker.util.MetaBuilder;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import kor.toxicity.cutscenemaker.util.gui.GuiAdapter;
 import kor.toxicity.cutscenemaker.util.gui.GuiExecutor;
@@ -18,10 +20,10 @@ import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 final class QnA extends EditorSupplier implements DialogAddon {
     private final FunctionPrinter name;
@@ -59,7 +61,7 @@ final class QnA extends EditorSupplier implements DialogAddon {
         ItemStack itemStack = current.inventory.getItem(CutsceneConfig.getInstance().getDefaultDialogCenter());
         buttonMap.forEach((i,b) -> inventory.setItem(i,b.builder.get(current.player)));
         if (itemStack != null) inventory.setItem(center,itemStack);
-        GuiRegister.registerNewGui(new GuiAdapter(current.player, inventory) {
+        GuiRegister.registerNewGui(new GuiAdapter(current.player,manager, inventory) {
             @Override
             public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
                 Button button1 = buttonMap.get(slot);
@@ -88,103 +90,265 @@ final class QnA extends EditorSupplier implements DialogAddon {
     }
 
     private class QnAEditor extends Editor {
-        private final ConfigurationSection resources = QuestUtil.copy(section);
-        private final Map<Integer,ConfigurationSection> sectionMap = new HashMap<>();
-        private final String name = getString(resources,"Name").orElse(null);
-        private int slot = getInt(resources,"Slot").orElse(3);
+        private final ConfigurationSection resource = QuestUtil.copy(section);
+        private String name = ConfigUtil.getString(resource,"Name").orElse(null);
+        private int slot = ConfigUtil.getInt(resource,"Slot").orElse(3);
 
-        private int newCenter = Math.floorDiv(slot+1,2)*9-5;
+        private final Map<Integer,ItemEditor> editorMap = new HashMap<>();
 
-        QnAEditor(Player player) {
-            super(player, "QnA");
-            getConfig(resources,"Button").ifPresent(c -> c.getKeys(false).forEach(s -> getConfig(c,s).ifPresent(t -> {
+        private class ItemEditor {
+            private ItemBuilder item;
+            private String[] dialogs;
+            private ItemEditor(ConfigurationSection section) {
+                item = InvUtil.fromConfig(section,"Item");
+                dialogs = ConfigUtil.getStringList(section,"Dialog").map(l -> l.toArray(new String[0])).orElse(null);
+            }
+            private void open() {
+                Inventory subInv = InvUtil.create(invName + ": Button",3);
+                subInv.setItem(
+                        26,
+                        new MetaBuilder(new ItemStack(Material.STONE_BUTTON))
+                                .setDisplayName(ChatColor.WHITE + "Back")
+                                .setLore(
+                                        Arrays.asList(
+                                                "",
+                                                ChatColor.GRAY + "(Click: back)"
+                                        )
+                                )
+                                .build()
+                );
+                GuiRegister.registerNewGui(new GuiAdapter(player,manager,subInv) {
+                    @Override
+                    public void initialize() {
+                        subInv.setItem(11, (item != null) ? new MetaBuilder(item.get())
+                                .addLore(Arrays.asList(
+                                        "",
+                                        ChatColor.GRAY + "(Click player inventory: change item)"
+                                ))
+                                .build() : null);
+                        List<String> strings = new ArrayList<>((dialogs == null) ? Collections.singletonList(ChatColor.GRAY + "<none>") : Arrays.stream(dialogs).map(s -> ChatColor.GRAY + " - " + ChatColor.WHITE + s).collect(Collectors.toList()));
+                        strings.add("");
+                        strings.add(ChatColor.GRAY + "(Left: add Dialog, Right - Delete last dialog)");
+                        subInv.setItem(
+                                15,
+                                new MetaBuilder(new ItemStack(Material.BOOK))
+                                        .setDisplayName(ChatColor.WHITE + "Dialogs")
+                                        .setLore(strings)
+                                        .build()
+                        );
+                    }
+                    @Override
+                    public void onClick(ItemStack clicked, int slot, MouseButton button, boolean isPlayerInventory) {
+                        if (isPlayerInventory) {
+                            ItemStack stack = clicked.clone();
+                            clicked.setAmount(0);
+                            if (item != null) InvUtil.give(player,item.get());
+                            item = new ItemBuilder(stack);
+                            initialize();
+                            player.updateInventory();
+                        } else switch (slot) {
+                            case 15:
+                                switch (button) {
+                                    case LEFT:
+                                    case LEFT_WITH_SHIFT:
+                                        callbackSign(new String[] {
+                                                "",
+                                                "write the dialog here!",
+                                                "",
+                                                ""
+                                        },s -> {
+                                            if (!QuestData.DIALOG_MAP.containsKey(s)) {
+                                                CutsceneMaker.send(player,"The Dialog named \"" + s + "\" doesn't exist!");
+                                            } else {
+                                                dialogs = QuestUtil.plusElement(dialogs,s);
+                                                initialize();
+                                                player.updateInventory();
+                                            }
+                                        });
+                                        break;
+                                    case RIGHT:
+                                    case RIGHT_WITH_SHIFT:
+                                        dialogs = QuestUtil.deleteLast(dialogs);
+                                        initialize();
+                                        player.updateInventory();
+                                        break;
+                                }
+                                break;
+                            case 26:
+                                updateGui();
+                                break;
+                        }
+                    }
+                });
+            }
+        }
+
+        public QnAEditor(Player player) {
+            super(player,"QnA");
+            ConfigUtil.getConfig(resource,"Button").ifPresent(c -> c.getKeys(false).forEach(k -> ConfigUtil.getConfig(c,k).ifPresent(c2 -> {
                 try {
-                    sectionMap.put(Integer.parseInt(s),t);
-                } catch (Exception ignored) {}
+                    editorMap.put(Integer.parseInt(k),new ItemEditor(c2));
+                } catch (NumberFormatException ignored) {}
             })));
         }
 
-        private void setCenter(int i) {
-            slot = i;
-            newCenter = Math.floorDiv(slot+1,2)*9-5;
-        }
-
-        private void reopen() {
-            manager.runTaskLater(this::updateGui,5);
-        }
-        private Inventory getInventory() {
-            Inventory inv = InvUtil.create(invName,slot + 1);
-            sectionMap.forEach((k,v) -> {
-                ItemBuilder builder = InvUtil.fromConfig(v,"Item");
-                if (builder != null) inv.setItem(
-                        k,
-                        addLore(builder.get(player), Arrays.asList(
-                                "",
-                                ChatColor.GRAY + "(Left: open editor)",
-                                ChatColor.GRAY + "(Shift+Left: delete this button.)"
-                        ))
-                );
-            });
-            ItemStack barrier = new ItemStack(Material.BARRIER);
-            barrier.setItemMeta(NBTReflector.edit(barrier.getItemMeta(),ChatColor.WHITE.toString()));
-            inv.setItem(
-                    newCenter,
-                    barrier
-            );
-            return inv;
-        }
         @Override
-        public GuiExecutor getMainExecutor() {
-            return new GuiAdapter(player,getInventory()) {
+        GuiExecutor getMainExecutor() {
+            Inventory inventory = InvUtil.create(invName,slot + 1);
+            Iterator<Map.Entry<Integer,ItemEditor>> entryIterator = editorMap.entrySet().iterator();
+            while (entryIterator.hasNext()) {
+                Map.Entry<Integer,ItemEditor> entry = entryIterator.next();
+                ItemEditor v = entry.getValue();
+                Integer k = entry.getKey();
+                ItemBuilder builder = v.item;
+                if (builder != null) inventory.setItem(k,new MetaBuilder(builder.get())
+                        .addLore(Arrays.asList(
+                                "",
+                                ChatColor.GRAY + "(Left: Open Item Editor, Right: Relocate this item)"
+                        ))
+                        .build());
+                else entryIterator.remove();
+            }
+            int center = Math.floorDiv(slot+1,2)*9-5;
+            ItemStack barrier = new MetaBuilder(new ItemStack(Material.BARRIER))
+                    .setDisplayName(ChatColor.RED + "Talker")
+                    .build();
+            inventory.setItem(center, barrier);
+            int q = slot * 9;
+            inventory.setItem(
+                    q + 2,
+                    new MetaBuilder(new ItemStack(Material.BOOK))
+                            .setDisplayName(ChatColor.WHITE + "Rename")
+                            .setLore(Arrays.asList(
+                                    "",
+                                    ChatColor.WHITE + "Rename this inventory.",
+                                    ChatColor.YELLOW + "Current Name: " + ((name != null) ? ChatColor.WHITE + name : ChatColor.GRAY + "<none>"),
+                                    "",
+                                    ChatColor.GRAY + "(Click: rename this inventory)"
+                            ))
+                            .build()
+            );
+            inventory.setItem(
+                    q + 4,
+                    new MetaBuilder(new ItemStack(Material.PAPER))
+                            .setDisplayName(ChatColor.WHITE + "Resize")
+                            .setLore(Arrays.asList(
+                                    "",
+                                    ChatColor.WHITE + "Resize this inventory.",
+                                    ChatColor.YELLOW + "Current Size: " + ChatColor.WHITE + QnAEditor.this.slot,
+                                    "",
+                                    ChatColor.GRAY + "(Click: resize this inventory)"
+                            ))
+                            .build()
+            );
+            inventory.setItem(
+                    q + 6,
+                    new MetaBuilder(new ItemStack(Material.CHEST))
+                            .setDisplayName(ChatColor.WHITE + "Change layout")
+                            .setLore(Arrays.asList(
+                                    "",
+                                    ChatColor.WHITE + "Change the layout of this QnA.",
+                                    "",
+                                    ChatColor.GRAY + "(Click: change layout)"
+                            ))
+                            .build()
+            );
+            return new GuiAdapter(player,manager,inventory) {
                 @Override
-                public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
-                    ConfigurationSection get = sectionMap.get(slot);
-                    if (get != null) openButtonEditor(slot,get);
+                public void onClick(ItemStack clicked, int slot, MouseButton button, boolean isPlayerInventory) {
+                    if (slot == q + 2) {
+                        openChat(new String[]{
+                                ChatColor.YELLOW + "enter a value in the chat. " + ChatColor.GOLD + "cancel: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "cancel" + ChatColor.WHITE + "\"",
+                                ChatColor.GOLD + "remove: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "null" + ChatColor.WHITE + "\""
+                        }, s -> {
+                            if ("null".equals(s)) {
+                                CutsceneMaker.send(player, "successfully changed to <none>.");
+                                name = null;
+                            } else {
+                                CutsceneMaker.send(player, "successfully changed to " + s + ".");
+                                name = s;
+                            }
+                            reopen();
+                        });
+                    }
+                    else if (slot == q + 4) {
+                        openSign(new String[]{
+                                "",
+                                "write the size here!",
+                                "",
+                                ""
+                        }, s -> {
+                            try {
+                                QnAEditor.this.slot = Math.min(5, Math.max(3, Integer.parseInt(s)));
+                            } catch (NumberFormatException e) {
+                                CutsceneMaker.send(player, "An argument \"" + s + "\" is not an integer!");
+                            }
+                        });
+                    }
+                    else if (slot == q + 6) {
+                        Inventory callbackInv = InvUtil.create("Put your item in here!",QnAEditor.this.slot);
+                        callbackInv.setItem(center,barrier);
+                        editorMap.forEach((k,v) -> {
+                            ItemBuilder builder = v.item;
+                            callbackInv.setItem(k,(builder != null) ? builder.get() : null);
+                        });
+                        openInventory(callbackInv,m -> m.forEach((k, v) -> {
+                            ConfigurationSection configuration = new MemoryConfiguration();
+                            configuration.set("Item",v);
+                            if (v.getType() != Material.AIR) {
+                                ItemEditor editor = editorMap.get(k);
+                                editorMap.put(k,(editor != null) ? editor : new ItemEditor(configuration));
+                            }
+                            else editorMap.remove(k);
+                        }));
+                    }
+                    else if (clicked.getType() != Material.BARRIER) {
+                        switch (button) {
+                            case LEFT:
+                            case LEFT_WITH_SHIFT:
+                                ItemEditor editor = editorMap.get(slot);
+                                if (editor != null) editor.open();
+                                break;
+                            case RIGHT:
+                            case RIGHT_WITH_SHIFT:
+                                openSign(new String[]{
+                                        "",
+                                        "write the slot here!",
+                                        "",
+                                        ""
+                                },s -> {
+                                    try {
+                                        int t = Integer.parseInt(s);
+                                        ItemEditor editor1 = editorMap.remove(slot);
+                                        if (editor1 != null) editorMap.put(t,editor1);
+                                    } catch (NumberFormatException e) {
+                                        CutsceneMaker.send(player,"A argument \"" + s + "\" is not an integer!");
+                                    }
+                                });
+                                break;
+                        }
+                    }
                 }
             };
         }
-        private void openButtonEditor(int slot, ConfigurationSection button) {
-            ItemBuilder item = InvUtil.fromConfig(button,"Item");
-            if (item == null) return;
-
-            ItemStack defItem = item.get(player);
-            Inventory sub = InvUtil.create(invName + ": " + slot,6);
-            sub.setItem(13,defItem);
-            GuiRegister.registerNewGui(new GuiAdapter(player,sub) {
-                private ItemStack stack = defItem;
-                private final String[] dialogs = getStringList(button,"Dialog").map(l -> l.toArray(new String[0])).orElse(null);
-                @Override
-                public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
-                    if (item.getType() == Material.AIR) return;
-                    if (isPlayerInventory) {
-                        sub.setItem(13,item);
-                        InvUtil.give(player,stack);
-                        stack = sub.getItem(13);
-                        item.setAmount(0);
-                    } else {
-
-                    }
-                }
-            });
+        private void reopen() {
+            manager.runTaskLater(this::updateGui, 5);
         }
-        private ItemStack addLore(ItemStack stack, List<String> lore) {
-            ItemMeta meta = stack.getItemMeta();
-            List<String> l = meta.getLore();
-            if (l == null) l = new ArrayList<>();
-            l.addAll(lore);
-            meta.setLore(l);
-            stack.setItemMeta(meta);
-            return stack;
-        }
-
         @Override
-        public ConfigurationSection getSaveData() {
-            ConfigurationSection buttonSection = new MemoryConfiguration();
-            sectionMap.forEach((k,v) -> buttonSection.set(Integer.toString(k),v));
-            resources.set("Name",name);
-            resources.set("Slot",slot);
-            resources.set("Button",buttonSection);
-            return resources;
+        ConfigurationSection getSaveData() {
+            resource.set("Name",name);
+            resource.set("Slot",(slot == 3) ? null : slot);
+
+            ConfigurationSection button = new MemoryConfiguration();
+            for (Map.Entry<Integer, ItemEditor> e : editorMap.entrySet()) {
+                MemoryConfiguration configuration = new MemoryConfiguration();
+                ItemEditor editor = e.getValue();
+                configuration.set("Item",editor.item != null ? editor.item.get() : null);
+                configuration.set("Dialog",editor.dialogs);
+                button.set(Integer.toString(e.getKey()),configuration);
+            }
+            resource.set("Button",button);
+            return resource;
         }
     }
 }

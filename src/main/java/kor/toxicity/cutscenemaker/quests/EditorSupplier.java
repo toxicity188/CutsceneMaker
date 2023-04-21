@@ -3,10 +3,7 @@ package kor.toxicity.cutscenemaker.quests;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.util.ConfigUtil;
-import kor.toxicity.cutscenemaker.util.gui.GuiAdapter;
-import kor.toxicity.cutscenemaker.util.gui.GuiExecutor;
-import kor.toxicity.cutscenemaker.util.gui.GuiRegister;
-import kor.toxicity.cutscenemaker.util.gui.MouseButton;
+import kor.toxicity.cutscenemaker.util.gui.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.ChatColor;
@@ -26,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.*;
+import java.util.function.Consumer;
 
 @RequiredArgsConstructor(access = AccessLevel.MODULE)
 public abstract class EditorSupplier {
@@ -171,28 +169,41 @@ public abstract class EditorSupplier {
                     + ChatColor.YELLOW + fileName + ": "
                     + ChatColor.WHITE + name;
         }
-        protected final Optional<ConfigurationSection> getConfig(ConfigurationSection section, String... key) {
-            return ConfigUtil.getConfig(section, key);
-        }
-        protected final Optional<List<String>> getStringList(ConfigurationSection section, String... key) {
-            return ConfigUtil.getStringList(section,key);
-        }
-        protected final Optional<String> getString(ConfigurationSection section, String... key) {
-            return ConfigUtil.getString(section,key);
-        }
-        protected final Optional<Integer> getInt(ConfigurationSection section, String... key) {
-            return ConfigUtil.getInt(section,key);
-        }
+
+
         abstract GuiExecutor getMainExecutor();
         abstract ConfigurationSection getSaveData();
 
+        protected void openSign(String[] strings, Consumer<String> consumer) {
+            CallbackManager.openSign(player,strings,t -> {
+                String s = t[0];
+                if (s.equals("")) CutsceneMaker.send(player,"the value cannot be empty string!");
+                else consumer.accept(s);
+                manager.runTaskLater(this::updateGui,5);
+            });
+        }
+        protected void openInventory(Inventory inventory, Consumer<Map<Integer,ItemStack>> consumer) {
+            CallbackManager.callbackInventory(player,inventory,m -> {
+                consumer.accept(m);
+                manager.runTaskLater(this::updateGui,5);
+            });
+        }
+
+        protected void openChat(String[] strings, Consumer<String> consumer) {
+            CallbackManager.callbackChat(player,strings,t -> {
+                String s = t[0];
+                if (s.equals("cancel")) CutsceneMaker.send(player,"successfully cancelled.");
+                else consumer.accept(s);
+                manager.runTaskLater(this::updateGui,5);
+            });
+        }
         public final void updateGui() {
             GuiExecutor executor = getMainExecutor();
             Inventory inventory = executor.getInventory();
             int slot = inventory.getContents().length;
             inventory.setItem(slot - 1, SAVE_BUTTON);
             inventory.setItem(slot - 9, EXIT_WITHOUT_SAVE_BUTTON);
-            GuiRegister.registerNewGui(new GuiAdapter(Objects.requireNonNull(player),inventory) {
+            GuiRegister.registerNewGui(new GuiAdapter(Objects.requireNonNull(player),manager,inventory) {
                 @Override
                 public void initialize() {
                     executor.initialize();

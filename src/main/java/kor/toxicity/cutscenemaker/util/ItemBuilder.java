@@ -98,5 +98,8 @@ public class ItemBuilder implements ItemSupplier {
     public ItemStack get(Player player) {
         return function.apply(player);
     }
+    public ItemStack get() {
+        return item.clone();
+    }
 
 }

@@ -26,6 +26,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -37,6 +38,8 @@ public final class CallbackManager implements Reloadable, Listener {
 
     private static final Map<Player, CallbackData> CALLBACK_MAP = new ConcurrentHashMap<>();
     private final PacketListener listener;
+
+    private static final ItemStack AIR = new ItemStack(Material.AIR);
 
     private final JavaPlugin pl;
     public CallbackManager(JavaPlugin pl) {
@@ -93,25 +96,26 @@ public final class CallbackManager implements Reloadable, Listener {
                 ItemStack[] contents = e.getInventory().getContents();
                 for (int i = 0; i < contents.length; i++) {
                     ItemStack stack = contents[i];
-                    if (stack != null && stack.getType() != Material.AIR && stack.getType() != Material.BARRIER) stackMap.put(i,stack);
+                    if (stack == null) stack = AIR;
+                    if (stack.getType() != Material.BARRIER) stackMap.put(i,stack);
                 }
                 CALLBACK_MAP.remove(p);
                 data.itemMap.accept(stackMap);
             }
         }
     }
-    public static void callbackInventory(Player player, Inventory inventory, Consumer<Map<Integer,ItemStack>> callback) {
+    public static void callbackInventory(@NotNull Player player,@NotNull Inventory inventory,@NotNull Consumer<Map<Integer,ItemStack>> callback) {
         player.openInventory(inventory);
         CALLBACK_MAP.put(player,new CallbackData(CallBackType.INVENTORY,null,callback));
     }
-    public static void callbackChat(Player player, String[] args, Consumer<String[]> callback) {
+    public static void callbackChat(@NotNull Player player,@NotNull String[] args,@NotNull Consumer<String[]> callback) {
         player.closeInventory();
         for (String arg : args) {
             CutsceneMaker.send(player,arg);
         }
         CALLBACK_MAP.put(player,new CallbackData(CallBackType.CHAT,callback,null));
     }
-    public static void openSign(Player player, String[] args, Consumer<String[]> callback) {
+    public static void openSign(@NotNull Player player,@NotNull String[] args, @NotNull Consumer<String[]> callback) {
         if (args.length != 4) return;
         Location location = player.getLocation();
         location.setY(0);

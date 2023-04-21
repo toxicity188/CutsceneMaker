@@ -28,6 +28,6 @@ public class ActOpen extends CutsceneAction {
 
     @Override
     protected void apply(LivingEntity entity) {
-        if (gui != null && entity instanceof Player) gui.open((Player) entity);
+        if (gui != null && entity instanceof Player) gui.open((Player) entity,manager);
     }
 }

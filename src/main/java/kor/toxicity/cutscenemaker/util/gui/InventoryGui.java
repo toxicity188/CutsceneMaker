@@ -1,6 +1,7 @@
 package kor.toxicity.cutscenemaker.util.gui;
 
 import kor.toxicity.cutscenemaker.CutsceneMaker;
+import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.data.ActionData;
 import kor.toxicity.cutscenemaker.quests.QuestUtil;
 import lombok.RequiredArgsConstructor;
@@ -36,9 +37,9 @@ public class InventoryGui extends InventorySupplier {
             }
         });
     }
-    public void open(Player player) {
+    public void open(Player player, CutsceneManager manager) {
         Inventory inv = getInventory(player);
-        GuiRegister.registerNewGui(new GuiAdapter(player,inv) {
+        GuiRegister.registerNewGui(new GuiAdapter(player,manager,inv) {
             @Override
             public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
                 if (!isPlayerInventory) {

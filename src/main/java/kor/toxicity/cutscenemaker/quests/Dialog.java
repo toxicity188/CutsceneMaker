@@ -767,19 +767,19 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
         );
 
         private String[] getStringArray(String... key) {
-            return getStringList(resource,key).map(s -> s.toArray(new String[0])).orElse(null);
+            return ConfigUtil.getStringList(resource,key).map(s -> s.toArray(new String[0])).orElse(null);
         }
         DialogEditor(Player player) {
             super(player, "Dialog");
-            List<String> list = getStringList(resource,"Talk").orElse(null);
+            List<String> list = ConfigUtil.getStringList(resource,"Talk").orElse(null);
             if (list != null) {
                 talk = new TalkEditor[list.size()];
                 int i = 0;
                 TalkEditor editor;
-                ConfigurationSection items = getConfig(resource,"Item").orElse(null);
-                ConfigurationSection talkers = getConfig(resource,"Talker").orElse(null);
-                ConfigurationSection sounds = getConfig(resource,"Sound").orElse(null);
-                ConfigurationSection interfaces = getConfig(resource,"Interface").orElse(null);
+                ConfigurationSection items = ConfigUtil.getConfig(resource,"Item").orElse(null);
+                ConfigurationSection talkers = ConfigUtil.getConfig(resource,"Talker").orElse(null);
+                ConfigurationSection sounds = ConfigUtil.getConfig(resource,"Sound").orElse(null);
+                ConfigurationSection interfaces = ConfigUtil.getConfig(resource,"Interface").orElse(null);
                 for (String s : list) {
                     String key = Integer.toString(i + 1);
 
@@ -789,11 +789,11 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                     if (matcher.find()) {
                         editor.talk = matcher.group("content");
                         String t = matcher.group("talker");
-                        editor.talker = (t != null) ? t : (talkers != null) ? getString(talkers,key).orElse(null) : null;
+                        editor.talker = (t != null) ? t : (talkers != null) ? ConfigUtil.getString(talkers,key).orElse(null) : null;
                     }
-                    editor.sound = (sounds != null) ? getString(sounds,key).orElse(null) : null;
-                    editor.typing = (interfaces != null) ? getString(interfaces,key).orElse(null) : null;
-                    editor.item = (items != null) ? getConfig(items,key).orElse(null) : null;
+                    editor.sound = (sounds != null) ? ConfigUtil.getString(sounds,key).orElse(null) : null;
+                    editor.typing = (interfaces != null) ? ConfigUtil.getString(interfaces,key).orElse(null) : null;
+                    editor.item = (items != null) ? ConfigUtil.getConfig(items,key).orElse(null) : null;
                     talk[i++] = editor;
                 }
             } else {
@@ -904,7 +904,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                         "Item",
                         getItemList()
                 ));
-                GuiRegister.registerNewGui(new GuiAdapter(player,sub) {
+                GuiRegister.registerNewGui(new GuiAdapter(player,manager,sub) {
                     @Override
                     public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
                         switch (slot) {
@@ -913,7 +913,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                                 updateGui();
                                 break;
                             case 9:
-                                callbackChat(new String[]{
+                                chatTask(new String[]{
                                         ChatColor.YELLOW + "enter a value in the chat. " + ChatColor.GOLD + "cancel: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "cancel" + ChatColor.WHITE + "\"",
                                         ChatColor.GOLD + "format: " + ChatColor.GREEN + "<talk>" + ChatColor.WHITE + " or " + ChatColor.GREEN + "<talker: talk>",
                                         ChatColor.GOLD + "function format: " + ChatColor.GREEN + "%function[]%"
@@ -927,7 +927,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                                 });
                                 break;
                             case 11:
-                                callbackChat(new String[]{
+                                chatTask(new String[]{
                                         ChatColor.YELLOW + "enter a value in the chat. " + ChatColor.GOLD + "cancel: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "cancel" + ChatColor.WHITE + "\"",
                                         ChatColor.GOLD + "format: " + ChatColor.GREEN + "<talker>",
                                         ChatColor.GOLD + "function format: " + ChatColor.GREEN + "%function[]%",
@@ -938,7 +938,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                                 });
                                 break;
                             case 13:
-                                callbackChat(new String[]{
+                                chatTask(new String[]{
                                         ChatColor.YELLOW + "enter a value in the chat. " + ChatColor.GOLD + "cancel: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "cancel" + ChatColor.WHITE + "\"",
                                         ChatColor.GOLD + "format: " + ChatColor.GREEN + "<sound name> <volume> <pitch>",
                                         ChatColor.GOLD + "remove: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "null" + ChatColor.WHITE + "\""
@@ -948,7 +948,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                                 });
                                 break;
                             case 15:
-                                callbackChat(new String[]{
+                                chatTask(new String[]{
                                         ChatColor.YELLOW + "enter a value in the chat. " + ChatColor.GOLD + "cancel: " + ChatColor.WHITE + "type \"" + ChatColor.RED + "cancel" + ChatColor.WHITE + "\"",
                                         ChatColor.GOLD + "format: " + ChatColor.GREEN + "<interface name>",
                                         ChatColor.GOLD + "example: " + ChatColor.GREEN + "default",
@@ -981,7 +981,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                                         try {
                                             cal.setItem(
                                                     Integer.parseInt(s),
-                                                    builder.get(player)
+                                                    builder.get()
                                             );
                                         } catch (Exception ignored) {}
                                     }
@@ -993,7 +993,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                                             ConfigurationSection sec = new MemoryConfiguration();
                                             m.forEach((k,v) -> {
                                                 String q = Integer.toString(k);
-                                                sec.set(q,(t != null && t.isSet(q)) ? t.get(q) : v);
+                                                if (v.getType() != Material.AIR) sec.set(q,v);
                                             });
                                             TalkEditor.this.item = (sec.getKeys(false).isEmpty()) ? null : sec;
                                             CutsceneMaker.send(player,"successfully changed.");
@@ -1003,7 +1003,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                                 break;
                         }
                     }
-                    private void callbackChat(String[] message, Consumer<String> consumer) {
+                    private void chatTask(String[] message, Consumer<String> consumer) {
                         CallbackManager.callbackChat(
                                 player,
                                 message,
@@ -1131,7 +1131,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                 resetInv();
             }
             setupPage();
-            return new GuiAdapter(player,inv) {
+            return new GuiAdapter(player,manager,inv) {
                 @Override
                 public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
                     if (isPlayerInventory) return;

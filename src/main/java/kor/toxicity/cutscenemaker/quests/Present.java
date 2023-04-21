@@ -77,7 +77,7 @@ final class Present extends EditorSupplier implements DialogAddon {
         inv.setItem(15, supplier.get(current.player));
 
         Map<PresentKey,ItemStack> map = presentKeys.stream().collect(Collectors.toMap(k -> k, k -> k.builder.get(current.player)));
-        GuiRegister.registerNewGui(new GuiAdapter(current.player,inv) {
+        GuiRegister.registerNewGui(new GuiAdapter(current.player,manager,inv) {
             private PresentKey stack;
             @Override
             public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
