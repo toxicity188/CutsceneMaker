@@ -3,10 +3,7 @@ package kor.toxicity.cutscenemaker.quests;
 import kor.toxicity.cutscenemaker.CutsceneConfig;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
-import kor.toxicity.cutscenemaker.util.ConfigUtil;
-import kor.toxicity.cutscenemaker.util.InvUtil;
-import kor.toxicity.cutscenemaker.util.ItemBuilder;
-import kor.toxicity.cutscenemaker.util.MetaBuilder;
+import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.util.functions.FunctionPrinter;
 import kor.toxicity.cutscenemaker.util.gui.GuiAdapter;
 import kor.toxicity.cutscenemaker.util.gui.GuiExecutor;
@@ -19,6 +16,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
@@ -57,7 +55,8 @@ final class QnA extends EditorSupplier implements DialogAddon {
     @Override
     public void run(Dialog.DialogCurrent current) {
 
-        Inventory inventory = InvUtil.create((name != null) ? name.print(current.player) : (current.inventory != null ? current.player.getOpenInventory().getTitle() : current.talker + "'s question"),slot);
+        InventoryHolder holder = (current.inventory != null) ? current.inventory.getHolder() : null;
+        Inventory inventory = InvUtil.create((name != null) ? name.print(current.player) : (holder instanceof TitleWrapper ? ((TitleWrapper) holder).getTitle() : current.talker + "'s question"),slot);
         ItemStack itemStack = current.inventory.getItem(CutsceneConfig.getInstance().getDefaultDialogCenter());
         buttonMap.forEach((i,b) -> inventory.setItem(i,b.builder.get(current.player)));
         if (itemStack != null) inventory.setItem(center,itemStack);

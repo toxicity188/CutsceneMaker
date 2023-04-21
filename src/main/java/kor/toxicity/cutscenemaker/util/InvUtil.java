@@ -33,7 +33,7 @@ public final class InvUtil {
     }
 
     public static Inventory create(String name, int rows) {
-        return Bukkit.createInventory(null,Math.min(Math.max(1,rows),6)*9,name);
+        return new TitleWrapper(name,Math.min(Math.max(1,rows),6)*9).getInventory();
     }
 
     public static void give(Player player, ItemStack... itemStack) {
