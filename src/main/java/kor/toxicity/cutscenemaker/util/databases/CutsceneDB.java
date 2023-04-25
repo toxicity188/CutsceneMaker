@@ -4,7 +4,7 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 import kor.toxicity.cutscenemaker.CutsceneConfig;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
-import kor.toxicity.cutscenemaker.events.QuestTimeOverEvent;
+import kor.toxicity.cutscenemaker.event.QuestTimeOverEvent;
 import kor.toxicity.cutscenemaker.quests.QuestData;
 import kor.toxicity.cutscenemaker.quests.QuestSet;
 import kor.toxicity.cutscenemaker.util.EvtUtil;

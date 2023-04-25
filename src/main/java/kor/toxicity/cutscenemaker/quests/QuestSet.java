@@ -3,9 +3,9 @@ package kor.toxicity.cutscenemaker.quests;
 import kor.toxicity.cutscenemaker.CutsceneConfig;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
-import kor.toxicity.cutscenemaker.actions.CutsceneAction;
+import kor.toxicity.cutscenemaker.action.CutsceneAction;
 import kor.toxicity.cutscenemaker.data.ActionData;
-import kor.toxicity.cutscenemaker.events.QuestCompleteEvent;
+import kor.toxicity.cutscenemaker.event.QuestCompleteEvent;
 import kor.toxicity.cutscenemaker.material.WrappedMaterial;
 import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
@@ -177,7 +177,7 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
         if (giveItem != null) {
             rewardsArray = new ArrayList<>(giveItem.length + 2);
             for (ItemBuilder builder : giveItem) {
-                rewardsArray.add(InvUtil.getItemName(builder.get(player)));
+                rewardsArray.add(TextUtil.getItemName(builder.get(player)));
             }
             rewardsArray.add("Exp: " + expString);
             rewardsArray.add("Gold: " + moneyString);
@@ -416,13 +416,15 @@ public final class QuestSet extends EditorSupplier implements Comparable<QuestSe
             }
             return this;
         }
-        void open(Player player) {
-            GuiRegister.registerNewGui(new GuiAdapter(player,manager,inventory) {
+        void open(Player player, GuiAdapter adapter) {
+            GuiRegister.registerNewGui(new SubAdapter(inventory,adapter) {
                 @Override
                 public void onClick(ItemStack item, int slot, MouseButton button, boolean isPlayerInventory) {
                     int t = slot - 9;
                     if (t >= 0 && t < set.size()) {
-                        Navigator.startNavigate(player,set.get(t).location);
+                        NamedLocation location = set.get(t);
+                        safeEnd = true;
+                        Navigator.startNavigate(player,location.name,location.location);
                     }
                 }
             });

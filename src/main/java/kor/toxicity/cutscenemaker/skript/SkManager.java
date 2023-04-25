@@ -12,7 +12,7 @@ import ch.njol.skript.registrations.EventValues;
 import ch.njol.skript.util.Getter;
 import ch.njol.yggdrasil.Fields;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
-import kor.toxicity.cutscenemaker.events.QuestCompleteEvent;
+import kor.toxicity.cutscenemaker.event.QuestCompleteEvent;
 import kor.toxicity.cutscenemaker.quests.QuestSet;
 import kor.toxicity.cutscenemaker.skript.effects.EffCompleteQuest;
 import kor.toxicity.cutscenemaker.skript.effects.EffGiveQuest;
@@ -153,28 +153,6 @@ public class SkManager {
                         @Override
                         public QuestSet get(QuestCompleteEvent arg) {
                             return arg.getQuestSet();
-                        }
-                    },
-                    0
-            );
-            EventValues.registerEventValue(
-                    QuestCompleteEvent.class,
-                    Double.class,
-                    new Getter<Double, QuestCompleteEvent>() {
-                        @Override
-                        public Double get(QuestCompleteEvent arg) {
-                            return arg.getMoney();
-                        }
-                    },
-                    0
-            );
-            EventValues.registerEventValue(
-                    QuestCompleteEvent.class,
-                    Double.class,
-                    new Getter<Double, QuestCompleteEvent>() {
-                        @Override
-                        public Double get(QuestCompleteEvent arg) {
-                            return arg.getExp();
                         }
                     },
                     0

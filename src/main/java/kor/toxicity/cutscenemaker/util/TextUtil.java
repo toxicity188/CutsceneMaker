@@ -55,7 +55,7 @@ public final class TextUtil {
     }
 
     public static String colored(String s) {
-        return s.replace('&','§');
+        return s.replace('&',ChatColor.COLOR_CHAR);
     }
 
     public static String toSingleText(List<String> text) {
@@ -78,8 +78,8 @@ public final class TextUtil {
     }
     public static String getItemName(ItemStack stack) {
         ItemMeta meta = stack.getItemMeta();
-        String display;
-        return stack.getAmount() + " of " + (((display = meta.getDisplayName()) != null) ? display : stack.getType().toString().toLowerCase());
+        String name = meta.getDisplayName();
+        return (name != null && !name.equals("") ? name : stack.getType().toString().toLowerCase()) + " " + ChatColor.GREEN + ChatColor.BOLD + ChatColor.ITALIC + "x" + stack.getAmount();
     }
 
     public static String uncolored(String s) {

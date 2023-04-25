@@ -4,8 +4,8 @@ import kor.toxicity.cutscenemaker.CutsceneConfig;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.CutsceneManager;
 import kor.toxicity.cutscenemaker.data.ActionData;
-import kor.toxicity.cutscenemaker.events.DialogEndEvent;
-import kor.toxicity.cutscenemaker.events.DialogStartEvent;
+import kor.toxicity.cutscenemaker.event.DialogEndEvent;
+import kor.toxicity.cutscenemaker.event.DialogStartEvent;
 import kor.toxicity.cutscenemaker.material.WrappedMaterial;
 import kor.toxicity.cutscenemaker.util.*;
 import kor.toxicity.cutscenemaker.util.functions.ActionPredicate;
@@ -585,7 +585,7 @@ public final class Dialog extends EditorSupplier implements Comparable<Dialog> {
                 length++;
                 if (message.charAt(length -1) != '*') {
                     outputLength++;
-                    char t = '§';
+                    char t = ChatColor.COLOR_CHAR;
                     int i = 0;
                     while (message.charAt(length - 1) == t || (length >= 2 && message.charAt(length - 2) == t)) {
                         length = Math.min(length + 2,message.length());

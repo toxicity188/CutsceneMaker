@@ -20,15 +20,17 @@ Button:
 
 Message:
     quest-give:
-        message: "다음 퀘스트가 발주되었습니다: " #출력 메세지
+        message: "다음 퀘스트가 발주되었습니다: %%s" #출력 메세지
         sound: entity.experience_orb.pickup 1 1 #<사운드 이름> <소리 크기> <소리 높이>
     quest-cancel-message: "퀘스트가 취소되었습니다."
     quest-cancel-fail-message: "취소가 불가능한 퀘스트 입니다."
     quest-no-item-presented-message: "현재 아무 아이템도 제시하지 않은 상태입니다."
     quest-no-item-found-message: "제시할 수 없는 아이템 입니다."
     quest-less-item-amount-message: "아이템의 수량이 부족하여 제시할 수 없습니다."
-    quest-start-navigate: "길안내를 시작합니다."
-    quest-end-navigate: "길안내를 중지합니다."
+    quest-start-navigate: "길안내를 시작합니다: %%s"
+    quest-end-navigate: "길안내를 중지합니다: %%s"
+    quest-another-world: "월드가 달라 안내가 불가능 합니다: %%s"
+    quest-finish-navigate: "다음 목적지에 도착했습니다: %%s"
 
 Suffix:
     - ""

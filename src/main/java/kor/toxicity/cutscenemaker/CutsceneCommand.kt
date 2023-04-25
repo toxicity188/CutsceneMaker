@@ -1,13 +1,14 @@
 package kor.toxicity.cutscenemaker
 
-import kor.toxicity.cutscenemaker.commands.CommandAPI
-import kor.toxicity.cutscenemaker.commands.SenderType
+import kor.toxicity.cutscenemaker.command.CommandAPI
+import kor.toxicity.cutscenemaker.command.SenderType
 import kor.toxicity.cutscenemaker.data.ActionData
 import kor.toxicity.cutscenemaker.data.ItemData
 import kor.toxicity.cutscenemaker.quests.EditorSupplier
 import kor.toxicity.cutscenemaker.util.ConfigWriter
 import kor.toxicity.cutscenemaker.util.EvtUtil
 import kor.toxicity.cutscenemaker.util.InvUtil
+import kor.toxicity.cutscenemaker.util.TextUtil
 import kor.toxicity.cutscenemaker.util.blockanims.BlockAnimation
 import kor.toxicity.cutscenemaker.util.databases.CutsceneDB
 import kor.toxicity.cutscenemaker.util.gui.CallbackManager
@@ -166,7 +167,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
             .create("give").apply {
                 aliases = arrayOf("g","지급")
                 description = "give the preset"
-                usage = "give ${CC.YELLOW}<file> <key> <player> [hour]"
+                usage = "give ${CC.YELLOW}<file> <key> <player> ${CC.DARK_AQUA}[hour]"
                 length = 4
                 executor = { sender, args ->
                     plugin.manager.runTaskAsynchronously {
@@ -229,7 +230,7 @@ class CutsceneCommand(private val plugin: CutsceneMaker): TabExecutor, Listener 
                     (sender as Player).run {
                         ItemData.getItem(this, args[2])?.run {
                             inventory.addItem(this)
-                            CutsceneMaker.send(sender, "successfully given.")
+                            CutsceneMaker.send(sender, "successfully given: ${TextUtil.getItemName(this)}")
                         } ?: run {
                             CutsceneMaker.send(sender, "item not found: ${args[2]}")
                         }

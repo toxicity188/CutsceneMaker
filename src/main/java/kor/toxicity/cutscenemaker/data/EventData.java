@@ -2,8 +2,8 @@ package kor.toxicity.cutscenemaker.data;
 
 import com.google.gson.JsonObject;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
-import kor.toxicity.cutscenemaker.handlers.ActionHandler;
-import kor.toxicity.cutscenemaker.handlers.DelayedHandler;
+import kor.toxicity.cutscenemaker.handler.ActionHandler;
+import kor.toxicity.cutscenemaker.handler.DelayedHandler;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
 import org.bukkit.event.EventHandler;

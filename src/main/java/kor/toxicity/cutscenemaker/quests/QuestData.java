@@ -156,7 +156,7 @@ public final class QuestData extends CutsceneData {
                                 if (set == null) {
                                     MessageSender q = QUEST_MESSAGE_MAP.get("quest-no-location-found");
                                     if (q != null) q.send(p);
-                                } else set.open(p);
+                                } else set.open(p,this);
                                 break;
                             case RIGHT:
                                 Navigator.endNavigate(p);

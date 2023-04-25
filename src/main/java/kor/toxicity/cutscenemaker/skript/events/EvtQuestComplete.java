@@ -3,7 +3,7 @@ package kor.toxicity.cutscenemaker.skript.events;
 import ch.njol.skript.lang.Literal;
 import ch.njol.skript.lang.SkriptEvent;
 import ch.njol.skript.lang.SkriptParser;
-import kor.toxicity.cutscenemaker.events.QuestCompleteEvent;
+import kor.toxicity.cutscenemaker.event.QuestCompleteEvent;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 

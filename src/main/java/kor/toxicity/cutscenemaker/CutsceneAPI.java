@@ -1,9 +1,9 @@
 package kor.toxicity.cutscenemaker;
 
-import kor.toxicity.cutscenemaker.actions.CutsceneAction;
-import kor.toxicity.cutscenemaker.actions.mechanics.ActSlate;
+import kor.toxicity.cutscenemaker.action.CutsceneAction;
+import kor.toxicity.cutscenemaker.action.mechanic.ActSlate;
 import kor.toxicity.cutscenemaker.data.ActionData;
-import kor.toxicity.cutscenemaker.handlers.ActionHandler;
+import kor.toxicity.cutscenemaker.handler.ActionHandler;
 import kor.toxicity.cutscenemaker.quests.Dialog;
 import kor.toxicity.cutscenemaker.quests.QuestData;
 import kor.toxicity.cutscenemaker.quests.QuestSet;

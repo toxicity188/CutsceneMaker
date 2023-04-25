@@ -1,10 +1,10 @@
 package kor.toxicity.cutscenemaker.util;
 
 import kor.toxicity.cutscenemaker.CutsceneMaker;
-import kor.toxicity.cutscenemaker.actions.CutsceneAction;
-import kor.toxicity.cutscenemaker.actions.mechanics.ActEntry;
-import kor.toxicity.cutscenemaker.events.ActionCancelEvent;
-import kor.toxicity.cutscenemaker.events.enums.CancelCause;
+import kor.toxicity.cutscenemaker.action.CutsceneAction;
+import kor.toxicity.cutscenemaker.action.mechanic.ActEntry;
+import kor.toxicity.cutscenemaker.event.ActionCancelEvent;
+import kor.toxicity.cutscenemaker.event.enums.CancelCause;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;

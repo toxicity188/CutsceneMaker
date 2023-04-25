@@ -37,8 +37,8 @@ class MessageSender {
         player.sendMessage(printer.print(player));
         if (soundPlay != null) soundPlay.accept(player);
     }
-    void send(Player player, String add) {
-        player.sendMessage(printer.print(player) + add);
+    void send(Player player, Object... add) {
+        player.sendMessage(String.format(printer.print(player),add));
         if (soundPlay != null) soundPlay.accept(player);
     }
 }

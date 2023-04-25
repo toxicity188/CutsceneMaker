@@ -5,7 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
-import kor.toxicity.cutscenemaker.actions.mechanics.ActCoolTime;
+import kor.toxicity.cutscenemaker.action.mechanic.ActCoolTime;
 import kor.toxicity.cutscenemaker.data.ItemData;
 import kor.toxicity.cutscenemaker.quests.QuestData;
 import kor.toxicity.cutscenemaker.quests.QuestSet;

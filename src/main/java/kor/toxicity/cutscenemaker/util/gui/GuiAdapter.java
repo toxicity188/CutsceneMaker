@@ -36,7 +36,7 @@ public abstract class GuiAdapter implements GuiExecutor {
     }
 
     protected void open() {
-        GuiRegister.registerNewGui(this);
+        if (player.isValid() && !player.isDead() && player.isOnline()) GuiRegister.registerNewGui(this);
     }
     protected void callbackSign(String[] message, Consumer<String> callback) {
         if (this instanceof SubAdapter) ((SubAdapter) this).safeEnd = true;

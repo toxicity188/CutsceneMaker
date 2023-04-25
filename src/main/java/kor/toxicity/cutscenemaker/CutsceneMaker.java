@@ -2,9 +2,8 @@ package kor.toxicity.cutscenemaker;
 
 import com.google.gson.JsonParser;
 import kor.toxicity.cutscenemaker.data.*;
-import kor.toxicity.cutscenemaker.entities.EntityManager;
-import kor.toxicity.cutscenemaker.events.ActionReloadEndEvent;
-import kor.toxicity.cutscenemaker.events.ActionReloadStartEvent;
+import kor.toxicity.cutscenemaker.event.ActionReloadEndEvent;
+import kor.toxicity.cutscenemaker.event.ActionReloadStartEvent;
 import kor.toxicity.cutscenemaker.quests.QuestData;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
 import kor.toxicity.cutscenemaker.util.EvtUtil;
@@ -46,7 +45,7 @@ import java.util.stream.Collectors;
 public final class CutsceneMaker extends JavaPlugin {
 
     public static final String NAME = "[CutsceneMaker]";
-    public static final String BUILD_VERSION = "2023-04-22";
+    public static final String BUILD_VERSION = "2023-04-26";
     public static final int BSTATS_ID = 18237;
     private static final List<Runnable> LATE_CHECK = new ArrayList<>();
     public void addLateCheck(Runnable runnable) {

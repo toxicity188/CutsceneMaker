@@ -27,11 +27,6 @@ import java.util.stream.IntStream;
 public final class InvUtil {
     private static final Pattern SIMPLE_ITEM_PATTERN = Pattern.compile("\\?(?<type>(\\w|_)+) (?<data>[0-9]+) (?<name>(\\w|\\W)+)", Pattern.UNICODE_CHARACTER_CLASS);
 
-    public static String getItemName(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        return (meta.getDisplayName() != null) ? meta.getDisplayName() : item.getType().toString().replace("_"," ").toLowerCase();
-    }
-
     public static Inventory create(String name, int rows) {
         return new TitleWrapper(name,Math.min(Math.max(1,rows),6)*9).getInventory();
     }
