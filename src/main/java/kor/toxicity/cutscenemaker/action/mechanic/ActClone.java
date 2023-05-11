@@ -7,10 +7,8 @@ import kor.toxicity.cutscenemaker.util.reflect.DataField;
 import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.PlayerDisguise;
 import org.bukkit.Location;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
+import org.bukkit.inventory.PlayerInventory;
 
 public class ActClone extends CutsceneAction {
 
@@ -36,8 +34,15 @@ public class ActClone extends CutsceneAction {
     protected void apply(LivingEntity entity) {
         if (entity instanceof Player) {
             Player player = (Player) entity;
+            PlayerInventory inventory = player.getInventory();
             try {
-                Entity entity1 = manager.getEntityManager().createMob(player,key, EntityType.ARMOR_STAND,(loc != null) ? loc : player.getLocation()).getEntity();
+                ArmorStand entity1 = (ArmorStand) manager.getEntityManager().createMob(player,key, EntityType.ARMOR_STAND,(loc != null) ? loc : player.getLocation()).getEntity();
+                entity1.setHelmet(inventory.getHelmet());
+                entity1.setChestplate(inventory.getChestplate());
+                entity1.setLeggings(inventory.getLeggings());
+                entity1.setBoots(inventory.getBoots());
+                entity1.setItemInHand(inventory.getItemInMainHand());
+                entity1.setCanPickupItems(false);
                 entity1.setInvulnerable(true);
                 entity1.setCustomNameVisible(false);
                 DisguiseAPI.disguiseToPlayers(entity1,new PlayerDisguise(player).setNameVisible(false),player);

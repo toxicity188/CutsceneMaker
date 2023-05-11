@@ -52,7 +52,7 @@ public final class CutsceneMaker extends JavaPlugin {
         LATE_CHECK.add(runnable);
     }
 
-    private final Set<Reloadable> reload = new LinkedHashSet<>();
+    private final List<Reloadable> reload = new ArrayList<>();
     private static CutsceneManager manager;
     private static boolean debug;
 

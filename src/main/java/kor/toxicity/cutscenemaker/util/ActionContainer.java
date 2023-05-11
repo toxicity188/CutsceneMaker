@@ -3,19 +3,16 @@ package kor.toxicity.cutscenemaker.util;
 import kor.toxicity.cutscenemaker.CutsceneMaker;
 import kor.toxicity.cutscenemaker.action.CutsceneAction;
 import kor.toxicity.cutscenemaker.action.mechanic.ActEntry;
-import kor.toxicity.cutscenemaker.event.ActionCancelEvent;
-import kor.toxicity.cutscenemaker.event.enums.CancelCause;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -73,7 +70,8 @@ public class ActionContainer {
 
         };
         else run = (e,m) -> {
-            if (tasks.containsKey(e)) tasks.get(e).kill();
+            ActionRunning running = tasks.remove(e);
+            if (running != null) running.kill();
             if (m != null && e instanceof Player) {
                 tasks.put(e, new ActionRunning((Player) e,m));
             } else {
@@ -82,7 +80,9 @@ public class ActionContainer {
         };
     }
 
-    public int size() {return actions.size();}
+    public int size() {
+        return actions.size();
+    }
     public void setConditions(Predicate<LivingEntity> cond) {
         conditions = cond;
     }
@@ -100,8 +100,17 @@ public class ActionContainer {
         run.accept(entity,localVariables);
         return true;
     }
+    public synchronized boolean stop(LivingEntity entity) {
+        ActionRunning running = tasks.remove(entity);
+        if (running != null) {
+            running.kill();
+            BukkitTask task = delay.remove(entity);
+            if (task != null) task.cancel();
+            return true;
+        } else return false;
+    }
 
-    private class ActionRunning implements Listener {
+    private class ActionRunning {
 
         private BukkitTask task;
         private int loop;
@@ -112,35 +121,18 @@ public class ActionContainer {
         private ActionRunning(LivingEntity entity) {
             this.player = entity;
             localVars = null;
-            EvtUtil.register(pl,this);
             load();
         }
         private ActionRunning(Player player, Map<String,String> localVariables) {
             this.player = player;
             localVars = localVariables;
             localVars.forEach((k,v) -> pl.getManager().getVars(player).get(k).setVar(v));
-            EvtUtil.register(pl,this);
             load();
-        }
-        @EventHandler
-        public void quit(PlayerQuitEvent e) {
-            if (e.getPlayer().equals(player)) {
-                kill();
-                EvtUtil.call(new ActionCancelEvent(player,ActionContainer.this, CancelCause.QUIT));
-            }
-        }
-        @EventHandler
-        public void death(EntityDeathEvent e) {
-            if (e.getEntity().equals(player)) {
-                kill();
-                EvtUtil.call(new ActionCancelEvent(player,ActionContainer.this, CancelCause.DEATH));
-            }
         }
 
 
         private void kill() {
             if (task != null) task.cancel();
-            EvtUtil.unregister(this);
             tasks.remove(player);
             if (localVars != null) localVars.forEach((k,v) -> pl.getManager().getVars((Player) player).remove(k));
         }

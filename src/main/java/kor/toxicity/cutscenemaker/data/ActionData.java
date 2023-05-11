@@ -11,6 +11,7 @@ import kor.toxicity.cutscenemaker.exception.NoActionFoundException;
 import kor.toxicity.cutscenemaker.exception.NoValueFoundException;
 import kor.toxicity.cutscenemaker.util.ActionContainer;
 import kor.toxicity.cutscenemaker.util.ConfigLoad;
+import kor.toxicity.cutscenemaker.util.EvtUtil;
 import kor.toxicity.cutscenemaker.util.reflect.DataObject;
 import kor.toxicity.cutscenemaker.util.TextUtil;
 import kor.toxicity.cutscenemaker.util.functions.ActionPredicate;
@@ -18,6 +19,10 @@ import kor.toxicity.cutscenemaker.util.functions.ConditionBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -71,6 +76,9 @@ public final class ActionData extends CutsceneData {
         actions.put("opentemp", ActOpenTemp.class);
         actions.put("removemark", ActRemoveMark.class);
         actions.put("clone", ActClone.class);
+        actions.put("navigate", ActNavigate.class);
+        actions.put("stop",ActStop.class);
+        actions.put("temp",ActTemp.class);
 
         if (Bukkit.getPluginManager().isPluginEnabled("Skript")) {
             actions.put("skript", ActSetSkriptVar.class);
@@ -88,6 +96,16 @@ public final class ActionData extends CutsceneData {
     }
     public ActionData(CutsceneMaker pl) {
         super(pl);
+        EvtUtil.register(pl, new Listener() {
+            @EventHandler
+            public void onDeath(PlayerDeathEvent e) {
+                actionContainer.values().forEach(c -> c.stop(e.getEntity()));
+            }
+            @EventHandler
+            public void onQuit(PlayerQuitEvent e) {
+                actionContainer.values().forEach(c -> c.stop(e.getPlayer()));
+            }
+        });
     }
 
     @Override
@@ -200,7 +218,13 @@ public final class ActionData extends CutsceneData {
         actions.putIfAbsent(name,action);
     }
     public static boolean start(String name, LivingEntity entity) {
-        if (!actionContainer.containsKey(name)) return false;
-        return actionContainer.get(name).run(entity);
+        ActionContainer container = actionContainer.get(name);
+        if (container == null) return false;
+        return container.run(entity);
+    }
+    public static boolean stop(String name, LivingEntity entity) {
+        ActionContainer container = actionContainer.get(name);
+        if (container == null) return false;
+        return container.stop(entity);
     }
 }
