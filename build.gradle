@@ -1,92 +1,59 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '1.7.10'
     id 'com.github.johnrengelman.shadow' version '5.1.0'
 }
 
 version '1.3-SNAPSHOT'
 
-repositories {
-    mavenCentral()
-    maven { url "https://jitpack.io" }
-    maven {
-        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
-        content {
-            includeGroup 'org.bukkit'
-            includeGroup 'org.spigotmc'
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'com.github.johnrengelman.shadow'
+    repositories {
+        mavenCentral()
+        maven { url "https://jitpack.io" }
+        maven {
+            name = 'papermc-repo'
+            url = 'https://repo.papermc.io/repository/maven-public/'
+        }
+        maven {
+            name = 'sonatype'
+            url = 'https://oss.sonatype.org/content/groups/public/'
+        }
+        maven {
+            name = "github"
+            url = "https://maven.pkg.github.com/Slikey/EffectLib"
+        }
+        maven { url "https://repo.dmulloy2.net/repository/public/" }
+        maven { url = 'https://repo.skriptlang.org/releases' }
+        maven { url = 'https://repo.destroystokyo.com/repository/maven-public/' }
+        maven { url "https://maven.enginehub.org/repo/" }
+        maven { url "https://repo.codemc.org/repository/maven-public/"}
+        maven { url = uri("https://repo.papermc.io/repository/maven-public/") }
+        maven {
+            name = 'minecraft-repo'
+            url = 'https://libraries.minecraft.net/'
         }
     }
-    maven {
-        name = "github"
-        url = "https://maven.pkg.github.com/Slikey/EffectLib"
-    }
-    maven { url "https://repo.dmulloy2.net/repository/public/" }
-    maven { url = 'https://oss.sonatype.org/content/repositories/snapshots' }
-    maven { url = 'https://oss.sonatype.org/content/repositories/central' }
-    maven { url = 'https://repo.skriptlang.org/releases' }
-    maven { url = 'https://repo.destroystokyo.com/repository/maven-public/' }
-    maven { url "https://maven.enginehub.org/repo/" }
-    maven { url "https://repo.codemc.org/repository/maven-public/"}
-    maven { url = uri("https://repo.papermc.io/repository/maven-public/") }
-    maven {
-        name = 'minecraft-repo'
-        url = 'https://libraries.minecraft.net/'
+    java {
+        toolchain.languageVersion.set(JavaLanguageVersion.of(8))
     }
 
+    compileJava.options.encoding = 'UTF-8'
 
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+
+    test {
+        useJUnitPlatform()
+    }
 }
 
 dependencies {
-
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
-
-    testImplementation 'org.spigotmc:spigot-api:1.12.2-R0.1-SNAPSHOT'
-
-    implementation 'com.elmakers.mine.bukkit:EffectLib:9.4'
-    compileOnly 'org.projectlombok:lombok:1.18.26'
-    compileOnly 'com.github.SkriptLang:Skript:dev37c'
-    annotationProcessor 'org.projectlombok:lombok:1.18.26'
-
-    testCompileOnly 'org.projectlombok:lombok:1.18.26'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.26'
-
-    implementation group: 'com.opencsv', name: 'opencsv', version: '4.6'
-    implementation group: 'org.codemc.worldguardwrapper', name: 'worldguardwrapper', version: '1.2.0-SNAPSHOT'
-    implementation 'org.apache.httpcomponents:httpclient:4.5.14'
-    implementation group: "org.bstats", name: "bstats-bukkit", version: "3.0.2"
-
-    compileOnly 'com.mojang:authlib:1.5.21'
-    compileOnly 'com.sk89q.worldguard:worldguard-legacy:6.2'
-    compileOnly 'com.sk89q.worldedit:worldedit-bukkit:6.1.4-SNAPSHOT'
-    compileOnly 'com.sk89q.worldedit:worldedit-core:6.1.4-SNAPSHOT'
-    compileOnly "com.github.MilkBowl:VaultAPI:1.7"
-    compileOnly group: "com.comphenix.protocol", name: "ProtocolLib", version: "4.8.0"
-    compileOnly 'org.spigotmc:spigot-api:1.12.2-R0.1-SNAPSHOT'
-    compileOnly fileTree(dir: 'libs', include: ['*.jar'])
-
-}
-java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(8))
+    implementation project(path: ':plugin', configuration: 'shadow')
+    implementation project(path: ':nms:v1_12_R1', configuration: 'shadow')
 }
 
-compileJava.options.encoding = 'UTF-8'
-
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-}
-
-compileKotlin {
-    kotlinOptions.jvmTarget = '1.8'
-}
-
-compileTestKotlin {
-    kotlinOptions.jvmTarget = '1.8'
-}
-
-test {
-    useJUnitPlatform()
-}
 
 shadowJar {
     setArchivesBaseName("CutsceneMaker")
@@ -107,9 +74,7 @@ shadowJar {
 
     relocate("org.codemc","kor.toxicity.cutscenemaker.shaded.org.codemc")
     relocate("de.slikey","kor.toxicity.cutscenemaker.shaded.de.slikey")
-    dependencies {
-        exclude(dependency("org.jetbrains:annotations:13.0"))
-    }
+
     exclude("*.properties")
     exclude("*.php")
     exclude("module-info.class")

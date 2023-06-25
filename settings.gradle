@@ -1,2 +1,6 @@
-rootProject.name = 'CutsceneMaker-Gradle'
+rootProject.name = 'CutsceneMaker'
 
+include("plugin")
+
+include("nms")
+include("nms:v1_12_R1")

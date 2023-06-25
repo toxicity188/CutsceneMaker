@@ -1,0 +1,8 @@
+#csv, mysql
+using: csv
+
+#MySql
+mysql-host: "localhost"
+mysql-database-name: "CutsceneMaker"
+mysql-user-name: "root"
+mysql-user-password: "write your password here."
